@@ -155,6 +155,7 @@
 }
 
 .badge-recent { background: var(--ana-gold-1); color: var(--ana-orange-3); border: 1px solid var(--ana-gold-2); }
+.badge-unclaimed { background: var(--mono-red-3); color: var(--neut-gray-2); border: 1px solid var(--mono-red-2); } /* NEW */
 .badge-pending { background: var(--ana-orange-1); color: var(--ana-orange-3); border: 1px solid var(--ana-orange-2); }
 .badge-claimed { background: var(--comp-green-1); color: var(--comp-green-3); border: 1px solid var(--comp-green-2); }
 

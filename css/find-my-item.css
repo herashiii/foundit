@@ -28,7 +28,7 @@
     --ana-gold-3: #B7791F; /* Dark Gold - Hover State */
     --ana-orange-1: #DD6B20; /* Burnt Orange - Warning */
     --ana-orange-2: #9C4221; /* Rust Orange - Urgent Label */
-
+    --ana-orange-3: #FFFAF0; /* Warning Wash */
     /* 5. Neutral/Achromatic Scheme (The Interface Canvas) */
     --neut-gray-1: #F7FAFC; /* Cool Gray - Body Background */
     --neut-gray-2: #FFFFFF; /* White - Surface/Card Color */
@@ -256,11 +256,25 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Analogous Scheme for Freshness Alert */
+/* Monochromatic Red (Default/Unclaimed) */
+.status-badge.unclaimed {
+    background: var(--mono-red-3);
+    color: white;
+}
+
+/* Analogous Gold (Recent) */
 .status-badge.recent {
     background: var(--ana-gold-1);
     color: var(--ana-orange-2);
     border: 1px solid var(--ana-gold-2);
+}
+
+/* Functional Orange (Pending Claim) */
+.status-badge.pending {
+    background: var(--ana-orange-3); 
+    color: var(--ana-orange-2); 
+    border: 1px solid var(--ana-orange-1); 
+
 }
 
 .card-body {

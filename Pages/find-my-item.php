@@ -69,20 +69,22 @@ $sortParam = $_GET['sort'] ?? 'newest';
 $orderBy = $sortParam === 'oldest' ? 'i.created_at ASC' : 'i.created_at DESC';
 
 // Fetch items - Strictly using existing columns and tables
+// Update your $itemsStmt to fetch both unclaimed and pending_claim
 $itemsStmt = $pdo->prepare("
     SELECT 
         i.id, 
         i.title, 
         i.created_at, 
         i.found_date,
+        i.status,
         c.name as category, 
         l.name as location,
-        (SELECT file_path FROM item_photos p WHERE p.item_id = i.id ORDER BY p.sort_order ASC LIMIT 1) as photo
+        (SELECT file_path FROM item_photos p WHERE p.item_id = i.id ORDER BY id ASC LIMIT 1) as photo
     FROM items i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN locations l ON i.found_location_id = l.id
-    WHERE $whereClause
-    ORDER BY $orderBy
+    WHERE i.status IN ('unclaimed', 'pending_claim')
+    ORDER BY i.created_at DESC
 ");
 $itemsStmt->execute($params);
 $items = $itemsStmt->fetchAll();
@@ -177,67 +179,68 @@ $items = $itemsStmt->fetchAll();
                 </div>
 
                 <div class="items-grid">
-                    <?php foreach ($items as $item): 
-                        $reportedTime = strtotime($item['created_at']);
-                        $isRecentItem = (time() - $reportedTime) <= (48 * 3600);
-                        
-                        // Put this near the top of the file (before the loop), once:
-                        $baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); // e.g. /projects/foundit/pages
+    <?php foreach ($items as $item): 
+        // 1. CALCULATE FRESHNESS (24-Hour Rule)
+        $createdTime = strtotime($item['created_at']);
+        $isRecentItem = (time() - $createdTime) <= (24 * 3600);
+        
+        // 2. DETERMINE BADGE CONTENT & STYLE
+        if ($item['status'] === 'pending_claim') {
+            $badgeText = "Pending Claim";
+            $badgeClass = "pending"; // We will add color for this in CSS
+        } elseif ($isRecentItem) {
+            $badgeText = "Recent";
+            $badgeClass = "recent";
+        } else {
+            $badgeText = "Unclaimed";
+            $badgeClass = "unclaimed";
+        }
 
-                        // Inside the loop where you build $imgSrc:
-                        $photoPath = trim((string)($item['photo'] ?? ''));
+        // Image Path Resolver
+        // Image Path Resolver (Pages/find-my-item.php + Pages/uploads/...)
+        $photoPath = trim((string)($item['photo'] ?? ''));
 
-                        if ($photoPath !== '') {
-                            // Because find-my-item.php is inside Pages/, and uploads/ is also inside Pages/
-                            $diskPath = __DIR__ . '/' . ltrim($photoPath, '/'); // filesystem path
-                            if (file_exists($diskPath)) {
-                                $imgSrc = h(ltrim($photoPath, '/')); // web path relative to Pages/
-                            } else {
-                                $imgSrc = placeholderDataUri($item['title']);
-                            }
-                        } else {
-                            $imgSrc = placeholderDataUri($item['title']);
-                        }
+        if ($photoPath !== '') {
+            $cleanPath = ltrim($photoPath, '/');      // e.g. uploads/items/15/x.jpg
+            $diskPath  = __DIR__ . '/' . $cleanPath;  // Pages/uploads/items/...
 
-
-                        $location = $item['location'] ?: 'Unspecified Location';
-                        $dateFormatted = date('M d, Y', strtotime($item['found_date']));
-                    ?>
-                        <!-- Entire card is wrapped in an anchor tag -->
-                        <a href="view-item.php?id=<?= $item['id'] ?>" class="mini-card" style="text-decoration: none;">
-                            <div class="card-media">
-                                <img src="<?= $imgSrc ?>"
-                                     alt="Photo of <?= h($item['title']) ?>"
-                                     title="Click to view details for <?= h($item['title']) ?>"
-                                     loading="lazy"
-                                     onerror="this.onerror=null; this.src='<?= placeholderDataUri($item['title']) ?>';">
-                                
-                                <?php if ($isRecentItem): ?>
-                                    <span class="status-badge recent">Recent</span>
-                                <?php else: ?>
-                                    <span class="status-badge">Unclaimed</span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="card-body">
-                                <span class="category-pill"><?= h($item['category'] ?? 'General') ?></span>
-                                <h3 class="card-title"><?= h($item['title']) ?></h3>
-                                <div class="card-meta">
-                                    <div class="meta-row" title="Specific location where found">
-                                        <span class="meta-icon" aria-hidden="true">📍</span>
-                                        <span class="meta-label">Found At:</span>
-                                        <!-- Truncation happens here via CSS -->
-                                        <span class="meta-value"><?= h($location) ?></span>
-                                    </div>
-                                    <div class="meta-row" title="The date this item was turned in">
-                                        <span class="meta-icon" aria-hidden="true">📅</span>
-                                        <span class="meta-label">Date Found:</span>
-                                        <span class="meta-value"><?= h($dateFormatted) ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
+            if (file_exists($diskPath)) {
+                $imgSrc = h($cleanPath);              // ✅ correct URL from Pages/
+            } else {
+                $imgSrc = '../open-box.png';          // fallback image in project root? (see note below)
+            }
+        } else {
+            $imgSrc = '../open-box.png';
+        }
+        
+        $location = !empty($item['location']) ? $item['location'] : 'Unspecified Location';
+        $dateFormatted = date('M d, Y', strtotime($item['found_date']));
+    ?>
+        <a href="view-item.php?id=<?= $item['id'] ?>" class="mini-card">
+            <div class="card-media">
+                <img src="<?= $imgSrc ?>"
+                    alt="Photo of <?= h($item['title']) ?>"
+                    onerror="this.onerror=null; this.src='open-box.png';">
+                
+                <span class="status-badge <?= $badgeClass ?>"><?= $badgeText ?></span>
+            </div>
+            <div class="card-body">
+                <span class="category-pill"><?= h($item['category'] ?? 'General') ?></span>
+                <h3 class="card-title"><?= h($item['title']) ?></h3>
+                <div class="card-meta">
+                    <div class="meta-row">
+                        <span class="meta-label">Found At:</span>
+                        <span class="meta-value"><?= h($location) ?></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Date Found:</span>
+                        <span class="meta-value"><?= h($dateFormatted) ?></span>
+                    </div>
                 </div>
+            </div>
+        </a>
+    <?php endforeach; ?>
+</div>
             <?php endif; ?>
         </div>
     </section>

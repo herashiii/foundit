@@ -1,4 +1,9 @@
 <!-- Footer V3 (Aligned with 14-Page Requirements) -->
+ <?php
+// If current page is inside /Login/, prefix links to go to /Pages/
+$currentFolder = basename(dirname($_SERVER['SCRIPT_NAME']));
+$pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
+?>
     <footer>
         <div class="container">
             <div class="footer-grid">
@@ -17,26 +22,31 @@
                 <div>
                     <h3 class="footer-title">Platform</h3>
                     <ul class="footer-links">
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="find-my-item.php">Browse Unclaimed Items</a></li>
-                        <li><a href="turn-in-item.php">Turn In Found Item</a></li>
+                        <li><a href="<?= $pagePrefix ?>index.php">Home</a></li>
+                        <li><a href="<?= $pagePrefix ?>find-my-item.php">Browse Unclaimed Items</a></li>
+                        <li><a href="<?= $pagePrefix ?>turn-in-item.php">Turn In Found Item</a></li>
+
                         <?php if(!isset($_SESSION['user_role']) || $_SESSION['user_role'] === 'guest'): ?>
-                            <li><a href="login.php">Student / Staff Login</a></li>
+                            <li>
+                            <a href="<?= ($currentFolder === 'Login') ? 'login.php' : '../Login/login.php' ?>">
+                                Student / Staff Login
+                            </a>
+                            </li>
                         <?php else: ?>
-                            <li><a href="<?= $_SESSION['user_role'] === 'office' ? 'staff-dashboard.php' : 'dashboard.php' ?>">My Dashboard</a></li>
+                            <li><a href="<?= $pagePrefix . ($_SESSION['user_role'] === 'office' ? 'staff-dashboard.php' : 'dashboard.php') ?>">My Dashboard</a></li>
                         <?php endif; ?>
-                    </ul>
+                        </ul>
                 </div>
 
                 <!-- Info Col -->
                 <div>
                     <h3 class="footer-title">Information</h3>
                     <ul class="footer-links">
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="how-it-works.php">How It Works</a></li>
-                        <li><a href="faq.php">Frequently Asked Questions (FAQs)</a></li>
-                        <li><a href="contact.php">Contact Us</a></li>
-                        <li><a href="sitemap.php">Site Map</a></li>
+                        <li><a href="<?= $pagePrefix ?>aboutus.php">About Us</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Frequently Asked Questions (FAQs)</a></li>
+                        <li><a href="<?= $pagePrefix ?>contactus.php">Contact Us</a></li>
+                        <li><a href="#">Site Map</a></li>
                     </ul>
                 </div>
             </div>

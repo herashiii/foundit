@@ -173,7 +173,18 @@ $recentItems = $stmt->fetchAll();
             <?php if (count($recentItems) > 0): ?>
                 <?php foreach ($recentItems as $item): ?>
                     <?php
-                        $img = $item['photo_path'] ? '../' . h($item['photo_path']) : placeholderDataUri($item['category_name']);
+                        $photoPath = trim((string)($item['photo_path'] ?? ''));
+
+                        if ($photoPath !== '') {
+                            $clean = ltrim($photoPath, '/');          // "uploads/items/15/xxx.jpg"
+                            $disk  = __DIR__ . '/' . $clean;          // Pages/uploads/items/...
+
+                            $img = file_exists($disk)
+                                ? h($clean)                           // web path relative to Pages/
+                                : placeholderDataUri($item['category_name']);
+                        } else {
+                            $img = placeholderDataUri($item['category_name']);
+                        }
                         $dateFound = date('M d, Y', strtotime($item['found_date']));
                         $locDisplay = h($item['location_name']);
                     ?>
@@ -190,11 +201,11 @@ $recentItems = $stmt->fetchAll();
 
                             <div class="mini-card-meta-grid" role="list">
                                 <div class="meta-item" role="listitem">
-                                    <span class="meta-label">Found at</span>
+                                    <span class="meta-label">Found at:</span>
                                     <span class="meta-value"><?= $locDisplay ?></span>
                                 </div>
                                 <div class="meta-item" role="listitem">
-                                    <span class="meta-label">Date found</span>
+                                    <span class="meta-label">Date found:</span>
                                     <span class="meta-value"><?= $dateFound ?></span>
                                 </div>
                             </div>

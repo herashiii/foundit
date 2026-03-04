@@ -36,7 +36,6 @@ if ($itemId <= 0) {
     http_response_code(400);
     $notFound = true;
 } else {
-    // Fetch item + joins strictly using db schema
     $stmt = $pdo->prepare("
         SELECT
             i.*,
@@ -56,43 +55,38 @@ if ($itemId <= 0) {
     if (!$item) {
         $notFound = true;
     } else {
-        // Fetch photos using id ordering to match the schema safely
         $stmtPhotos = $pdo->prepare("SELECT file_path FROM item_photos WHERE item_id = ? ORDER BY id ASC");
         $stmtPhotos->execute([$itemId]);
         $fetchedPhotos = $stmtPhotos->fetchAll(PDO::FETCH_COLUMN);
         
-       // Smart Path Resolver (Pages/view-item.php + Pages/uploads/...)
+        // Smart Path Resolver
         foreach ($fetchedPhotos as $photoPath) {
-            $photoPath = trim((string)$photoPath);
-            if ($photoPath === '') continue;
-
-            // Normalize (remove leading slash)
-            $clean = ltrim($photoPath, '/');
-
-            // Because uploads/ is inside Pages/, this is the correct disk path:
-            $diskPath = __DIR__ . '/' . $clean;
-
-            if (file_exists($diskPath)) {
-                // Web path relative to Pages/
-                $photos[] = $clean;
+            if (!empty($photoPath)) {
+                if (strpos($photoPath, '../') === 0) {
+                    $photos[] = h($photoPath);
+                } else {
+                    $photos[] = '../' . ltrim(h($photoPath), '/');
+                }
             }
         }
-        if (empty($photos)) {
-            $photos[] = placeholderDataUri($item['title']);
-        }
 
-        // Fetch ID details if they exist
         $stmtId = $pdo->prepare("SELECT * FROM item_id_details WHERE item_id = ?");
         $stmtId->execute([$itemId]);
         $idDetails = $stmtId->fetch(PDO::FETCH_ASSOC);
     }
 }
 
+// 24-Hour Freshness Logic (Applied if status is unclaimed)
+$isRecentItem = false;
+if ($item && $item['status'] === 'unclaimed') {
+    $createdTime = strtotime($item['created_at']);
+    $isRecentItem = (time() - $createdTime) <= (24 * 3600);
+}
+
 include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="page-container">
-    <!-- Breadcrumbs -->
     <div class="container">
         <nav class="breadcrumb" aria-label="Secondary Navigation">
             <a href="index.php">Home</a>
@@ -112,15 +106,12 @@ include __DIR__ . '/../includes/header.php';
                     The item you are looking for does not exist or has been removed.
                 </div>
             </div>
-            <a href="find-my-item.php" class="btn btn-secondary" style="margin-top: 24px;">Return to Browse</a>
+            <a href="find-my-item.php" class="btn-secondary" style="margin-top: 24px; display: inline-block; padding: 10px 20px;">Return to Browse</a>
         <?php else: ?>
             
             <div class="view-layout">
-                <!-- LEFT COLUMN: Photo Gallery -->
                 <div class="gallery-column">
-                    <?php 
-                        $mainPhoto = !empty($photos) ? $photos[0] : placeholderDataUri($item['title']); 
-                    ?>
+                    <?php $mainPhoto = !empty($photos) ? $photos[0] : placeholderDataUri($item['title']); ?>
                     
                     <div class="main-photo-container">
                         <img src="<?= h($mainPhoto) ?>" 
@@ -129,10 +120,12 @@ include __DIR__ . '/../includes/header.php';
                              id="mainImage" 
                              class="main-photo clickable">
                         
-                        <?php if($item['status'] === 'recent'): ?>
-                            <span class="badge badge-recent">Recent</span>
-                        <?php elseif($item['status'] === 'pending_claim'): ?>
+                        <?php if($item['status'] === 'pending_claim'): ?>
                             <span class="badge badge-pending">Pending Claim</span>
+                        <?php elseif($item['status'] === 'unclaimed' && $isRecentItem): ?>
+                            <span class="badge badge-recent">Recent</span>
+                        <?php elseif($item['status'] === 'unclaimed' && !$isRecentItem): ?>
+                            <span class="badge badge-unclaimed">Unclaimed</span>
                         <?php else: ?>
                             <span class="badge badge-claimed">Claimed</span>
                         <?php endif; ?>
@@ -152,23 +145,18 @@ include __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                 </div>
 
-                <!-- RIGHT COLUMN: Details & Actions -->
                 <div class="details-column">
-                    
-                    <!-- System Message (Informational Blue Wash) -->
                     <div class="alert alert-info">
                         <span class="icon" aria-hidden="true">ℹ</span>
                         <p>Review the photos and details carefully. If you believe this is yours, proceed to claim it.</p>
                     </div>
 
-                    <!-- Item Header -->
                     <div class="item-header">
                         <span class="category-pill"><?= h($item['category_name'] ?? 'General') ?></span>
                         <h1 class="item-title"><?= h($item['title']) ?></h1>
                         <p class="report-date">Reported on <?= date('F j, Y, g:i a', strtotime($item['created_at'])) ?></p>
                     </div>
 
-                    <!-- Meta Data -->
                     <div class="meta-box">
                         <div class="meta-row" title="The campus location where this was found">
                             <span class="meta-icon" aria-hidden="true">📍</span>
@@ -201,7 +189,6 @@ include __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
 
-                    <!-- Documentation Content (Calibri 12pt as per rules) -->
                     <div class="documentation-content">
                         <h2>Description</h2>
                         <p class="doc-text"><?= nl2br(h($item['description'] ?? 'No additional description provided.')) ?></p>
@@ -216,13 +203,12 @@ include __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <!-- Call To Action Panel -->
                     <div class="cta-panel">
-                        <?php if ($item['status'] === 'recent'): ?>
+                        <?php if ($item['status'] === 'unclaimed'): ?>
                             <h3 class="cta-title">Is this yours?</h3>
                             <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
                             <div class="cta-actions">
-                                <a href="claim-item.php?id=<?= $item['id'] ?>" class="btn-primary" title="Proceed to the claim verification form">
+                                <a href="claim-item.php?id=<?= $item['id'] ?>" class="btn-primary" title="Proceed to the claim verification form" style="display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none;">
                                     Proceed to Claim
                                 </a>
                             </div>
@@ -251,7 +237,6 @@ include __DIR__ . '/../includes/header.php';
     </section>
 </main>
 
-<!-- Lightbox Modal -->
 <div id="lightbox" class="lightbox" role="dialog" aria-label="Image gallery" aria-modal="true" hidden>
     <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Close gallery" title="Close">×</button>
     <button type="button" class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous photo" title="Previous">❮</button>
@@ -262,13 +247,11 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-    // Vanilla JS Lightbox & Thumbnail Logic
     document.addEventListener('DOMContentLoaded', () => {
         const allPhotos = <?= json_encode(!empty($photos) ? $photos : [$mainPhoto]) ?>;
         if (allPhotos.length === 0) return;
 
         let currentIndex = 0;
-        
         const mainImage = document.getElementById('mainImage');
         const thumbBtns = document.querySelectorAll('.thumb-btn');
         const lightbox = document.getElementById('lightbox');
@@ -277,18 +260,15 @@ include __DIR__ . '/../includes/header.php';
         const btnNext = document.getElementById('lightboxNext');
         const btnClose = document.getElementById('lightboxClose');
 
-        // Update Main Image from Thumbnail
         thumbBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentIndex = parseInt(e.currentTarget.getAttribute('data-index'));
                 mainImage.src = allPhotos[currentIndex];
-                
                 thumbBtns.forEach(b => b.classList.remove('active'));
                 e.currentTarget.classList.add('active');
             });
         });
 
-        // Lightbox Controls
         const openLightbox = () => {
             lightboxImg.src = allPhotos[currentIndex];
             lightbox.removeAttribute('hidden');
@@ -325,20 +305,17 @@ include __DIR__ . '/../includes/header.php';
         if(btnNext) btnNext.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
         if(btnPrev) btnPrev.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
 
-        // Hide arrows if only 1 photo
         if (allPhotos.length <= 1) {
             if(btnNext) btnNext.style.display = 'none';
             if(btnPrev) btnPrev.style.display = 'none';
         }
 
-        // Close on bg click
         if(lightbox) {
             lightbox.addEventListener('click', (e) => {
                 if (e.target === lightbox) closeLightbox();
             });
         }
 
-        // Keyboard Navigation
         document.addEventListener('keydown', (e) => {
             if (!lightbox || !lightbox.classList.contains('active')) return;
             if (e.key === 'Escape') closeLightbox();
