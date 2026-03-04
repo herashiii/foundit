@@ -111,9 +111,9 @@ ul { list-style: none; }
 .nav-actions { display: flex; gap: 12px; }
 
 /* Footer */
-footer { background: #1A202C; color: #CBD5E0; padding: 50px 0 20px; margin-top: auto; }
-.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
+footer { background: #1A202C; color: #CBD5E0; padding: 34px 0 10px; margin-top: auto; }
+.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 10px; }
 .footer-title { color: white; margin-bottom: 16px; font-size: 1.1rem; }
 .footer-links li { margin-bottom: 10px; }
 .footer-links a:hover { color: var(--accent); }
-.footer-bottom { border-top: 1px solid #2D3748; padding-top: 24px; text-align: center; font-size: 0.9rem; }
+.footer-bottom { border-top: 1px solid #2D3748; padding-top: 14px; text-align: center; font-size: 0.9rem; }
