@@ -1,8 +1,8 @@
 <?php
-// Dynamic CSS Loader Logic
 $current_page = basename($_SERVER['PHP_SELF'], ".php");
-$css_file = "css/" . $current_page . ".css";
+$page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,19 +11,19 @@ $css_file = "css/" . $current_page . ".css";
     <title>FoundiT - Campus Lost & Found</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon2.ico">
-    <link rel="shortcut icon" href="favicon2.ico">
+    <link rel="icon" type="image/x-icon" href="../favicon2.ico">
+    <link rel="shortcut icon" href="../favicon2.ico">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Global Styles -->
-    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="../css/base.css">
 
     <!-- Page Specific Styles -->
-    <?php if(file_exists($css_file)): ?>
-        <link rel="stylesheet" href="<?php echo $css_file; ?>">
-    <?php endif; ?>
+    <?php if(file_exists(__DIR__ . "/../css/" . $current_page . ".css")): ?>
+    <link rel="stylesheet" href="../css/<?php echo $current_page; ?>.css">
+<?php endif; ?>
 </head>
 <body>
     
@@ -32,7 +32,7 @@ $css_file = "css/" . $current_page . ".css";
         <div class="container nav-container">
             <!-- Updated Logo: Image + Text -->
             <a href="index.php" class="logo">
-                <img src="favicon.png" alt="Logo" class="logo-img">
+                <img src="../favicon.png" alt="Logo" class="logo-img">
                 <div>Found<span>iT</span></div>
             </a>
 

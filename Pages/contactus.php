@@ -1,6 +1,6 @@
 <?php 
 require_once __DIR__ . '/includes/db.php';
-include 'includes/header.php'; 
+include __DIR__ . '/../includes/header.php';  
 ?>
 
 <link rel="stylesheet" href="css/contact-us.css">
@@ -66,4 +66,4 @@ include 'includes/header.php';
 
 </main>
 
-<?php include 'includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
