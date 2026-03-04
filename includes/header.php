@@ -38,7 +38,7 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 
             <!-- Desktop Menu -->
             <div class="nav-links">
-                <a href="index.php" class="nav-link">Home</a>
+                <a href="../Pages/index.php" class="nav-link">Home</a>
                 <a href="find-my-item.php" class="nav-link">Find My Item</a>
                 <a href="#" class="nav-link">How it Works</a>
                 <a href="aboutus.php" class="nav-link">About Us</a>
@@ -48,7 +48,7 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
             </div>
 
             <div class="nav-actions">
-                <a href="login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
+                <a href="../Login/login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
                 <a href="turn-in-item.php" class="btn btn-primary" style="padding: 8px 20px;">Turn In Item</a>
             </div>
         </div>
