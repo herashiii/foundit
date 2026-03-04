@@ -1,0 +1,683 @@
+/* -------------------------------------------------------------------------- */
+/* INDEX.CSS - Homepage Layout Rules (Clean + Consolidated)                   */
+/* -------------------------------------------------------------------------- */
+
+/* ============================== */
+/* 1) HERO SECTION                */
+/* ============================== */
+
+.hero {
+  width: 100%;
+  background:
+    linear-gradient(135deg, rgba(155, 44, 44, 0.85) 0%, rgba(96, 21, 21, 0.9) 100%),
+    url('../silliman-hall.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  color: white;
+  min-height: calc(60vh - 65px);
+
+  display: flex;
+  align-items: center;
+
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -5%;
+  bottom: -10%;
+  width: 40%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero .container {
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.hero-content {
+  width: 100%;
+  max-width: 55%;
+  text-align: left;
+  padding: 70px 0;
+}
+
+/* NEW: Social Proof Badge */
+.hero-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.trust-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #48BB78; /* Green dot */
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.3);
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 32px;
+  max-width: 90%;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.search-bar {
+  background: white;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  display: flex;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 480px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 0 16px;
+  font-size: 1rem;
+  outline: none;
+  color: var(--text-main);
+}
+
+/* NEW: Hero Pills (Quick Filters) */
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  max-width: 600px;
+}
+
+.pills-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-right: 4px;
+}
+
+.hero-pill {
+  font-size: 0.85rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.hero-pill:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+
+/* ============================== */
+/* 2) HOW IT WORKS / CTA SECTION  */
+/* ============================== */
+
+.section-cta {
+  padding: 60px 0 0 0;
+  background-color: var(--bg-body);
+}
+
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* CTA card base */
+.action-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  transition: var(--transition);
+}
+
+/* IMPORTANT: card does NOT float on hover */
+.action-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(155,44,44,0.25);
+}
+
+/* Subtle header strip */
+.action-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: 86px;
+  background: linear-gradient(
+    180deg,
+    rgba(155, 44, 44, 0.10) 0%,
+    rgba(155, 44, 44, 0.04) 55%,
+    rgba(155, 44, 44, 0.00) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Watermark base */
+.action-card::before {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: 10px;
+  width: 270px;
+  height: 270px;
+
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: right top;
+
+  opacity: 0.08;
+  filter: grayscale(1) brightness(0.8) contrast(0.9);
+
+  transform: rotate(-7deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep card content above overlays */
+.action-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Variants: watermark images beside index.php */
+.action-card--lost::before {
+  background-image: url('../magnifying-glass-search.png');
+}
+
+.action-card--found::before {
+  background-image: url('../open-box.png');
+  opacity: 0.08;
+  transform: rotate(-5deg);
+
+  width: 376px;
+  height: 376px;
+  top: -35px;
+  right: -69px;
+}
+
+/* CTA top */
+.action-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* Icon chip */
+.action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+
+  font-size: 1.05rem;
+  border: 1px solid var(--border);
+
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+.action-card-head h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.action-card-desc {
+  margin: 6px 0 0 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--text-body);
+  max-width: 56ch;
+}
+
+/* Bullets */
+.card-bullets {
+  margin: 0;
+  padding: 12px 0 0 0;
+  list-style: none;
+
+  display: grid;
+  gap: 10px;
+
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.card-bullets li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.card-bullets li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.75rem;
+  color: var(--primary);
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+}
+
+.action-card-actions {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+
+/* ============================== */
+/* ACTION ROW BUTTON (Refined Colors) */
+/* ============================== */
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  width: 100%;
+  padding: 14px 16px;
+
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.92);
+
+  box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+
+  cursor: pointer;
+  text-decoration: none; /* Ensure link underline removed */
+}
+
+.action-btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--border);
+  background: var(--bg-body);
+}
+
+.action-btn-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.action-btn-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.action-btn-text strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.action-btn-text small {
+  font-size: 0.80rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.action-btn-arrow {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+}
+
+.action-btn-arrow-svg {
+  width: 18px;
+  height: 18px;
+  color: rgba(26,32,44,0.40);
+  transition: transform .16s ease, color .16s ease;
+}
+
+/* Button hover floats */
+.action-btn:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  box-shadow: 0 16px 26px rgba(0,0,0,0.12);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+}
+
+.action-btn:focus-visible {
+  outline: 3px solid rgba(155,44,44,0.25);
+  outline-offset: 3px;
+}
+
+/* --- COLOR THEME: CALM BLUE (SEARCH) --- */
+/* Used for 'I Lost Something' to reduce panic */
+.action-btn--lost {
+  border-color: rgba(66, 153, 225, 0.25); /* Blue 400 */
+}
+
+.action-btn--lost .action-btn-icon {
+  background: rgba(66, 153, 225, 0.08);
+  border-color: rgba(66, 153, 225, 0.2);
+}
+
+.action-btn--lost .action-btn-svg { color: #3182CE; /* Blue 600 */ }
+
+.action-btn--lost:hover .action-btn-icon {
+  background: rgba(66, 153, 225, 0.15);
+  border-color: rgba(66, 153, 225, 0.4);
+}
+
+.action-btn--lost:hover .action-btn-arrow-svg {
+  transform: translateX(3px);
+  color: #3182CE;
+}
+
+
+/* --- COLOR THEME --- */
+/* Used for 'I Found Something' to encourage action */
+/* Golden Yellow Theme for 'Found' Action */
+.action-btn--found {
+  /* Border: Golden Yellow with 35% opacity */
+  border-color: rgb(203 157 16 / 35%);
+}
+
+.action-btn--found .action-btn-icon {
+  /* Background: Golden Yellow with very low opacity (10%) */
+  background: rgba(242, 183, 5, 0.10);
+  /* Border: Golden Yellow with 30% opacity */
+  border-color: rgba(242, 183, 5, 0.30);
+}
+
+/* Hover State adjustments */
+.action-btn--found:hover .action-btn-icon {
+  background: rgba(242, 183, 5, 0.20);
+  border-color: rgba(242, 183, 5, 0.50);
+}
+
+.action-btn--found:hover .action-btn-arrow-svg {
+  color: #d99f00bd;
+}
+
+
+/* ============================== */
+/* 3) RECENTLY FOUND ITEMS        */
+/* ============================== */
+
+.section-recent {
+  padding: 60px 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.section-subtitle {
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.section-link {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.section-link:hover {
+  color: var(--primary-dark);
+}
+
+/* Center header text + subtext */
+.section-recent .section-header {
+  justify-content: center;
+  text-align: center;
+}
+
+.section-recent .section-header > div {
+  text-align: center;
+}
+
+/* Hide “View All →” to keep header truly centered */
+.section-recent .section-link {
+  display: none;
+}
+
+/* Grid */
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* Cards */
+.mini-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.mini-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.mini-card-img {
+  width: 100%;
+  height: 138px;
+  object-fit: cover;
+  background: #EDF2F7;
+}
+
+.mini-card-body {
+  padding: 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+}
+
+.mini-card-title {
+  font-size: 0.98rem;
+  margin: 0;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+/* Meta - UPDATED: Flex Column Layout */
+.mini-card-meta-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Spacing between rows */
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Meta Item - UPDATED: Row with Space Between */
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.meta-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.meta-value {
+  font-size: 0.86rem;
+  color: var(--text-body);
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.70rem;
+  font-weight: 800;
+
+  border: 1px solid var(--border);
+  letter-spacing: 0.04em;
+}
+
+.found { background: #F0FFF4; color: #276749; }
+.lost { background: #FFF5F5; color: #9B2C2C; }
+.claimed { background: #EBF8FF; color: #2B6CB0; }
+
+
+/* ============================== */
+/* 4) RESPONSIVE                  */
+/* ============================== */
+
+@media (max-width: 1024px) {
+  .hero-content { max-width: 60%; }
+  .hero h1 { font-size: 2.8rem; }
+  .recent-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .hero { text-align: center; }
+  .hero .container { justify-content: center; }
+  .hero-content { max-width: 100%; padding: 40px 0; }
+  .hero h1 { font-size: 2.5rem; }
+  .hero p { margin: 0 auto 30px auto; }
+  .search-bar { margin: 0 auto; }
+  .hero-pills { justify-content: center; }
+  
+  .cta-grid { grid-template-columns: 1fr; }
+  .recent-grid { grid-template-columns: 1fr; }
+
+  .mini-card-meta-grid { 
+    /* Maintain flex column behavior on mobile */
+    display: flex; 
+    flex-direction: column;
+  }
+
+  /* Watermark scaling for mobile */
+  .action-card::before {
+    width: 190px;
+    height: 190px;
+    right: -36px;
+    top: 20px;
+    opacity: 0.11;
+  }
+
+  .action-card::after {
+    height: 72px;
+  }
+} 
