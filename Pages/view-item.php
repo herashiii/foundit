@@ -3,12 +3,7 @@
 // view-item.php (DB-connected)
 declare(strict_types=1);
 
-// Robust include: works whether db.php is in root or /includes
-if (file_exists(__DIR__ . '/includes/db.php')) {
-  require_once __DIR__ . '/includes/db.php';
-} else {
-  require_once __DIR__ . '/db.php';
-}
+require_once __DIR__ . '/../includes/db.php';
 
 function h(string $s): string {
   return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -184,12 +179,7 @@ if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? 
 $claimSuccess = (($_GET['claim'] ?? '') === 'success');
 $justSubmitted = (($_GET['submitted'] ?? '') === '1');
 
-// Include header (your project currently uses includes/header.php in other pages)
-if (file_exists(__DIR__ . '/includes/header.php')) {
-  include __DIR__ . '/includes/header.php';
-} else {
-  include __DIR__ . '/header.php';
-}
+include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="main-content">
@@ -631,10 +621,5 @@ if (file_exists(__DIR__ . '/includes/header.php')) {
 </script>
 
 <?php
-// Footer include (match your project structure)
-if (file_exists(__DIR__ . '/includes/footer.php')) {
-  include __DIR__ . '/includes/footer.php';
-} else {
-  include __DIR__ . '/footer.php';
-}
+include __DIR__ . '/../includes/footer.php';
 ?>
