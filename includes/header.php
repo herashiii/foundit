@@ -40,11 +40,9 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
             <div class="nav-links">
                 <a href="../Pages/index.php" class="nav-link">Home</a>
                 <a href="find-my-item.php" class="nav-link">Find My Item</a>
-                <a href="#" class="nav-link">How it Works</a>
-                <a href="aboutus.php" class="nav-link">About Us</a>
-                <a href="contactus.php" class="nav-link">Contact Us</a>
                 <a href="#" class="nav-link">Site Map</a>
                 <a href="#" class="nav-link">FAQs</a>
+                <a href="aboutus.php" class="nav-link">About Us</a>
             </div>
 
             <div class="nav-actions">
