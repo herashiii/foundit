@@ -56,8 +56,8 @@ $recentItems = $stmt->fetchAll();
 
             <div class="hero-pills">
                 <span class="pills-label">Quick Filters:</span>
-                <a href="find-my-item.php?category=1" class="hero-pill">IDs & Cards</a>
-                <a href="find-my-item.php?category=2" class="hero-pill">Keys</a>
+                <a href="find-my-item.php?category=Identification%20Cards" class="hero-pill">IDs & Cards</a>
+                <a href="find-my-item.php?category=Keys" class="hero-pill">Keys</a>
                 <a href="find-my-item.php?category=Electronics" class="hero-pill">Electronics</a>
                 <a href="find-my-item.php?category=Books" class="hero-pill">Books</a>
             </div>
@@ -179,7 +179,7 @@ $recentItems = $stmt->fetchAll();
                     ?>
                     
                     <a href="view-item.php?id=<?= (int)$item['id'] ?>" class="mini-card" aria-label="View item: <?= h($item['title']) ?>">
-                        <img src="<?= $img ?>" alt="<?= h($item['title']) ?>" class="mini-card-img">
+                        <img src="<?= $img ?>" alt="<?= h($item['title']) ?>" class="mini-card-img" title="<?= h($item['title']) ?>">
                         <div class="mini-card-body">
                             <div class="mini-card-top">
                                 <span class="status-badge found">Found</span>

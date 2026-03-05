@@ -18,8 +18,8 @@ $sort = trim($_GET['sort'] ?? 'newest');      // newest | oldest
 // Fetch categories for chips
 $categories = db()->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 
-// Fetch locations for dropdown
-$locations = db()->query("SELECT id, name FROM locations WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
+// Fetch locations for dropdown - REMOVED is_active condition
+$locations = db()->query("SELECT id, name FROM locations ORDER BY name ASC")->fetchAll();
 
 /** Build query */
 $where = [];
@@ -35,7 +35,6 @@ if ($q !== '') {
   $params[':q_loc']   = $like;
 }
 
-
 // Category
 if ($categoryId > 0) {
   $where[] = "i.category_id = :category_id";
@@ -48,8 +47,8 @@ if ($locationId > 0) {
   $params[':location_id'] = $locationId;
 }
 
-// Status
-$allowedStatus = ['recent', 'pending_claim', 'claimed'];
+// Status - UPDATED to match your database values
+$allowedStatus = ['recent', 'pending', 'claimed', 'returned'];
 if ($status !== '' && in_array($status, $allowedStatus, true)) {
   $where[] = "i.status = :status";
   $params[':status'] = $status;
@@ -76,7 +75,6 @@ $sql = "
     i.status,
     i.found_at_detail,
     i.found_date,
-    i.found_time,
     i.created_at,
     c.name AS category_name,
     l.name AS location_name,
@@ -105,11 +103,12 @@ $items = $stmt->fetchAll();
 
 $count = count($items);
 
-/** Badge mapping */
+/** Badge mapping - UPDATED to match your database status values */
 function badgeForStatus(string $status): array {
   // Your CSS expects: badge-recent | badge-pending | badge-claimed
-  if ($status === 'pending_claim') return ['Pending Claim', 'badge-pending'];
-  if ($status === 'claimed')       return ['Claimed', 'badge-claimed'];
+  if ($status === 'pending')    return ['Pending Claim', 'badge-pending'];
+  if ($status === 'claimed')    return ['Claimed', 'badge-claimed'];
+  if ($status === 'returned')   return ['Returned', 'badge-claimed'];
   return ['Recent', 'badge-recent'];
 }
 
@@ -127,7 +126,7 @@ SVG;
 }
 ?>
 
-<link rel="stylesheet" href="css/find-my-item.css">
+<link rel="stylesheet" href="../css/find-my-item.css">
 
 <main class="main-content">
   <section class="find-shell">
@@ -141,7 +140,7 @@ SVG;
         </p>
       </header>
 
-      <!-- Search + Filters (NOW REAL) -->
+      <!-- Search + Filters -->
       <form class="find-tools" method="get" aria-label="Search and filters">
         <div class="find-search">
           <div class="search-icon" aria-hidden="true">
@@ -216,12 +215,13 @@ SVG;
               <select class="select" name="status" aria-label="Filter by status" onchange="this.form.submit()">
                 <option value="" <?= $status === '' ? 'selected' : '' ?>>Any Status</option>
                 <option value="recent" <?= $status === 'recent' ? 'selected' : '' ?>>Recent</option>
-                <option value="pending_claim" <?= $status === 'pending_claim' ? 'selected' : '' ?>>Pending Claim</option>
+                <option value="pending" <?= $status === 'pending' ? 'selected' : '' ?>>Pending Claim</option>
                 <option value="claimed" <?= $status === 'claimed' ? 'selected' : '' ?>>Claimed</option>
+                <option value="returned" <?= $status === 'returned' ? 'selected' : '' ?>>Returned</option>
               </select>
             </label>
 
-            <!-- Keep existing sort UI but now real -->
+            <!-- Keep existing sort UI -->
             <input type="hidden" name="sort" value="<?= h($sort) ?>">
           </div>
         </div>
@@ -252,7 +252,7 @@ SVG;
               [$badgeText, $badgeClass] = badgeForStatus($it['status']);
 
               $img = $it['photo_path']
-                ? h($it['photo_path'])
+                ? '../' . h($it['photo_path'])
                 : placeholderDataUri($it['category_name']);
 
               // Location display: location + optional detail
@@ -261,15 +261,15 @@ SVG;
                 $locationText .= ' — ' . $it['found_at_detail'];
               }
 
-              // “Turned in” uses created_at (until you add a dedicated turned_in column)
-              $turnedIn = date('M d, Y', strtotime($it['created_at']));
+              // Format date
+              $dateFound = date('M d, Y', strtotime($it['found_date']));
             ?>
 
             <a class="item-card"
                href="view-item.php?id=<?= (int)$it['id'] ?>"
                aria-label="View item: <?= h($it['title']) ?>">
 
-              <img class="item-img" src="<?= $img ?>" alt="<?= h($it['title']) ?>">
+              <img class="item-img" src="<?= $img ?>" alt="<?= h($it['title']) ?>" title="<?= h($it['title']) ?>">
 
               <div class="item-body">
                 <div class="item-top">
@@ -286,7 +286,7 @@ SVG;
                   </div>
                   <div class="meta-row">
                     <span class="meta-label">DATE FOUND</span>
-                    <span class="meta-value"><?= h($turnedIn) ?></span>
+                    <span class="meta-value"><?= h($dateFound) ?></span>
                   </div>
                 </div>
               </div>

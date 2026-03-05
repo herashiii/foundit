@@ -10,8 +10,10 @@ function h(string $s): string {
 }
 
 function badgeForStatus(string $status): array {
-  if ($status === 'pending_claim') return ['Pending Claim', 'badge-pending'];
-  if ($status === 'claimed')       return ['Claimed', 'badge-claimed'];
+  // Updated to match your database status values
+  if ($status === 'pending')    return ['Pending Claim', 'badge-pending'];
+  if ($status === 'claimed')    return ['Claimed', 'badge-claimed'];
+  if ($status === 'returned')   return ['Returned', 'badge-claimed'];
   return ['Recent', 'badge-recent'];
 }
 
@@ -34,18 +36,15 @@ $photos = [];
 $idDetails = null;
 
 if (!$notFound) {
-  // Fetch item + joins
+  // Fetch item + joins - REMOVED offices table completely
   $stmt = $pdo->prepare("
     SELECT
       i.*,
       c.name AS category_name,
-      l.name AS location_name,
-      o.name AS office_name,
-      o.location AS office_location
+      l.name AS location_name
     FROM items i
     INNER JOIN categories c ON c.id = i.category_id
     INNER JOIN locations  l ON l.id = i.found_location_id
-    LEFT JOIN offices     o ON o.id = i.office_id
     WHERE i.id = :id
     LIMIT 1
   ");
@@ -65,17 +64,22 @@ if (!$notFound) {
     $pstmt->execute([':id' => $itemId]);
     $photos = $pstmt->fetchAll();
 
-    // Optional: ID details if table exists + if category is IDs
+    // Optional: ID details if table exists + if category is IDs related
     try {
-      if (mb_strtolower((string)$item['category_name']) === 'ids') {
-        $dstmt = $pdo->prepare("
-          SELECT id_type, name_on_id, department, distinct_feature
-          FROM item_id_details
-          WHERE item_id = :id
-          LIMIT 1
-        ");
-        $dstmt->execute([':id' => $itemId]);
-        $idDetails = $dstmt->fetch() ?: null;
+      $idCategories = ['Identification Cards', 'Bank Cards', 'IDs & Cards'];
+      if (in_array($item['category_name'], $idCategories)) {
+        // Check if item_id_details table exists
+        $checkTable = $pdo->query("SHOW TABLES LIKE 'item_id_details'");
+        if ($checkTable->rowCount() > 0) {
+          $dstmt = $pdo->prepare("
+            SELECT id_type, name_on_id, department, distinct_feature
+            FROM item_id_details
+            WHERE item_id = :id
+            LIMIT 1
+          ");
+          $dstmt->execute([':id' => $itemId]);
+          $idDetails = $dstmt->fetch() ?: null;
+        }
       }
     } catch (Throwable $e) {
       // If the table doesn't exist yet, ignore silently.
@@ -103,64 +107,25 @@ if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? 
     try {
       $pdo->beginTransaction();
 
-      // No login yet: create/find requester user (minimal) by email if provided, else create a placeholder keyed by studentOrEmail
-      $requesterUserId = null;
-
-      $maybeEmail = filter_var($studentOrEmail, FILTER_VALIDATE_EMAIL) ? $studentOrEmail : null;
-
-      if ($maybeEmail) {
-        $u = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
-        $u->execute([':email' => $maybeEmail]);
-        $row = $u->fetch();
-        if ($row) {
-          $requesterUserId = (int)$row['id'];
-          $pdo->prepare("UPDATE users SET phone = COALESCE(phone, :phone), full_name = COALESCE(NULLIF(full_name,''), :name) WHERE id = :id")
-              ->execute([':phone' => $contact, ':name' => $fullName, ':id' => $requesterUserId]);
-        } else {
-          $pdo->prepare("INSERT INTO users (role, full_name, email, phone, is_active) VALUES ('student', :name, :email, :phone, 1)")
-              ->execute([':name' => $fullName, ':email' => $maybeEmail, ':phone' => $contact]);
-          $requesterUserId = (int)$pdo->lastInsertId();
-        }
-      } else {
-        // Not an email — create a local placeholder email (so users table remains consistent)
-        $placeholderEmail = 'claim_' . preg_replace('/[^a-zA-Z0-9]/', '', $studentOrEmail) . '@foundit.local';
-        $u = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
-        $u->execute([':email' => $placeholderEmail]);
-        $row = $u->fetch();
-        if ($row) {
-          $requesterUserId = (int)$row['id'];
-        } else {
-          $pdo->prepare("INSERT INTO users (role, full_name, email, phone, is_active) VALUES ('student', :name, :email, :phone, 1)")
-              ->execute([':name' => $fullName, ':email' => $placeholderEmail, ':phone' => $contact]);
-          $requesterUserId = (int)$pdo->lastInsertId();
-        }
-      }
-
-      // Insert claim request
+      // Insert claim request directly
       $pdo->prepare("
         INSERT INTO claim_requests (
-          item_id, requester_user_id,
-          full_name, student_or_email, proof, where_lost, contact,
-          status
+          item_id, claimer_name, claimer_email, claimer_phone, proof_description, status
         ) VALUES (
-          :item_id, :requester_user_id,
-          :full_name, :student_or_email, :proof, :where_lost, :contact,
-          'pending'
+          :item_id, :claimer_name, :claimer_email, :claimer_phone, :proof_description, 'pending'
         )
       ")->execute([
         ':item_id' => $itemId,
-        ':requester_user_id' => $requesterUserId,
-        ':full_name' => $fullName,
-        ':student_or_email' => $studentOrEmail,
-        ':proof' => $proof,
-        ':where_lost' => ($whereLost !== '' ? $whereLost : null),
-        ':contact' => $contact,
+        ':claimer_name' => $fullName,
+        ':claimer_email' => (filter_var($studentOrEmail, FILTER_VALIDATE_EMAIL) ? $studentOrEmail : $studentOrEmail . '@foundit.local'),
+        ':claimer_phone' => $contact,
+        ':proof_description' => $proof
       ]);
 
-      // Optional: set item status to pending_claim if currently recent
+      // Update item status to pending if currently recent
       if (($item['status'] ?? '') === 'recent') {
-        $pdo->prepare("UPDATE items SET status = 'pending_claim' WHERE id = :id")->execute([':id' => $itemId]);
-        $item['status'] = 'pending_claim';
+        $pdo->prepare("UPDATE items SET status = 'pending' WHERE id = :id")->execute([':id' => $itemId]);
+        $item['status'] = 'pending';
       }
 
       $pdo->commit();
@@ -172,6 +137,8 @@ if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? 
     } catch (Throwable $e) {
       if ($pdo->inTransaction()) $pdo->rollBack();
       $claimError = "Could not submit claim request. Please try again.";
+      // Log error for debugging
+      error_log($e->getMessage());
     }
   }
 }
@@ -261,7 +228,7 @@ include __DIR__ . '/../includes/header.php';
               $jsPhotos = [];
               if (count($photos) > 0) {
                 foreach ($photos as $p) {
-                  $jsPhotos[] = $p['file_path'];
+                  $jsPhotos[] = '../' . $p['file_path']; // Add ../ to path
                 }
               } else {
                  // Placeholder if no photos
@@ -283,6 +250,7 @@ include __DIR__ . '/../includes/header.php';
                   class="media-main"
                   src="<?= h($mainPhoto) ?>"
                   alt="Photo of <?= h((string)$item['title']) ?>"
+                  title="<?= h((string)$item['title']) ?>"
                 />
                 <div class="zoom-hint">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -301,9 +269,9 @@ include __DIR__ . '/../includes/header.php';
                   <button class="thumb <?= $idx === 0 ? 'is-active' : '' ?>"
                           type="button"
                           data-idx="<?= $idx ?>"
-                          data-src="<?= h((string)$p['file_path']) ?>"
+                          data-src="<?= h('../' . $p['file_path']) ?>"
                           aria-label="View photo <?= (int)($idx + 1) ?>">
-                    <img src="<?= h((string)$p['file_path']) ?>" alt="" />
+                    <img src="<?= h('../' . $p['file_path']) ?>" alt="" />
                   </button>
                 <?php endforeach; ?>
               </div>
@@ -335,24 +303,18 @@ include __DIR__ . '/../includes/header.php';
                   <span class="fact-value"><?= h(date('M d, Y', strtotime((string)$item['found_date']))) ?></span>
                 </div>
 
-                <?php if (!empty($item['found_time'])): ?>
-                  <div class="fact">
-                    <span class="fact-label">Time found</span>
-                    <span class="fact-value"><?= h(substr((string)$item['found_time'], 0, 5)) ?></span>
-                  </div>
-                <?php endif; ?>
-
                 <div class="fact">
-                  <span class="fact-label">Custody</span>
+                  <span class="fact-label">Status</span>
                   <span class="fact-value">
-                    <?php if (($item['custody_state'] ?? '') === 'at_office'): ?>
-                      <?= h((string)$item['office_name']) ?>
-                      <?php if (!empty($item['office_location'])): ?>
-                        — <?= h((string)$item['office_location']) ?>
-                      <?php endif; ?>
-                    <?php else: ?>
-                      With finder (Please coordinate through staff)
-                    <?php endif; ?>
+                    <?php 
+                      $statusText = [
+                        'recent' => 'Recently Found',
+                        'pending' => 'Pending Claim',
+                        'claimed' => 'Claimed',
+                        'returned' => 'Returned to Owner'
+                      ];
+                      echo h($statusText[$item['status']] ?? $item['status']);
+                    ?>
                   </span>
                 </div>
               </div>
@@ -386,8 +348,21 @@ include __DIR__ . '/../includes/header.php';
 
               <?php if (!empty($item['description'])): ?>
                 <div class="divider"></div>
-                <div class="notes-label">Reporter notes</div>
+                <div class="notes-label">Description</div>
                 <p class="notes-text"><?= nl2br(h((string)$item['description'])) ?></p>
+              <?php endif; ?>
+              
+              <?php if (!empty($item['contact_email']) || !empty($item['contact_phone'])): ?>
+                <div class="divider"></div>
+                <div class="notes-label">Contact Information</div>
+                <p class="notes-text">
+                  <?php if (!empty($item['contact_email'])): ?>
+                    <strong>Email:</strong> <?= h($item['contact_email']) ?><br>
+                  <?php endif; ?>
+                  <?php if (!empty($item['contact_phone'])): ?>
+                    <strong>Phone:</strong> <?= h($item['contact_phone']) ?>
+                  <?php endif; ?>
+                </p>
               <?php endif; ?>
             </section>
 
@@ -404,6 +379,7 @@ include __DIR__ . '/../includes/header.php';
               </div>
             </div>
 
+            <?php if ($item['status'] === 'recent' || $item['status'] === 'pending'): ?>
             <section class="panel panel-claim" aria-label="Claim request">
               <div class="panel-title-row">
                 <h2>Claim Request</h2>
@@ -439,7 +415,7 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                     <div>
                       <strong>Submit a claim request</strong>
-                      <small>We’ll ask a few details to verify ownership.</small>
+                      <small>We'll ask a few details to verify ownership.</small>
                     </div>
                   </div>
                   <div class="summary-arrow" aria-hidden="true">
@@ -455,18 +431,18 @@ include __DIR__ . '/../includes/header.php';
                   <div class="form-grid">
                     <div class="field">
                       <label>Full Name</label>
-                      <input name="full_name" type="text" value="<?= h($_POST['full_name'] ?? '') ?>" placeholder="e.g., Juan Dela Cruz">
+                      <input name="full_name" type="text" value="<?= h($_POST['full_name'] ?? '') ?>" placeholder="e.g., Juan Dela Cruz" required>
                     </div>
 
                     <div class="field">
                       <label>Student ID or Email</label>
-                      <input name="student_or_email" type="text" value="<?= h($_POST['student_or_email'] ?? '') ?>" placeholder="e.g., 22-1-00065 or name@su.edu.ph">
+                      <input name="student_or_email" type="text" value="<?= h($_POST['student_or_email'] ?? '') ?>" placeholder="e.g., 22-1-00065 or name@su.edu.ph" required>
                     </div>
                   </div>
 
                   <div class="field">
                     <label>How can we reach you?</label>
-                    <input name="contact" type="text" value="<?= h($_POST['contact'] ?? '') ?>" placeholder="09XX XXX XXXX">
+                    <input name="contact" type="text" value="<?= h($_POST['contact'] ?? '') ?>" placeholder="09XX XXX XXXX" required>
                     <p class="field-hint">Your contact is visible to staff only.</p>
                   </div>
 
@@ -477,12 +453,12 @@ include __DIR__ . '/../includes/header.php';
 
                   <div class="field">
                     <label>Proof / Description</label>
-                    <textarea name="proof" rows="4" placeholder="Describe a detail only the owner would know (stickers, contents, scratches, etc.)."><?= h($_POST['proof'] ?? '') ?></textarea>
+                    <textarea name="proof" rows="4" placeholder="Describe a detail only the owner would know (stickers, contents, scratches, etc.)." required><?= h($_POST['proof'] ?? '') ?></textarea>
                     <p class="field-hint">Do not share sensitive numbers (ID numbers, addresses).</p>
                   </div>
 
                   <div class="claim-actions">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary">Submit Claim Request</button>
                     <a class="btn btn-muted" href="find-my-item.php">Back to list</a>
                   </div>
 
@@ -492,6 +468,16 @@ include __DIR__ . '/../includes/header.php';
                 </form>
               </details>
             </section>
+            <?php else: ?>
+            <section class="panel" style="background: rgba(155,44,44,0.04);">
+              <div class="panel-title-row">
+                <h2>Claim Status</h2>
+              </div>
+              <p class="notes-text">
+                This item is <?= $item['status'] === 'claimed' ? 'already claimed' : 'no longer available for claiming' ?>.
+              </p>
+            </section>
+            <?php endif; ?>
 
           </aside>
         </div>
