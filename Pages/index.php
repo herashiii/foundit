@@ -173,7 +173,7 @@ $recentItems = $stmt->fetchAll();
             <?php if (count($recentItems) > 0): ?>
                 <?php foreach ($recentItems as $item): ?>
                     <?php
-                        $img = $item['photo_path'] ? '../' . h($item['photo_path']) : placeholderDataUri($item['category_name']);
+                        $img = $item['photo_path'] ? h($item['photo_path']) : placeholderDataUri($item['category_name']);
                         $dateFound = date('M d, Y', strtotime($item['found_date']));
                         $locDisplay = h($item['location_name']);
                     ?>

@@ -248,28 +248,29 @@ SVG;
       <?php if ($count > 0): ?>
         <div class="items-grid" aria-label="Turned-in items list">
           <?php foreach ($items as $it): ?>
-            <?php
-              [$badgeText, $badgeClass] = badgeForStatus($it['status']);
+  <?php
+    [$badgeText, $badgeClass] = badgeForStatus($it['status']);
 
-              $img = $it['photo_path']
-                ? '../' . h($it['photo_path'])
-                : placeholderDataUri($it['category_name']);
+    // FIXED: Don't add ../ to the path, use it directly
+    $img = !empty($it['photo_path']) 
+      ? h($it['photo_path'])  // Use the path exactly as stored in database
+      : placeholderDataUri($it['category_name']);
 
-              // Location display: location + optional detail
-              $locationText = $it['location_name'];
-              if (!empty($it['found_at_detail'])) {
-                $locationText .= ' — ' . $it['found_at_detail'];
-              }
+    // Location display: location + optional detail
+    $locationText = $it['location_name'];
+    if (!empty($it['found_at_detail'])) {
+      $locationText .= ' — ' . $it['found_at_detail'];
+    }
 
-              // Format date
-              $dateFound = date('M d, Y', strtotime($it['found_date']));
-            ?>
+    // Format date
+    $dateFound = date('M d, Y', strtotime($it['found_date']));
+  ?>
 
-            <a class="item-card"
-               href="view-item.php?id=<?= (int)$it['id'] ?>"
-               aria-label="View item: <?= h($it['title']) ?>">
+  <a class="item-card"
+     href="view-item.php?id=<?= (int)$it['id'] ?>"
+     aria-label="View item: <?= h($it['title']) ?>">
 
-              <img class="item-img" src="<?= $img ?>" alt="<?= h($it['title']) ?>" title="<?= h($it['title']) ?>">
+    <img class="item-img" src="<?= $img ?>" alt="<?= h($it['title']) ?>" title="<?= h($it['title']) ?>">
 
               <div class="item-body">
                 <div class="item-top">

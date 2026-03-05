@@ -12,10 +12,10 @@ function ensureDir(string $path): void {
 
 $pdo = db();
 
-// Dropdown data
+// Dropdown data  
 $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 $locations  = $pdo->query("SELECT id, name FROM locations WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
-$offices    = $pdo->query("SELECT id, name, location FROM offices WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
+$offices    = $pdo->query("SELECT id, name FROM offices WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
 
 // Find IDs category id
 $idCategoryId = null;
@@ -59,30 +59,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $distinct_feature = trim($old['distinct_feature'] ?? '');
 
   // Files
-  $files = $_FILES['photos'] ?? null;
+$files = $_FILES['photos'] ?? null;
 
-  // Server validation (still needed even with JS)
-  if ($category_id <= 0) $errors[] = "Please choose a category.";
-  if ($title === '') $errors[] = "Please enter a short title.";
-  if ($found_location_id <= 0) $errors[] = "Please select where you found the item.";
-  if ($found_date === '') $errors[] = "Please select the date found.";
-  if (!filter_var($reporter_email, FILTER_VALIDATE_EMAIL)) $errors[] = "Please enter a valid email.";
-  if ($reporter_phone === '') $errors[] = "Please enter a phone number.";
+// Debug logging (remove after testing)
+error_log("POST data: " . print_r($_POST, true));
+error_log("FILES data: " . print_r($_FILES, true));
 
-  $allowedCustody = ['with_finder','at_office'];
-  if (!in_array($custody_state, $allowedCustody, true)) $errors[] = "Invalid custody value.";
-  if ($custody_state === 'at_office' && $office_id <= 0) $errors[] = "Please select which office is holding the item.";
+// Photos required: at least 1, up to 5
+$photoCount = 0;
+$uploadedFiles = [];
 
-  $allowedVis = ['anonymous_to_owner','share_with_owner'];
-  if (!in_array($visibility, $allowedVis, true)) $errors[] = "Invalid privacy choice.";
+if ($files && isset($files['name']) && is_array($files['name'])) {
+    foreach ($files['name'] as $index => $name) {
+        if ($name !== '') {
+            // Check if this file was actually uploaded successfully
+            if ($files['error'][$index] === UPLOAD_ERR_OK) {
+                $photoCount++;
+                $uploadedFiles[] = [
+                    'name' => $name,
+                    'tmp_name' => $files['tmp_name'][$index],
+                    'error' => $files['error'][$index],
+                    'size' => $files['size'][$index]
+                ];
+                error_log("Valid file: $name");
+            } else {
+                // File upload error
+                $errorCode = $files['error'][$index];
+                error_log("File upload error for $name: $errorCode");
+                
+                if ($errorCode === UPLOAD_ERR_INI_SIZE || $errorCode === UPLOAD_ERR_FORM_SIZE) {
+                    $errors[] = "File '$name' is too large. Maximum size is " . ini_get('upload_max_filesize');
+                } else if ($errorCode === UPLOAD_ERR_PARTIAL) {
+                    $errors[] = "File '$name' was only partially uploaded.";
+                } else if ($errorCode === UPLOAD_ERR_NO_FILE) {
+                    // Skip - no file
+                } else {
+                    $errors[] = "Error uploading file '$name'. Error code: $errorCode";
+                }
+            }
+        }
+    }
+}
 
-  // Photos required: at least 1, up to 5
-  $photoCount = 0;
-  if ($files && isset($files['name']) && is_array($files['name'])) {
-    foreach ($files['name'] as $n) if ($n !== '') $photoCount++;
-  }
-  if ($photoCount < 1) $errors[] = "Please upload at least 1 photo.";
-  if ($photoCount > 5) $errors[] = "You can upload up to 5 photos only.";
+error_log("Total valid files: $photoCount");
+
+if ($photoCount < 1) $errors[] = "Please upload at least 1 photo.";
+if ($photoCount > 5) $errors[] = "You can upload up to 5 photos only.";
 
   // If IDs, require extra
   if ($idCategoryId !== null && $category_id === $idCategoryId) {
@@ -104,12 +126,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET phone = COALESCE(phone, :phone) WHERE id = :id")
             ->execute([':phone' => $reporter_phone, ':id' => $reporter_user_id]);
       } else {
-        $nameGuess = strstr($reporter_email, '@', true) ?: 'Reporter';
+        // Extract name from email (part before @)
+        $emailName = strstr($reporter_email, '@', true) ?: 'Reporter';
+        
+        // Split into first and last name (simple approach)
+        $nameParts = explode(' ', $emailName, 2);
+        $first_name = $nameParts[0];
+        $last_name = isset($nameParts[1]) ? $nameParts[1] : '';
+        
         $pdo->prepare("
-          INSERT INTO users (role, full_name, email, phone, is_active)
-          VALUES ('student', :full_name, :email, :phone, 1)
+          INSERT INTO users (role, first_name, last_name, email, phone, is_active)
+          VALUES ('student', :first_name, :last_name, :email, :phone, 1)
         ")->execute([
-          ':full_name' => $nameGuess,
+          ':first_name' => $first_name,
+          ':last_name' => $last_name,
           ':email' => $reporter_email,
           ':phone' => $reporter_phone
         ]);
@@ -117,33 +147,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       // Insert item
-      $pdo->prepare("
-        INSERT INTO items (
-          category_id, status, title, description,
-          found_location_id, found_at_detail,
-          found_date, found_time,
-          custody_state, office_id,
-          reported_by_user_id, reporter_visibility
-        ) VALUES (
-          :category_id, 'recent', :title, :description,
-          :found_location_id, :found_at_detail,
-          :found_date, :found_time,
-          :custody_state, :office_id,
-          :reported_by_user_id, :reporter_visibility
-        )
-      ")->execute([
-        ':category_id' => $category_id,
-        ':title' => $title,
-        ':description' => $description !== '' ? $description : null,
-        ':found_location_id' => $found_location_id,
-        ':found_at_detail' => $found_at_detail !== '' ? $found_at_detail : null,
-        ':found_date' => $found_date,
-        ':found_time' => $found_time !== '' ? $found_time : null,
-        ':custody_state' => $custody_state,
-        ':office_id' => ($custody_state === 'at_office') ? $office_id : null,
-        ':reported_by_user_id' => $reporter_user_id,
-        ':reporter_visibility' => $visibility
-      ]);
+$pdo->prepare("
+  INSERT INTO items (
+    category_id, status, title, description,
+    found_location_id, found_at_detail,
+    found_date, found_time,
+    custody_state, office_id,
+    user_id, reporter_visibility
+  ) VALUES (
+    :category_id, 'recent', :title, :description,
+    :found_location_id, :found_at_detail,
+    :found_date, :found_time,
+    :custody_state, :office_id,
+    :user_id, :reporter_visibility
+  )
+")->execute([
+  ':category_id' => $category_id,
+  ':title' => $title,
+  ':description' => $description !== '' ? $description : null,
+  ':found_location_id' => $found_location_id,
+  ':found_at_detail' => $found_at_detail !== '' ? $found_at_detail : null,
+  ':found_date' => $found_date,
+  ':found_time' => $found_time !== '' ? $found_time : null,
+  ':custody_state' => $custody_state,
+  ':office_id' => ($custody_state === 'at_office') ? $office_id : null,
+  ':user_id' => $reporter_user_id,
+  ':reporter_visibility' => $visibility
+]);
 
       $item_id = (int)$pdo->lastInsertId();
 
@@ -184,14 +214,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $allowedExt = ['jpg','jpeg','png','webp'];
       $sortOrder = 1;
 
-      for ($i = 0; $i < count($files['name']); $i++) {
-        if ($files['name'][$i] === '') continue;
-
-        $tmp = $files['tmp_name'][$i];
-        $err = $files['error'][$i];
-        if ($err !== UPLOAD_ERR_OK) throw new RuntimeException("Upload failed.");
-
-        $origName = $files['name'][$i];
+      foreach ($uploadedFiles as $file) {
+        $tmp = $file['tmp_name'];
+        $origName = $file['name'];
+        
         $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         if (!in_array($ext, $allowedExt, true)) throw new RuntimeException("Only JPG, PNG, or WEBP allowed.");
 
@@ -200,7 +226,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!move_uploaded_file($tmp, $destFs)) throw new RuntimeException("Could not save uploaded photo.");
 
-        $webPath = "uploads/items/{$item_id}/{$safeName}";
+$webPath = "uploads/items/{$item_id}/{$safeName}";
+
         $insertPhoto->execute([
           ':item_id' => $item_id,
           ':file_path' => $webPath,
@@ -254,6 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form id="reportForm" method="post" enctype="multipart/form-data" novalidate>
       <input type="hidden" name="current_step" id="currentStepInput" value="<?= (int)$postedStep ?>">
+      <input type="hidden" name="MAX_FILE_SIZE" value="20971520"> <!-- 20MB max file size -->
 
       <!-- STEP 1 -->
       <section class="report-card" data-step="1">
@@ -261,11 +289,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="helper">Upload 1–5 photos. Clear photos help the owner recognize it faster.</p>
 
         <div class="upload-zone" id="dropZone">
-          <input type="file" id="photoInput" name="photos[]" accept="image/*" multiple hidden>
+          <input type="file" id="photoInput" name="photos[]" accept="image/jpeg,image/png,image/webp" multiple>
           <div class="zone-content">
             <span class="zone-icon">📷</span>
             <p><strong>Click to upload</strong> or drag and drop</p>
-            <span class="upload-hint">JPG, PNG, WEBP (Max 5 photos)</span>
+            <span class="upload-hint">JPG, PNG, WEBP (Max 5 photos, 20MB each)</span>
           </div>
         </div>
 
@@ -389,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="">Select office</option>
             <?php foreach ($offices as $o): ?>
               <option value="<?= (int)$o['id'] ?>" <?= ((int)($old['office_id'] ?? 0) === (int)$o['id']) ? 'selected' : '' ?>>
-                <?= h($o['name']) ?><?= $o['location'] ? ' — ' . h($o['location']) : '' ?>
+                <?= h($o['name']) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -432,56 +460,153 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <script>
-  // ------- Stepper core -------
-  let currentStep = Math.min(Math.max(parseInt(document.getElementById('currentStepInput').value || '1', 10), 1), 5);
-
-  const cards = document.querySelectorAll('.report-card');
-  const steps = document.querySelectorAll('.step');
-  const stepInput = document.getElementById('currentStepInput');
-
+  // Simple stepper
+  let currentStep = parseInt(document.getElementById('currentStepInput').value) || 1;
+  
   function showStep(step) {
     currentStep = step;
-    stepInput.value = String(step);
-
-    cards.forEach(c => c.classList.remove('active'));
-    steps.forEach(s => s.classList.remove('active'));
-
+    document.getElementById('currentStepInput').value = step;
+    
+    document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    
     document.querySelector(`.report-card[data-step="${step}"]`).classList.add('active');
     document.querySelector(`.step[data-step="${step}"]`).classList.add('active');
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    window.scrollTo({ top: 0 });
   }
-
-  // Clickable Stepper (Go back functionality)
-  steps.forEach(s => {
-    s.addEventListener('click', () => {
-      const targetStep = parseInt(s.dataset.step);
-      // Allow going back immediately without validation
-      if (targetStep < currentStep) {
-        showStep(targetStep);
-      }
-      // Note: Going forward via stepper is disabled to force validation via "Continue" buttons
-    });
-  });
-
-  // init
+  
   showStep(currentStep);
 
-  // ------- Photo append + Drag & Drop -------
-  const dropZone = document.getElementById('dropZone');
+  // Photo upload - IMPROVED VERSION
   const photoInput = document.getElementById('photoInput');
+  const dropZone = document.getElementById('dropZone');
   const preview = document.getElementById('previewContainer');
-
+  const step1Error = document.getElementById('step1Error');
+  
+  // Store files in an array to persist them
   let selectedFiles = [];
 
-  // Click to upload
-  dropZone.addEventListener('click', () => photoInput.click());
+  // Style the drop zone
+  dropZone.style.position = 'relative';
+  dropZone.style.cursor = 'pointer';
+  
+  // Make file input invisible but functional
+  photoInput.style.position = 'absolute';
+  photoInput.style.top = '0';
+  photoInput.style.left = '0';
+  photoInput.style.width = '100%';
+  photoInput.style.height = '100%';
+  photoInput.style.opacity = '0';
+  photoInput.style.cursor = 'pointer';
+  photoInput.style.zIndex = '10';
 
-  photoInput.addEventListener('change', () => {
-    handleFiles(Array.from(photoInput.files || []));
+  // Click handler
+  dropZone.addEventListener('click', function(e) {
+    if (e.target !== photoInput) {
+      photoInput.click();
+    }
   });
 
-  // Drag & Drop events
+  // Prevent click on photoInput from bubbling
+  photoInput.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
+  // Handle file selection
+  photoInput.addEventListener('change', function(e) {
+    const files = Array.from(this.files);
+    console.log('Files selected:', files.length);
+    
+    // Add new files to our persistent array
+    files.forEach(file => {
+      if (selectedFiles.length < 5) {
+        if (file.type.startsWith('image/')) {
+          selectedFiles.push(file);
+        }
+      }
+    });
+    
+    // Update the file input with all selected files
+    updateFileInput();
+    
+    // Show previews
+    renderPreviews();
+    
+    // Clear any errors
+    step1Error.style.display = 'none';
+    dropZone.classList.remove('input-error');
+  });
+
+  // Update the file input with our persistent file array
+  function updateFileInput() {
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => {
+      dt.items.add(file);
+    });
+    photoInput.files = dt.files;
+    console.log('File input updated, now has:', photoInput.files.length, 'files');
+  }
+
+  // Render previews from selectedFiles array
+  function renderPreviews() {
+    preview.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'preview-tile';
+        previewDiv.style.position = 'relative';
+        previewDiv.style.display = 'inline-block';
+        previewDiv.style.margin = '10px';
+        
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100px';
+        img.style.height = '100px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '4px';
+        
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '×';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '-5px';
+        removeBtn.style.right = '-5px';
+        removeBtn.style.width = '20px';
+        removeBtn.style.height = '20px';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.background = '#C53030';
+        removeBtn.style.color = 'white';
+        removeBtn.style.border = 'none';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.fontWeight = 'bold';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        
+        removeBtn.onclick = function(e) {
+          e.stopPropagation();
+          // Remove file from array
+          selectedFiles.splice(index, 1);
+          // Update file input
+          updateFileInput();
+          // Re-render previews
+          renderPreviews();
+        };
+        
+        previewDiv.appendChild(img);
+        previewDiv.appendChild(removeBtn);
+        preview.appendChild(previewDiv);
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Drag and drop
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropZone.addEventListener(eventName, preventDefaults, false);
   });
@@ -492,238 +617,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, highlight, false);
+    dropZone.addEventListener(eventName, () => {
+      dropZone.classList.add('dragover');
+    });
   });
 
   ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, unhighlight, false);
+    dropZone.addEventListener(eventName, () => {
+      dropZone.classList.remove('dragover');
+    });
   });
 
-  function highlight() { dropZone.classList.add('dragover'); }
-  function unhighlight() { dropZone.classList.remove('dragover'); }
-
-  dropZone.addEventListener('drop', (e) => {
+  dropZone.addEventListener('drop', function(e) {
     const dt = e.dataTransfer;
-    handleFiles(Array.from(dt.files));
-  });
-
-  function handleFiles(newFiles) {
-    if (!newFiles.length) return;
-
-    for (const f of newFiles) {
-      if (selectedFiles.length >= 5) break;
-      // Simple type check
-      if(f.type.startsWith('image/')) {
-        selectedFiles.push(f);
+    const files = Array.from(dt.files);
+    
+    // Add dropped files to our persistent array
+    files.forEach(file => {
+      if (selectedFiles.length < 5) {
+        if (file.type.startsWith('image/')) {
+          selectedFiles.push(file);
+        }
       }
-    }
-    updateInputFiles();
+    });
+    
+    // Update file input and previews
+    updateFileInput();
     renderPreviews();
-  }
-
-  function updateInputFiles() {
-    const dt = new DataTransfer();
-    selectedFiles.forEach(f => dt.items.add(f));
-    photoInput.files = dt.files;
-  }
-
-  function renderPreviews() {
-    preview.innerHTML = '';
-
-    selectedFiles.forEach((file, idx) => {
-      const tile = document.createElement('div');
-      tile.className = 'preview-tile';
-
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-
-      const rm = document.createElement('button');
-      rm.type = 'button';
-      rm.className = 'preview-remove';
-      rm.setAttribute('aria-label', 'Remove photo');
-      // No text, CSS will add icon/styling
-
-      rm.addEventListener('click', (e) => {
-        e.stopPropagation(); // prevent triggering dropZone click
-        selectedFiles.splice(idx, 1);
-        updateInputFiles();
-        renderPreviews();
-      });
-
-      tile.appendChild(img);
-      tile.appendChild(rm);
-      preview.appendChild(tile);
-    });
-  }
-
-  // ------- Category selection (and ID extra visibility) -------
-  const categoryGrid = document.getElementById('categoryGrid');
-  const categoryId = document.getElementById('categoryId');
-  const idExtra = document.getElementById('idExtra');
-
-  function isIDs(name) {
-    return (name || '').trim().toLowerCase() === 'ids';
-  }
-
-  // Restore active category UI if present
-  (function restoreCategoryUI(){
-    const activeId = categoryId.value;
-    if (!activeId) return;
-    const btn = categoryGrid.querySelector(`.cat[data-id="${activeId}"]`);
-    if (btn) btn.classList.add('active');
-  })();
-
-  categoryGrid.addEventListener('click', (e) => {
-    const btn = e.target.closest('.cat');
-    if (!btn) return;
-
-    categoryGrid.querySelectorAll('.cat').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    categoryId.value = btn.dataset.id || '';
-
-    if (isIDs(btn.dataset.name)) {
-      idExtra.hidden = false;
-    } else {
-      idExtra.hidden = true;
-      document.getElementById('idType').value = '';
-      document.getElementById('nameOnId').value = '';
-    }
   });
 
-  // ------- Custody / office toggle -------
-  const officeWrap = document.getElementById('officeWrap');
-  const officeSelect = document.getElementById('officeSelect');
-  document.querySelectorAll('input[name="custody_state"]').forEach(r => {
-    r.addEventListener('change', () => {
-      const isAtOffice = document.querySelector('input[name="custody_state"][value="at_office"]').checked;
-      officeWrap.hidden = !isAtOffice;
-    });
-  });
-
-  // ------- Step validation (fix #1) -------
-  function setError(step, msg) {
-    const el = document.getElementById(`step${step}Error`);
-    if (!el) return;
-    el.textContent = msg || '';
-    el.style.display = msg ? 'block' : 'none';
-  }
-
-  function toggleErrorClass(id, hasError) {
-    const el = document.getElementById(id);
-    if(el) {
-      if(hasError) el.classList.add('input-error');
-      else el.classList.remove('input-error');
-    }
-  }
-
-  function validateStep(step) {
-    setError(step, '');
-    // Reset borders
-    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-
-    if (step === 1) {
-      if (selectedFiles.length < 1) {
-        setError(1, 'Please upload at least 1 photo to continue.');
-        document.getElementById('dropZone').classList.add('input-error');
-        return false;
-      }
-      return true;
-    }
-
-    if (step === 2) {
-      const cat = (categoryId.value || '').trim();
-      const titleInput = document.getElementById('titleInput');
-      const title = (titleInput.value || '').trim();
-
-      let valid = true;
-
-      if (!cat) {
-        setError(2, 'Please choose a category to continue.');
-        // categoryGrid isn't an input, just show text error
-        valid = false;
-      }
-
-      // If IDs category, require id_type + name_on_id
-      const catBtn = categoryGrid.querySelector(`.cat[data-id="${cat}"]`);
-      const isIds = catBtn ? isIDs(catBtn.dataset.name) : false;
-
-      if (isIds) {
-        const idTypeInput = document.getElementById('idType');
-        const nameOnIdInput = document.getElementById('nameOnId');
-        
-        if (!idTypeInput.value.trim()) {
-          toggleErrorClass('idType', true);
-          valid = false;
-        }
-        if (!nameOnIdInput.value.trim()) {
-          toggleErrorClass('nameOnId', true);
-          valid = false;
-        }
-        if (!valid) {
-          setError(2, 'For ID items, please fill the required ID details (type and name).');
-        }
-      }
-
-      if (!title) {
-        toggleErrorClass('titleInput', true);
-        if(valid) setError(2, 'Please enter a short title to continue.');
-        valid = false;
-      }
-
-      return valid;
-    }
-
-    if (step === 3) {
-      const locInput = document.getElementById('foundLocation');
-      const dateInput = document.getElementById('foundDate');
-      let valid = true;
-
-      if (!locInput.value.trim()) {
-        toggleErrorClass('foundLocation', true);
-        valid = false;
-      }
-      if (!dateInput.value.trim()) {
-        toggleErrorClass('foundDate', true);
-        valid = false;
-      }
-
-      if(!valid) setError(3, 'Please select a location and date found to continue.');
-      return valid;
-    }
-
-    if (step === 4) {
-      const isAtOffice = document.querySelector('input[name="custody_state"][value="at_office"]').checked;
-      if (isAtOffice && !(officeSelect.value || '').trim()) {
-        toggleErrorClass('officeSelect', true);
-        setError(4, 'Please select the office holding the item to continue.');
-        return false;
-      }
-      return true;
-    }
-
-    if (step === 5) {
-      const emailInput = document.getElementById('emailInput');
-      const phoneInput = document.getElementById('phoneInput');
-      const visSelect = document.getElementById('visSelect');
-      let valid = true;
-
-      if (!emailInput.value.trim()) { toggleErrorClass('emailInput', true); valid = false; }
-      if (!phoneInput.value.trim()) { toggleErrorClass('phoneInput', true); valid = false; }
-      if (!visSelect.value.trim()) { toggleErrorClass('visSelect', true); valid = false; }
-
-      if (!valid) setError(5, 'Please complete your contact details before submitting.');
-      return valid;
-    }
-
-    return true;
-  }
-
-  // Override next/prev behavior
+  // Step navigation
   document.querySelectorAll('.nextBtn').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (!validateStep(currentStep)) return;
-      if (currentStep < 5) showStep(currentStep + 1);
+      if (currentStep === 1) {
+        if (selectedFiles.length === 0) {
+          step1Error.textContent = 'Please upload at least 1 photo';
+          step1Error.style.display = 'block';
+          dropZone.classList.add('input-error');
+          return;
+        } else {
+          console.log('Moving to next step with', selectedFiles.length, 'files');
+        }
+      }
+      
+      if (currentStep < 5) {
+        showStep(currentStep + 1);
+      }
     });
   });
 
@@ -733,6 +672,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     });
   });
 
+  // Form submit - ensure files are in the input
+  document.getElementById('reportForm').addEventListener('submit', function(e) {
+    // Make sure file input has all files before submitting
+    updateFileInput();
+    
+    console.log('Submitting with', photoInput.files.length, 'files');
+    
+    if (selectedFiles.length === 0) {
+      e.preventDefault();
+      alert('Please upload at least 1 photo');
+      showStep(1);
+    }
+  });
+
+  // Clickable steps for going back
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', () => {
+      const targetStep = parseInt(step.dataset.step);
+      if (targetStep < currentStep) {
+        showStep(targetStep);
+      }
+    });
+  });
+
+  // Category selection
+  document.addEventListener('DOMContentLoaded', function() {
+    const categoryGrid = document.getElementById('categoryGrid');
+    const categoryId = document.getElementById('categoryId');
+    const idExtra = document.getElementById('idExtra');
+    
+    if (categoryGrid) {
+      console.log('Category grid found, categories:', document.querySelectorAll('.cat').length);
+      
+      document.querySelectorAll('.cat').forEach(cat => {
+        cat.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const catId = this.dataset.id;
+          const catName = this.dataset.name;
+          
+          console.log('Category clicked:', catName, 'ID:', catId);
+          
+          document.querySelectorAll('.cat').forEach(c => {
+            c.classList.remove('active');
+          });
+          
+          this.classList.add('active');
+          categoryId.value = catId;
+          
+          if (catName.toLowerCase() === 'ids') {
+            idExtra.hidden = false;
+          } else {
+            idExtra.hidden = true;
+          }
+        });
+      });
+      
+      const savedCategoryId = categoryId.value;
+      if (savedCategoryId) {
+        const selectedCat = document.querySelector(`.cat[data-id="${savedCategoryId}"]`);
+        if (selectedCat) {
+          selectedCat.classList.add('active');
+          if (selectedCat.dataset.name.toLowerCase() === 'ids') {
+            idExtra.hidden = false;
+          }
+        }
+      }
+    }
+  });
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

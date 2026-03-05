@@ -338,3 +338,30 @@ input:focus, select:focus, textarea:focus {
   
   .upload-zone { padding: 20px; }
 }
+
+/* Make active category clearly visible */
+.cat.active {
+  background-color: #9B2C2C !important;
+  color: white !important;
+  border-color: #9B2C2C !important;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(155, 44, 44, 0.3);
+  transform: translateY(-2px);
+}
+
+.cat.active:hover {
+  background-color: #742A2A !important;
+  color: white !important;
+}
+
+/* Ensure categories are clickable */
+.cat {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.cat:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}

@@ -223,61 +223,62 @@ include __DIR__ . '/../includes/header.php';
         <div class="view-layout">
 
           <aside class="view-media" aria-label="Item photos">
-            <?php
-              // Prepare photo list for JS
-              $jsPhotos = [];
-              if (count($photos) > 0) {
-                foreach ($photos as $p) {
-                  $jsPhotos[] = '../' . $p['file_path']; // Add ../ to path
-                }
-              } else {
-                 // Placeholder if no photos
-                 $jsPhotos[] = 'data:image/svg+xml;utf8,' . rawurlencode(
-                  '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720">
-                    <rect width="100%" height="100%" fill="#EDF2F7"/>
-                    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
-                      font-family="Inter, Arial" font-size="28" fill="#718096">No photo</text>
-                  </svg>'
-                );
-              }
-              $mainPhoto = $jsPhotos[0];
-            ?>
+  <?php
+    // Prepare photo list for JS - FIXED PATH
+    $jsPhotos = [];
+    if (count($photos) > 0) {
+      foreach ($photos as $p) {
+        // Use the path exactly as stored in database
+        $jsPhotos[] = $p['file_path'];
+      }
+    } else {
+       // Placeholder if no photos
+       $jsPhotos[] = 'data:image/svg+xml;utf8,' . rawurlencode(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720">
+          <rect width="100%" height="100%" fill="#EDF2F7"/>
+          <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+            font-family="Inter, Arial" font-size="28" fill="#718096">No photo</text>
+        </svg>'
+      );
+    }
+    $mainPhoto = $jsPhotos[0];
+  ?>
 
-            <div class="media-card">
-              <div class="main-photo-wrapper">
-                <img
-                  id="mainPhoto"
-                  class="media-main"
-                  src="<?= h($mainPhoto) ?>"
-                  alt="Photo of <?= h((string)$item['title']) ?>"
-                  title="<?= h((string)$item['title']) ?>"
-                />
-                <div class="zoom-hint">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="11" y1="8" x2="11" y2="14"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                </div>
-              </div>
-            </div>
+  <div class="media-card">
+    <div class="main-photo-wrapper">
+      <img
+        id="mainPhoto"
+        class="media-main"
+        src="<?= h($mainPhoto) ?>"
+        alt="Photo of <?= h((string)$item['title']) ?>"
+        title="<?= h((string)$item['title']) ?>"
+        onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<?= rawurlencode('<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'960\' height=\'720\'><rect width=\'100%\' height=\'100%\' fill=\'#EDF2F7\'/><text x=\'50%\' y=\'50%\' text-anchor=\'middle\' dominant-baseline=\'middle\' font-family=\'Inter, Arial\' font-size=\'28\' fill=\'#718096\'>Image not found</text></svg>') ?>';"
+      />
+      <div class="zoom-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </div>
+    </div>
+  </div>
 
-            <?php if (count($photos) > 1): ?>
-              <div class="media-thumbs" aria-label="More photos">
-                <?php foreach ($photos as $idx => $p): ?>
-                  <button class="thumb <?= $idx === 0 ? 'is-active' : '' ?>"
-                          type="button"
-                          data-idx="<?= $idx ?>"
-                          data-src="<?= h('../' . $p['file_path']) ?>"
-                          aria-label="View photo <?= (int)($idx + 1) ?>">
-                    <img src="<?= h('../' . $p['file_path']) ?>" alt="" />
-                  </button>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
-
-          </aside>
+  <?php if (count($photos) > 1): ?>
+    <div class="media-thumbs" aria-label="More photos">
+      <?php foreach ($photos as $idx => $p): ?>
+        <button class="thumb <?= $idx === 0 ? 'is-active' : '' ?>"
+                type="button"
+                data-idx="<?= $idx ?>"
+                data-src="<?= h($p['file_path']) ?>"
+                aria-label="View photo <?= (int)($idx + 1) ?>">
+          <img src="<?= h($p['file_path']) ?>" alt="" />
+        </button>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+</aside>
 
           <aside class="view-side">
 
