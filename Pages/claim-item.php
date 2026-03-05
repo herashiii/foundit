@@ -31,22 +31,36 @@ if ($itemId > 0) {
     $stmt->execute([$itemId]);
     $item = $stmt->fetch();
 
-    if (!$item) {
-        $errorMsg = 'Item not found.';
-    } elseif ($item['status'] !== 'available' && $item['status'] !== 'recent') {
-        // Prevent claiming an item that is already claimed or pending
-        $errorMsg = 'This item is no longer available for claims.';
-    } else {
-        // Fetch first photo for context
-        $photoStmt = $pdo->prepare("SELECT file_path FROM item_photos WHERE item_id = ? ORDER BY is_primary DESC, id ASC LIMIT 1");
-        $photoStmt->execute([$itemId]);
-        $photoRow = $photoStmt->fetch();
-        $itemPhoto = $photoRow ? '../' . $photoRow['file_path'] : '../silliman-hall.jpg'; // fallback
-    }
+        if (!$item) {
+            $errorMsg = 'Item not found.';
+        } elseif ($item['status'] !== 'available' && $item['status'] !== 'recent') {
+            $errorMsg = 'This item is no longer available for claims.';
+        } else {
+            // FIX: Changed 'is_primary DESC' to 'sort_order ASC' to match your database schema
+            $photoStmt = $pdo->prepare("SELECT file_path FROM item_photos WHERE item_id = ? ORDER BY sort_order ASC LIMIT 1");
+            $photoStmt->execute([$itemId]);
+            $photoRow = $photoStmt->fetch();
+            
+            // Ensure path resolution matches your folder structure
+            if ($photoRow && !empty($photoRow['file_path'])) {
+
+                $clean = ltrim(trim((string)$photoRow['file_path']), '/'); // uploads/items/...
+                $disk  = __DIR__ . '/' . $clean;                            // Pages/uploads/items/...
+
+                if (file_exists($disk)) {
+                    $itemPhoto = $clean; // correct path
+                } else {
+                    $itemPhoto = placeholderDataUri($item['title']);
+                }
+
+            } else {
+                $itemPhoto = placeholderDataUri($item['title']);
+            }        }
 } else {
     $errorMsg = 'Invalid item request.';
 }
 
+// Handle Form Submission
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
     $proof = trim($_POST['proof_description'] ?? '');
@@ -57,18 +71,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
         try {
             $pdo->beginTransaction();
             
-            // Insert claim request
-            $insertClaim = $pdo->prepare("INSERT INTO claim_requests (item_id, requester_user_id, proof_description, status) VALUES (?, ?, ?, 'pending')");
-            $insertClaim->execute([$itemId, $currentUserId, $proof]);
+            // 1. Fetch current user info to fill claim_requests (since the table lacks a user_id)
+            $userStmt = $pdo->prepare("SELECT first_name, last_name, email, phone FROM users WHERE id = ?");
+            $userStmt->execute([$currentUserId]);
+            $userData = $userStmt->fetch();
+            $fullName = $userData['first_name'] . ' ' . $userData['last_name'];
+
+            // 2. Insert claim request using columns that actually exist in your SQL schema
+            $insertClaim = $pdo->prepare("
+                INSERT INTO claim_requests 
+                (item_id, claimer_name, claimer_email, claimer_phone, proof_description, status) 
+                VALUES (?, ?, ?, ?, ?, 'pending')
+            ");
+            $insertClaim->execute([
+                $itemId, 
+                $fullName, 
+                $userData['email'], 
+                $userData['phone'], 
+                $proof
+            ]);
             
-            // Update item status
-            $updateItem = $pdo->prepare("UPDATE items SET status = 'pending_claim' WHERE id = ?");
+            // 3. Update item status to 'pending' (must match ENUM in your SQL dump)
+            $updateItem = $pdo->prepare("UPDATE items SET status = 'pending' WHERE id = ?");
             $updateItem->execute([$itemId]);
             
             $pdo->commit();
             $successMsg = 'Your claim request has been submitted successfully. Please proceed to the designated office with your ID.';
         } catch (Exception $e) {
             $pdo->rollBack();
+            // For debugging, you can temporary change this to: $errorMsg = $e->getMessage();
             $errorMsg = 'A system error occurred while processing your request. Please try again.';
         }
     }

@@ -37,12 +37,31 @@ if ($itemId <= 0) {
     $notFound = true;
 } else {
     $stmt = $pdo->prepare("
+    SELECT
+        i.*,
+        c.name AS category_name,
+        l.name AS location_name,
+        o.name AS office_name,
+        o.building AS office_location
+    FROM items i
+    LEFT JOIN categories c ON c.id = i.category_id
+    LEFT JOIN locations l ON l.id = i.found_location_id
+    LEFT JOIN offices o ON o.id = i.office_id
+    WHERE i.id = ?
+");
+$itemId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$item = null;
+
+if ($itemId > 0) {
+    // 1. Updated Query: Uses 'building' instead of 'location' for offices
+    // 2. Removed reference to 'reported_by_user_id' in favor of 'user_id'
+    $stmt = $pdo->prepare("
         SELECT
             i.*,
             c.name AS category_name,
             l.name AS location_name,
             o.name AS office_name,
-            o.location AS office_location
+            o.building AS office_location
         FROM items i
         LEFT JOIN categories c ON c.id = i.category_id
         LEFT JOIN locations l ON l.id = i.found_location_id
@@ -52,33 +71,40 @@ if ($itemId <= 0) {
     $stmt->execute([$itemId]);
     $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$item) {
-        $notFound = true;
-    } else {
+    if ($item) {
+        // Fetch photos associated with the item
         $stmtPhotos = $pdo->prepare("SELECT file_path FROM item_photos WHERE item_id = ? ORDER BY id ASC");
         $stmtPhotos->execute([$itemId]);
         $fetchedPhotos = $stmtPhotos->fetchAll(PDO::FETCH_COLUMN);
         
-        // Smart Path Resolver
-        foreach ($fetchedPhotos as $photoPath) {
-            if (!empty($photoPath)) {
-                if (strpos($photoPath, '../') === 0) {
-                    $photos[] = h($photoPath);
-                } else {
-                    $photos[] = '../' . ltrim(h($photoPath), '/');
-                }
+        // Normalize image paths for display (Pages/view-item.php + Pages/uploads/...)
+        foreach ($fetchedPhotos as $path) {
+            $path = trim((string)$path);
+            if ($path === '') continue;
+
+            // DB stores: uploads/items/15/xxx.jpg
+            $clean = ltrim($path, '/');
+
+            // Check file exists on disk inside Pages/
+            $disk = __DIR__ . '/' . $clean;
+
+            if (file_exists($disk)) {
+                // Use web path relative to Pages/
+                $photos[] = $clean; // ✅ "uploads/items/15/xxx.jpg"
             }
         }
 
-        $stmtId = $pdo->prepare("SELECT * FROM item_id_details WHERE item_id = ?");
-        $stmtId->execute([$itemId]);
-        $idDetails = $stmtId->fetch(PDO::FETCH_ASSOC);
+        // If still no photos, fall back to placeholder
+        if (empty($photos) && $item) {
+            $photos[] = placeholderDataUri($item['title'] ?? 'Item');
+        }
     }
+}
 }
 
 // 24-Hour Freshness Logic (Applied if status is unclaimed)
 $isRecentItem = false;
-if ($item && $item['status'] === 'unclaimed') {
+if ($item && $item['status'] === 'recent') {
     $createdTime = strtotime($item['created_at']);
     $isRecentItem = (time() - $createdTime) <= (24 * 3600);
 }
@@ -204,32 +230,35 @@ include __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="cta-panel">
-                        <?php if ($item['status'] === 'unclaimed'): ?>
-                            <h3 class="cta-title">Is this yours?</h3>
-                            <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
-                            <div class="cta-actions">
-                                <a href="claim-item.php?id=<?= $item['id'] ?>" class="btn-primary" title="Proceed to the claim verification form" style="display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none;">
-                                    Proceed to Claim
-                                </a>
-                            </div>
-                        <?php elseif ($item['status'] === 'pending_claim'): ?>
-                            <div class="alert alert-warning" style="margin-bottom: 0;">
-                                <span class="icon" aria-hidden="true">⏳</span>
-                                <div>
-                                    <strong>Claim Pending</strong><br>
-                                    Someone has submitted a claim for this item. It is currently awaiting staff verification.
-                                </div>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-success" style="margin-bottom: 0;">
-                                <span class="icon" aria-hidden="true">✔</span>
-                                <div>
-                                    <strong>Item Claimed</strong><br>
-                                    This item has been successfully returned to its owner.
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+    <?php if ($item['status'] === 'recent'): ?>
+        <h3 class="cta-title">Is this yours?</h3>
+        <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
+        <div class="cta-actions">
+            <a href="claim-item.php?id=<?= (int)$item['id'] ?>" 
+               class="btn-primary" 
+               title="Proceed to the claim verification form" 
+               style="display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none;">
+                Proceed to Claim
+            </a>
+        </div>
+    <?php elseif ($item['status'] === 'pending_claim' || $item['status'] === 'pending'): ?>
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+            <span class="icon" aria-hidden="true">⏳</span>
+            <div>
+                <strong>Claim Pending</strong><br>
+                Someone has submitted a claim for this item. It is currently awaiting staff verification.
+            </div>
+        </div>
+    <?php else: ?>
+        <div class="alert alert-success" style="margin-bottom: 0;">
+            <span class="icon" aria-hidden="true">✔</span>
+            <div>
+                <strong>Item Claimed</strong><br>
+                This item has been successfully returned to its owner.
+            </div>
+        </div>
+    <?php endif; ?>
+</div>
 
                 </div>
             </div>

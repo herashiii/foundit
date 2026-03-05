@@ -83,7 +83,7 @@ $itemsStmt = $pdo->prepare("
     FROM items i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN locations l ON i.found_location_id = l.id
-    WHERE i.status IN ('unclaimed', 'pending_claim')
+    WHERE i.status IN ('recent', 'pending') 
     ORDER BY i.created_at DESC
 ");
 $itemsStmt->execute($params);
@@ -180,21 +180,19 @@ $items = $itemsStmt->fetchAll();
 
                 <div class="items-grid">
     <?php foreach ($items as $item): 
-        // 1. CALCULATE FRESHNESS (24-Hour Rule)
-        $createdTime = strtotime($item['created_at']);
-        $isRecentItem = (time() - $createdTime) <= (24 * 3600);
-        
-        // 2. DETERMINE BADGE CONTENT & STYLE
-        if ($item['status'] === 'pending_claim') {
-            $badgeText = "Pending Claim";
-            $badgeClass = "pending"; // We will add color for this in CSS
-        } elseif ($isRecentItem) {
-            $badgeText = "Recent";
-            $badgeClass = "recent";
-        } else {
-            $badgeText = "Unclaimed";
-            $badgeClass = "unclaimed";
-        }
+    $createdTime = strtotime($item['created_at']);
+    $isRecentItem = (time() - $createdTime) <= (24 * 3600);
+    
+    if ($item['status'] === 'pending') {
+        $badgeText = "Pending";
+        $badgeClass = "pending";
+    } elseif ($item['status'] === 'recent') {
+        $badgeText = "Recent";
+        $badgeClass = "recent";
+    } else {
+        $badgeText = "Found";
+        $badgeClass = "unclaimed";
+    }
 
         // Image Path Resolver
         // Image Path Resolver (Pages/find-my-item.php + Pages/uploads/...)
