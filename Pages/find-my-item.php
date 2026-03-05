@@ -2,317 +2,248 @@
 require_once __DIR__ . '/../includes/db.php';
 include __DIR__ . '/../includes/header.php';
 
-/** Escape helper */
-function h(string $s): string {
-  return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+// Helper for safe HTML
+function h($s): string {
+    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
-/** Read filters (GET) */
-$q = trim($_GET['q'] ?? '');
-$categoryId = (int)($_GET['category_id'] ?? 0);
-$locationId = (int)($_GET['location_id'] ?? 0);
-$status = trim($_GET['status'] ?? '');        // recent | pending_claim | claimed
-$dateRange = trim($_GET['date'] ?? '');       // today | week | older
-$sort = trim($_GET['sort'] ?? 'newest');      // newest | oldest
-
-// Fetch categories for chips
-$categories = db()->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
-
-// Fetch locations for dropdown - REMOVED is_active condition
-$locations = db()->query("SELECT id, name FROM locations ORDER BY name ASC")->fetchAll();
-
-/** Build query */
-$where = [];
-$params = [];
-
-// Search (title/description/category/location)
-if ($q !== '') {
-  $where[] = "(i.title LIKE :q_title OR i.description LIKE :q_desc OR c.name LIKE :q_cat OR l.name LIKE :q_loc)";
-  $like = "%{$q}%";
-  $params[':q_title'] = $like;
-  $params[':q_desc']  = $like;
-  $params[':q_cat']   = $like;
-  $params[':q_loc']   = $like;
-}
-
-// Category
-if ($categoryId > 0) {
-  $where[] = "i.category_id = :category_id";
-  $params[':category_id'] = $categoryId;
-}
-
-// Location
-if ($locationId > 0) {
-  $where[] = "i.found_location_id = :location_id";
-  $params[':location_id'] = $locationId;
-}
-
-// Status - UPDATED to match your database values
-$allowedStatus = ['recent', 'pending', 'claimed', 'returned'];
-if ($status !== '' && in_array($status, $allowedStatus, true)) {
-  $where[] = "i.status = :status";
-  $params[':status'] = $status;
-}
-
-// Date range (based on found_date)
-if ($dateRange === 'today') {
-  $where[] = "i.found_date = CURDATE()";
-} elseif ($dateRange === 'week') {
-  $where[] = "i.found_date >= (CURDATE() - INTERVAL 7 DAY)";
-} elseif ($dateRange === 'older') {
-  $where[] = "i.found_date < (CURDATE() - INTERVAL 7 DAY)";
-}
-
-$orderBy = "i.found_date DESC, i.created_at DESC";
-if ($sort === 'oldest') {
-  $orderBy = "i.found_date ASC, i.created_at ASC";
-}
-
-$sql = "
-  SELECT
-    i.id,
-    i.title,
-    i.status,
-    i.found_at_detail,
-    i.found_date,
-    i.created_at,
-    c.name AS category_name,
-    l.name AS location_name,
-    (
-      SELECT p.file_path
-      FROM item_photos p
-      WHERE p.item_id = i.id
-      ORDER BY p.sort_order ASC, p.id ASC
-      LIMIT 1
-    ) AS photo_path
-  FROM items i
-  INNER JOIN categories c ON c.id = i.category_id
-  INNER JOIN locations  l ON l.id = i.found_location_id
-";
-
-// Add WHERE if needed
-if (!empty($where)) {
-  $sql .= " WHERE " . implode(" AND ", $where);
-}
-
-$sql .= " ORDER BY {$orderBy} LIMIT 100";
-
-$stmt = db()->prepare($sql);
-$stmt->execute($params);
-$items = $stmt->fetchAll();
-
-$count = count($items);
-
-/** Badge mapping - UPDATED to match your database status values */
-function badgeForStatus(string $status): array {
-  // Your CSS expects: badge-recent | badge-pending | badge-claimed
-  if ($status === 'pending')    return ['Pending Claim', 'badge-pending'];
-  if ($status === 'claimed')    return ['Claimed', 'badge-claimed'];
-  if ($status === 'returned')   return ['Returned', 'badge-claimed'];
-  return ['Recent', 'badge-recent'];
-}
-
-/** Safe placeholder image (no external URL needed) */
+/** Placeholder logic fallback */
 function placeholderDataUri(string $label = 'Item'): string {
   $label = preg_replace('/[^a-zA-Z0-9 \-]/', '', $label);
   $svg = <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" width="560" height="420">
-  <rect width="100%" height="100%" fill="#EDF2F7"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+  <rect width="100%" height="100%" fill="#F1F5F9"/>
   <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
-        font-family="Inter, Arial" font-size="28" fill="#718096">$label</text>
+        font-family="Inter, Arial" font-size="20" fill="#94A3B8">$label</text>
 </svg>
 SVG;
   return 'data:image/svg+xml;utf8,' . rawurlencode($svg);
 }
+
+$pdo = db();
+
+// Fetch dynamic categories and their 'recent' (unclaimed) item counts
+$catStmt = $pdo->query("
+    SELECT c.id, c.name, COUNT(i.id) as count 
+    FROM categories c
+    LEFT JOIN items i ON c.id = i.category_id AND i.status = 'recent'
+    GROUP BY c.id 
+    ORDER BY c.name ASC
+");
+$categories = $catStmt->fetchAll();
+
+// Process GET filters
+$searchQuery = trim($_GET['q'] ?? '');
+$catFilter = (int)($_GET['cat'] ?? 0);
+$freshness = $_GET['f'] ?? ['recent', 'unclaimed']; // Default to showing both if empty array
+
+// Base query conditions (Only show items that haven't been claimed/pending)
+$where = ["i.status = 'recent'"];
+$params = [];
+
+if ($searchQuery !== '') {
+    $where[] = "(i.title LIKE ? OR i.description LIKE ?)";
+    $params[] = "%$searchQuery%";
+    $params[] = "%$searchQuery%";
+}
+
+if ($catFilter > 0) {
+    $where[] = "i.category_id = ?";
+    $params[] = $catFilter;
+}
+
+// Freshness logic (recent = created within last 48 hours)
+$isRecent = in_array('recent', (array)$freshness);
+$isUnclaimed = in_array('unclaimed', (array)$freshness);
+
+if ($isRecent && !$isUnclaimed) {
+    $where[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 48 HOUR)";
+} elseif (!$isRecent && $isUnclaimed) {
+    $where[] = "i.created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)";
+} 
+
+$whereClause = implode(' AND ', $where);
+
+// Build sorting
+$sortParam = $_GET['sort'] ?? 'newest';
+$orderBy = $sortParam === 'oldest' ? 'i.created_at ASC' : 'i.created_at DESC';
+
+// Fetch items - Strictly using existing columns and tables
+// Update your $itemsStmt to fetch both unclaimed and pending_claim
+$itemsStmt = $pdo->prepare("
+    SELECT 
+        i.id, 
+        i.title, 
+        i.created_at, 
+        i.found_date,
+        i.status,
+        c.name as category, 
+        l.name as location,
+        (SELECT file_path FROM item_photos p WHERE p.item_id = i.id ORDER BY id ASC LIMIT 1) as photo
+    FROM items i
+    LEFT JOIN categories c ON i.category_id = c.id
+    LEFT JOIN locations l ON i.found_location_id = l.id
+    WHERE i.status IN ('unclaimed', 'pending_claim')
+    ORDER BY i.created_at DESC
+");
+$itemsStmt->execute($params);
+$items = $itemsStmt->fetchAll();
 ?>
 
-<link rel="stylesheet" href="../css/find-my-item.css">
-
-<main class="main-content">
-  <section class="find-shell">
-    <div class="container">
-
-      <!-- Title + reassurance -->
-      <header class="find-header">
-        <h1>Items Turned In</h1>
-        <p class="find-subtext">
-          Items listed here have been turned in to campus offices for safekeeping and verification.
-        </p>
-      </header>
-
-      <!-- Search + Filters -->
-      <form class="find-tools" method="get" aria-label="Search and filters">
-        <div class="find-search">
-          <div class="search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" class="icon" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="7"></circle>
-              <path d="M21 21l-4.3-4.3"></path>
-            </svg>
-          </div>
-
-          <input
-            type="text"
-            name="q"
-            class="find-input"
-            value="<?= h($q) ?>"
-            placeholder="Try: ID card, keys, umbrella, calculator, blue tumbler…"
-            aria-label="Search turned-in items"
-          />
-
-          <button class="find-search-btn btn btn-primary" type="submit" aria-label="Search">
-            Search
-          </button>
+<main class="portal-main-wrapper">
+    <!-- 1. Breadcrumbs & Header -->
+    <section class="portal-header-strip">
+        <div class="container">
+            <nav class="breadcrumb" aria-label="Secondary Navigation">
+                <a href="index.php">Home</a>
+                <span class="sep" aria-hidden="true">/</span>
+                <span class="active">Items Turned In</span>
+            </nav>
+            <div class="header-content">
+                <h1>Items Turned In</h1>
+                <p>Search and browse items found across campus grounds.</p>
+            </div>
         </div>
+    </section>
 
-        <div class="find-filters" aria-label="Filters">
-          <?php
-            // “All” chip clears category_id
-            $allChipClass = ($categoryId === 0) ? 'chip chip-active' : 'chip';
-            $baseQuery = $_GET;
-            unset($baseQuery['category_id']);
-            $allHref = '?' . http_build_query($baseQuery);
-          ?>
-          <a class="<?= $allChipClass ?>" href="<?= h($allHref) ?>">All</a>
-
-          <?php foreach ($categories as $cat): ?>
-            <?php
-              $isActive = ($categoryId === (int)$cat['id']);
-              $chipClass = $isActive ? 'chip chip-active' : 'chip';
-
-              $q2 = $_GET;
-              $q2['category_id'] = (int)$cat['id'];
-              $href = '?' . http_build_query($q2);
-            ?>
-            <a class="<?= $chipClass ?>" href="<?= h($href) ?>"><?= h($cat['name']) ?></a>
-          <?php endforeach; ?>
-
-          <div class="filter-selects">
-            <label class="select-wrap">
-              <span class="sr-only">Location</span>
-              <select class="select" name="location_id" aria-label="Filter by location" onchange="this.form.submit()">
-                <option value="">All Locations</option>
-                <?php foreach ($locations as $loc): ?>
-                  <option value="<?= (int)$loc['id'] ?>" <?= $locationId === (int)$loc['id'] ? 'selected' : '' ?>>
-                    <?= h($loc['name']) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </label>
-
-            <label class="select-wrap">
-              <span class="sr-only">Date</span>
-              <select class="select" name="date" aria-label="Filter by date" onchange="this.form.submit()">
-                <option value="" <?= $dateRange === '' ? 'selected' : '' ?>>Any Date</option>
-                <option value="today" <?= $dateRange === 'today' ? 'selected' : '' ?>>Today</option>
-                <option value="week" <?= $dateRange === 'week' ? 'selected' : '' ?>>This Week</option>
-                <option value="older" <?= $dateRange === 'older' ? 'selected' : '' ?>>Older</option>
-              </select>
-            </label>
-
-            <label class="select-wrap">
-              <span class="sr-only">Status</span>
-              <select class="select" name="status" aria-label="Filter by status" onchange="this.form.submit()">
-                <option value="" <?= $status === '' ? 'selected' : '' ?>>Any Status</option>
-                <option value="recent" <?= $status === 'recent' ? 'selected' : '' ?>>Recent</option>
-                <option value="pending" <?= $status === 'pending' ? 'selected' : '' ?>>Pending Claim</option>
-                <option value="claimed" <?= $status === 'claimed' ? 'selected' : '' ?>>Claimed</option>
-                <option value="returned" <?= $status === 'returned' ? 'selected' : '' ?>>Returned</option>
-              </select>
-            </label>
-
-            <!-- Keep existing sort UI -->
-            <input type="hidden" name="sort" value="<?= h($sort) ?>">
-          </div>
-        </div>
-      </form>
-
-      <!-- Results header -->
-      <div class="results-bar" aria-label="Results">
-        <div class="results-meta">
-          <span class="results-count"><strong><?= (int)$count ?></strong> items shown</span>
-          <span class="results-hint">Click an item to view details and verify ownership.</span>
-        </div>
-
-        <div class="results-sort">
-          <label class="sr-only" for="sort">Sort</label>
-          <select id="sort" class="select" aria-label="Sort results"
-                  onchange="window.location = updateQueryString('sort', this.value);">
-            <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest first</option>
-            <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Results grid -->
-      <?php if ($count > 0): ?>
-        <div class="items-grid" aria-label="Turned-in items list">
-          <?php foreach ($items as $it): ?>
-  <?php
-    [$badgeText, $badgeClass] = badgeForStatus($it['status']);
-
-    // FIXED: Don't add ../ to the path, use it directly
-    $img = !empty($it['photo_path']) 
-      ? h($it['photo_path'])  // Use the path exactly as stored in database
-      : placeholderDataUri($it['category_name']);
-
-    // Location display: location + optional detail
-    $locationText = $it['location_name'];
-    if (!empty($it['found_at_detail'])) {
-      $locationText .= ' — ' . $it['found_at_detail'];
-    }
-
-    // Format date
-    $dateFound = date('M d, Y', strtotime($it['found_date']));
-  ?>
-
-  <a class="item-card"
-     href="view-item.php?id=<?= (int)$it['id'] ?>"
-     aria-label="View item: <?= h($it['title']) ?>">
-
-    <img class="item-img" src="<?= $img ?>" alt="<?= h($it['title']) ?>" title="<?= h($it['title']) ?>">
-
-              <div class="item-body">
-                <div class="item-top">
-                  <span class="badge <?= h($badgeClass) ?>"><?= h($badgeText) ?></span>
-                  <span class="pill"><?= h($it['category_name']) ?></span>
+    <section class="portal-layout container">
+        <!-- 2. Sidebar Filters -->
+        <aside class="portal-sidebar">
+            <form id="filterForm" method="GET" action="find-my-item.php">
+                <div class="sidebar-section">
+                    <h2 class="sidebar-title">Search</h2>
+                    <div class="search-box">
+                        <img src="../magnifying-glass-search.png" class="search-signifier" alt="" aria-hidden="true">
+                        <input type="text" name="q" value="<?= h($searchQuery) ?>" placeholder="Type here..." title="Search by item name or description">
+                    </div>
                 </div>
 
-                <h3 class="item-title"><?= h($it['title']) ?></h3>
-
-                <div class="item-meta">
-                  <div class="meta-row">
-                    <span class="meta-label">FOUND AT</span>
-                    <span class="meta-value"><?= h($locationText) ?></span>
-                  </div>
-                  <div class="meta-row">
-                    <span class="meta-label">DATE FOUND</span>
-                    <span class="meta-value"><?= h($dateFound) ?></span>
-                  </div>
+                <div class="sidebar-section">
+                    <h2 class="sidebar-title">Availability</h2>
+                    <label class="filter-option">
+                        <input type="checkbox" name="f[]" value="recent" <?= $isRecent ? 'checked' : '' ?> onchange="this.form.submit()">
+                        <span>Recent (Last 48h)</span>
+                    </label>
+                    <label class="filter-option">
+                        <input type="checkbox" name="f[]" value="unclaimed" <?= $isUnclaimed ? 'checked' : '' ?> onchange="this.form.submit()">
+                        <span>Unclaimed</span>
+                    </label>
                 </div>
-              </div>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      <?php else: ?>
-        <div class="empty-state">
-          <h2>No matching items yet</h2>
-          <p>If your item is not listed, it may not have been turned in yet. You can file a report so we can help match it.</p>
-          <a href="turn-in-item.php" class="btn btn-primary">Turn In Item</a>
-        </div>
-      <?php endif; ?>
 
-    </div>
-  </section>
+                <div class="sidebar-section">
+                    <h2 class="sidebar-title">Categories</h2>
+                    <ul class="category-list">
+                        <?php 
+                            $qParam = $searchQuery ? '&q=' . urlencode($searchQuery) : '';
+                            $fParam = '';
+                            foreach((array)$freshness as $f) { $fParam .= '&f[]=' . urlencode($f); }
+                        ?>
+                        <li class="<?= $catFilter === 0 ? 'active' : '' ?>">
+                            <a href="?cat=0<?= $qParam ?><?= $fParam ?>">All Categories</a>
+                        </li>
+                        <?php foreach ($categories as $cat): ?>
+                            <li class="<?= $catFilter === (int)$cat['id'] ? 'active' : '' ?>">
+                                <a href="?cat=<?= (int)$cat['id'] ?><?= $qParam ?><?= $fParam ?>">
+                                    <?= h($cat['name']) ?>
+                                    <span class="count"><?= (int)$cat['count'] ?></span>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                
+                <input type="hidden" name="sort" value="<?= h($sortParam) ?>">
+            </form>
+        </aside>
+
+        <!-- 3. Results Grid -->
+        <div class="portal-main">
+            <!-- System Feedback -->
+            <div class="system-msg msg-info">
+                <span class="icon">ℹ</span>
+                <p>Showing all items currently held at university offices. Click an item to view verification requirements.</p>
+            </div>
+
+            <?php if (count($items) === 0): ?>
+                <div class="system-msg" style="background: var(--neut-gray-1); border: 1px dashed var(--neut-gray-4); justify-content: center; padding: 40px; text-align: center;">
+                    <p style="color: var(--split-char-2); font-weight: 500;">No items found matching your filters.</p>
+                </div>
+            <?php else: ?>
+                <div class="grid-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <span style="font-size: 0.9rem; color: var(--split-char-2);">Showing <strong><?= count($items) ?></strong> items</span>
+                    
+                    <select onchange="document.querySelector('input[name=\'sort\']').value=this.value; document.getElementById('filterForm').submit();" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neut-gray-3); font-family: 'Inter', sans-serif;">
+                        <option value="newest" <?= $sortParam === 'newest' ? 'selected' : '' ?>>Newest First</option>
+                        <option value="oldest" <?= $sortParam === 'oldest' ? 'selected' : '' ?>>Oldest First</option>
+                    </select>
+                </div>
+
+                <div class="items-grid">
+    <?php foreach ($items as $item): 
+        // 1. CALCULATE FRESHNESS (24-Hour Rule)
+        $createdTime = strtotime($item['created_at']);
+        $isRecentItem = (time() - $createdTime) <= (24 * 3600);
+        
+        // 2. DETERMINE BADGE CONTENT & STYLE
+        if ($item['status'] === 'pending_claim') {
+            $badgeText = "Pending Claim";
+            $badgeClass = "pending"; // We will add color for this in CSS
+        } elseif ($isRecentItem) {
+            $badgeText = "Recent";
+            $badgeClass = "recent";
+        } else {
+            $badgeText = "Unclaimed";
+            $badgeClass = "unclaimed";
+        }
+
+        // Image Path Resolver
+        // Image Path Resolver (Pages/find-my-item.php + Pages/uploads/...)
+        $photoPath = trim((string)($item['photo'] ?? ''));
+
+        if ($photoPath !== '') {
+            $cleanPath = ltrim($photoPath, '/');      // e.g. uploads/items/15/x.jpg
+            $diskPath  = __DIR__ . '/' . $cleanPath;  // Pages/uploads/items/...
+
+            if (file_exists($diskPath)) {
+                $imgSrc = h($cleanPath);              // ✅ correct URL from Pages/
+            } else {
+                $imgSrc = '../open-box.png';          // fallback image in project root? (see note below)
+            }
+        } else {
+            $imgSrc = '../open-box.png';
+        }
+        
+        $location = !empty($item['location']) ? $item['location'] : 'Unspecified Location';
+        $dateFormatted = date('M d, Y', strtotime($item['found_date']));
+    ?>
+        <a href="view-item.php?id=<?= $item['id'] ?>" class="mini-card">
+            <div class="card-media">
+                <img src="<?= $imgSrc ?>"
+                    alt="Photo of <?= h($item['title']) ?>"
+                    onerror="this.onerror=null; this.src='open-box.png';">
+                
+                <span class="status-badge <?= $badgeClass ?>"><?= $badgeText ?></span>
+            </div>
+            <div class="card-body">
+                <span class="category-pill"><?= h($item['category'] ?? 'General') ?></span>
+                <h3 class="card-title"><?= h($item['title']) ?></h3>
+                <div class="card-meta">
+                    <div class="meta-row">
+                        <span class="meta-label">Found At:</span>
+                        <span class="meta-value"><?= h($location) ?></span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Date Found:</span>
+                        <span class="meta-value"><?= h($dateFormatted) ?></span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    <?php endforeach; ?>
+</div>
+            <?php endif; ?>
+        </div>
+    </section>
 </main>
-
-<script>
-  // Small helper for changing sort without losing other filters
-  function updateQueryString(key, value){
-    const url = new URL(window.location.href);
-    url.searchParams.set(key, value);
-    return url.toString();
-  }
-</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
