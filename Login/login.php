@@ -25,11 +25,34 @@ function h($s) {
                 </div>
 
                 <?php if (isset($_GET['error'])): ?>
-                    <div class="error-message" role="alert" aria-labelledby="error-heading">
-                        <div class="error-icon" aria-hidden="true">⚠️</div>
+                    <?php 
+                    // Determine error type for better messaging
+                    $error = $_GET['error'];
+                    $errorTitle = 'Login Failed';
+                    $errorIcon = '⚠️';
+                    
+                    // Check if this is a redirect from turn-in-item
+                    if (strpos($error, 'turn in an item') !== false) {
+                        $errorTitle = 'Action Required';
+                        $errorIcon = '🔒';
+                    }
+                    // Check for registration needed
+                    elseif (strpos($error, 'register') !== false || strpos($error, 'not found') !== false) {
+                        $errorTitle = 'Account Not Found';
+                        $errorIcon = '❓';
+                    }
+                    // Check for wrong password
+                    elseif (strpos($error, 'password') !== false || strpos($error, 'birthdate') !== false) {
+                        $errorTitle = 'Incorrect Password';
+                        $errorIcon = '🔑';
+                    }
+                    ?>
+                    
+                    <div class="error-message" role="alert" aria-labelledby="error-heading" data-error-type="<?= $errorTitle ?>">
+                        <div class="error-icon" aria-hidden="true"><?= $errorIcon ?></div>
                         <div class="error-content">
-                            <h3 id="error-heading" class="error-title">Login Failed</h3>
-                            <p class="error-text"><?= h($_GET['error']) ?></p>
+                            <h3 id="error-heading" class="error-title"><?= $errorTitle ?></h3>
+                            <p class="error-text"><?= h($error) ?></p>
                         </div>
                     </div>
                 <?php endif; ?>
