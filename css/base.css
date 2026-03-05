@@ -68,7 +68,7 @@ ul { list-style: none; }
 /* Buttons */
 .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    padding: 10px 20px; /* Slightly tighter padding */
+    padding: 10px 20px;
     border-radius: var(--radius-md);
     font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none;
     transition: var(--transition); gap: 8px;
@@ -118,24 +118,45 @@ footer { background: #1A202C; color: #CBD5E0; padding: 34px 0 10px; margin-top: 
 .footer-links a:hover { color: var(--accent); }
 .footer-bottom { border-top: 1px solid #2D3748; padding-top: 14px; text-align: center; font-size: 0.9rem; }
 
-.user-welcome {
-        color: #9B2C2C;
-        font-weight: 500;
-        margin-right: 10px;
-        padding: 4px 12px;
-        background: #fef2f2;
-        border-radius: 20px;
-        font-size: 14px;
+/* Outline Primary Button */
+.btn-outline-primary {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 8px 20px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.nav-link {
+    color: #4a5568;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 12px;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #9B2C2C;
+}
+
+.nav-link.active {
+    color: #9B2C2C;
+    font-weight: 600;
+    border-bottom: 2px solid #9B2C2C;
+}
+
+@media (max-width: 768px) {
+    .user-link {
+        display: none; /* Hide on mobile to save space */
     }
-    
-    .nav-link.active {
-        color: #9B2C2C;
-        font-weight: 600;
-        border-bottom: 2px solid #9B2C2C;
-    }
-    
-    @media (max-width: 768px) {
-        .user-welcome {
-            display: none; /* Hide on mobile to save space */
-        }
-    }
+}
+

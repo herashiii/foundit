@@ -55,8 +55,9 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 
             <div class="nav-actions">
                 <?php if ($isLoggedIn): ?>
-                    <span class="user-welcome">Hi, <?= htmlspecialchars($userName) ?></span>
-                    <a href="../Pages/logout.php" class="btn btn-secondary" style="padding: 8px 20px;">Logout</a>
+                    <a href="../Pages/dashboard.php" class="btn btn-outline-primary">
+                        User Dashboard
+                    </a>
                 <?php else: ?>
                     <a href="../Login/login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
                 <?php endif; ?>
