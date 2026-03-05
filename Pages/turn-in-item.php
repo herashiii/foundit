@@ -1,4 +1,14 @@
 <?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // Store the current page to redirect back after login
+    $_SESSION['redirect_after_login'] = 'turn-in-item.php';
+    header('Location: ../Login/login.php?error=' . urlencode('Please login first to turn in an item'));
+    exit;
+}
+
 require_once __DIR__ . '/../includes/db.php';
 include __DIR__ . '/../includes/header.php';
 
