@@ -36,32 +36,43 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 <body>
     
     <!-- Navbar -->
-    <nav class="navbar">
-        <div class="container nav-container">
-            <!-- Updated Logo: Image + Text -->
-            <a href="../Pages/index.php" class="logo">
-                <img src="../favicon.png" alt="Logo" class="logo-img">
-                <div>Found<span>iT</span></div>
+<nav class="navbar">
+    <div class="container nav-container">
+        <!-- Updated Logo: Image + Text -->
+        <a href="../Pages/index.php" class="logo">
+            <img src="../favicon.png" alt="Logo" class="logo-img">
+            <div>Found<span>iT</span></div>
+        </a>
+
+        <!-- Desktop Menu -->
+        <div class="nav-links">
+            <a href="../Pages/index.php" class="nav-link <?= $current_page == 'index' ? 'active' : '' ?>">
+                Home
             </a>
-
-            <!-- Desktop Menu -->
-            <div class="nav-links">
-                <a href="../Pages/index.php" class="nav-link">Home</a>
-                <a href="../Pages/find-my-item.php" class="nav-link">Find My Item</a>
-                <a href="#" class="nav-link">Site Map</a>
-                <a href="#" class="nav-link">FAQs</a>
-                <a href="../Pages/aboutus.php" class="nav-link">About Us</a>
-            </div>
-
-            <div class="nav-actions">
-                <?php if ($isLoggedIn): ?>
-                    <a href="../Pages/dashboard.php" class="btn btn-primary" style="padding: 8px 20px;">
-                        User Dashboard
-                    </a>
-                <?php else: ?>
-                    <a href="../Login/login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
-                <?php endif; ?>
-                <a href="../Pages/turn-in-item.php" class="btn btn-primary" style="padding: 8px 20px;">Turn In Item</a>
-            </div>
+            <a href="../Pages/find-my-item.php" class="nav-link <?= $current_page == 'find-my-item' ? 'active' : '' ?>">
+                Find My Item
+            </a>
+            <a href="#" class="nav-link <?= $current_page == 'site-map' ? 'active' : '' ?>">
+                Site Map
+            </a>
+            <a href="#" class="nav-link <?= $current_page == 'faqs' ? 'active' : '' ?>">
+                FAQs
+            </a>
+            <a href="../Pages/aboutus.php" class="nav-link <?= $current_page == 'aboutus' ? 'active' : '' ?>">
+                About Us
+            </a>
         </div>
+
+        <div class="nav-actions">
+            <?php if ($isLoggedIn): ?>
+                <a href="../Pages/dashboard.php" class="btn btn-primary" style="padding: 8px 20px;">
+                    User Dashboard
+                </a>
+            <?php else: ?>
+                <a href="../Login/login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
+            <?php endif; ?>
+            <a href="../Pages/turn-in-item.php" class="btn btn-primary" style="padding: 8px 20px;">Turn In Item</a>
+        </div>
+    </div>
+</nav>
     </nav>
