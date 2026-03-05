@@ -55,7 +55,7 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 
             <div class="nav-actions">
                 <?php if ($isLoggedIn): ?>
-                    <a href="../Pages/dashboard.php" class="btn btn-outline-primary">
+                    <a href="../Pages/dashboard.php" class="btn btn-primary" style="padding: 8px 20px;">
                         User Dashboard
                     </a>
                 <?php else: ?>

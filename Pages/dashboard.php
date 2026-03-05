@@ -80,7 +80,13 @@ $my_claims = $stmt->fetchAll();
                 </div>
                 
                 <div class="dashboard-actions">
-                    <a href="logout.php" class="btn btn-secondary">Logout</a>
+                    <button onclick="confirmLogout()" 
+                            class="btn btn-logout" 
+                            aria-label="Logout from your account"
+                            title="Click to securely logout">
+                        <span class="btn-icon" aria-hidden="true">🚪</span>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </div>
 
@@ -161,6 +167,27 @@ $my_claims = $stmt->fetchAll();
             </div>
         </div>
     </div>
+    <script>
+        // Accessible logout confirmation
+        function confirmLogout() {
+            if (confirm('Are you sure you want to logout? This will end your current session.')) {
+                window.location.href = 'logout.php';
+            }
+        }
+
+        // Optional: Add keyboard support (Enter key)
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.querySelector('.btn-logout');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        confirmLogout();
+                    }
+                });
+            }
+        });
+        </script>
 </main>
 
 <style>
