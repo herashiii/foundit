@@ -23,7 +23,7 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                     <h3 class="footer-title">Platform</h3>
                     <ul class="footer-links">
                         <li><a href="<?= $pagePrefix ?>index.php">Home</a></li>
-                        <li><a href="<?= $pagePrefix ?>find-my-item.php">Browse Unclaimed Items</a></li>
+                        <li><a href="<?= $pagePrefix ?>find-my-item.php">Find My Item</a></li>
                         <li><a href="<?= $pagePrefix ?>turn-in-item.php">Turn In Found Item</a></li>
 
                         <?php if(!isset($_SESSION['user_role']) || $_SESSION['user_role'] === 'guest'): ?>
