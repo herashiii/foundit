@@ -7,11 +7,11 @@ include __DIR__ . '/../includes/header.php';
 
 <main class="about-page">
 
-    <!-- HERO SECTION -->
-    <section class="about-hero">
+    <!-- HERO SECTION - Using inline style to guarantee white text -->
+    <section class="about-hero" style="color: white !important;">
         <div class="container">
-            <h1>About FoundIt!</h1>
-            <p>
+            <h1 style="color: white !important; margin: 0 0 20px 0; font-size: 48px; font-weight: 700;">About FoundiT</h1>
+            <p style="color: white !important; font-size: 18px; max-width: 700px; margin: 0 auto; opacity: 0.95;">
                 FoundIt! is a campus-based Lost and Found system designed to make
                 reporting, searching, and claiming lost items simple, secure,
                 and organized.
