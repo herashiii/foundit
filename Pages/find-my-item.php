@@ -106,7 +106,7 @@ $items = $itemsStmt->fetchAll();
             <nav class="breadcrumb" aria-label="Secondary Navigation">
                 <a href="index.php">Home</a>
                 <span class="sep" aria-hidden="true">/</span>
-                <span class="active">Items Turned In</span>
+                <span class="active">Find My Item</span>
             </nav>
             <div class="header-content">
                 <h1>Items Turned In</h1>
