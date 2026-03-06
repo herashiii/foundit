@@ -44,7 +44,7 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                     <ul class="footer-links">
                         <li><a href="<?= $pagePrefix ?>aboutus.php">About Us</a></li>
                         <li><a href="#">How It Works</a></li>
-                        <li><a href="#">Frequently Asked Questions (FAQs)</a></li>
+                        <li><a href="<?= $pagePrefix ?>faq.php">Frequently Asked Questions (FAQs)</a></li>
                         <li><a href="<?= $pagePrefix ?>contactus.php">Contact Us</a></li>
                         <li><a href="#">Site Map</a></li>
                     </ul>

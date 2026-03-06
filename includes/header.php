@@ -55,7 +55,7 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
             <a href="#" class="nav-link <?= $current_page == 'site-map' ? 'active' : '' ?>">
                 Site Map
             </a>
-            <a href="#" class="nav-link <?= $current_page == 'faqs' ? 'active' : '' ?>">
+            <a href="../Pages/faq.php" class="nav-link <?= $current_page == 'faqs' ? 'active' : '' ?>">
                 FAQs
             </a>
             <a href="../Pages/aboutus.php" class="nav-link <?= $current_page == 'aboutus' ? 'active' : '' ?>">
