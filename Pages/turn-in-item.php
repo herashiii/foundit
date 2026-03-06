@@ -20,12 +20,31 @@ function ensureDir(string $path): void {
   if (!is_dir($path)) mkdir($path, 0775, true);
 }
 
+// Existing login check remains...
 $pdo = db();
+$currentUserId = $_SESSION['user_id'];
 
-// Dropdown data  
+// 1. Fetch Logged-in User Data for the Finish section
+$userStmt = $pdo->prepare("SELECT first_name, last_name, email, phone FROM users WHERE id = ?");
+$userStmt->execute([$currentUserId]);
+$user = $userStmt->fetch();
+$userFullName = $user['first_name'] . ' ' . $user['last_name'];
+
+// 2. RE-ADD THESE: Fetch data for Step 1 (Categories) and Step 2 (Locations)
 $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 $locations  = $pdo->query("SELECT id, name FROM locations WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
-$offices    = $pdo->query("SELECT id, name FROM offices WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
+
+// 3. Fetch Active Offices for the Step 3 Custody dropdown
+$offices = $pdo->query("SELECT id, name FROM offices WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
+
+// 4. Find IDs category id (Required for the dynamic "ID Details" section)
+$idCategoryId = null;
+foreach ($categories as $c) {
+  if (mb_strtolower($c['name']) === 'ids' || mb_strtolower($c['name']) === 'identification cards') {
+    $idCategoryId = (int)$c['id'];
+    break;
+  }
+}
 
 // Find IDs category id
 $idCategoryId = null;
@@ -116,8 +135,15 @@ error_log("Total valid files: $photoCount");
 if ($photoCount < 1) $errors[] = "Please upload at least 1 photo.";
 if ($photoCount > 5) $errors[] = "You can upload up to 5 photos only.";
 
-  // If IDs, require extra
-  if ($idCategoryId !== null && $category_id === $idCategoryId) {
+// --- NEW SERVER-SIDE VALIDATION CHECKS ---
+if ($category_id === 0) $errors[] = "Please select a category.";
+if ($title === '') $errors[] = "Please provide an item title.";
+if ($found_location_id === 0) $errors[] = "Please select the location where the item was found.";
+if ($found_date === '') $errors[] = "Please provide the date the item was found.";
+if ($custody_state === 'at_office' && $office_id === 0) $errors[] = "Please select the office where you left the item.";
+
+// If IDs, require extra
+if ($idCategoryId !== null && $category_id === $idCategoryId) {
     if ($id_type === '') $errors[] = "Please select the type of ID.";
     if ($name_on_id === '') $errors[] = "Please enter the name visible on the ID.";
   }
@@ -158,32 +184,32 @@ if ($photoCount > 5) $errors[] = "You can upload up to 5 photos only.";
 
       // Insert item
 $pdo->prepare("
-  INSERT INTO items (
-    category_id, status, title, description,
-    found_location_id, found_at_detail,
-    found_date, found_time,
-    custody_state, office_id,
-    user_id, reporter_visibility
-  ) VALUES (
-    :category_id, 'recent', :title, :description,
-    :found_location_id, :found_at_detail,
-    :found_date, :found_time,
-    :custody_state, :office_id,
-    :user_id, :reporter_visibility
-  )
-")->execute([
-  ':category_id' => $category_id,
-  ':title' => $title,
-  ':description' => $description !== '' ? $description : null,
-  ':found_location_id' => $found_location_id,
-  ':found_at_detail' => $found_at_detail !== '' ? $found_at_detail : null,
-  ':found_date' => $found_date,
-  ':found_time' => $found_time !== '' ? $found_time : null,
-  ':custody_state' => $custody_state,
-  ':office_id' => ($custody_state === 'at_office') ? $office_id : null,
-  ':user_id' => $reporter_user_id,
-  ':reporter_visibility' => $visibility
-]);
+        INSERT INTO items (
+          category_id, status, title, description,
+          found_location_id, found_at_detail,
+          found_date, found_time,
+          custody_state, office_id,
+          user_id, reporter_visibility
+        ) VALUES (
+          :category_id, 'recent', :title, :description,
+          :found_location_id, :found_at_detail,
+          :found_date, :found_time,
+          :custody_state, :office_id,
+          :user_id, :reporter_visibility
+        )
+      ")->execute([
+        ':category_id' => $category_id,
+        ':title' => $title,
+        ':description' => $description !== '' ? $description : null,
+        ':found_location_id' => $found_location_id,
+        ':found_at_detail' => $found_at_detail !== '' ? $found_at_detail : null,
+        ':found_date' => $found_date,
+        ':found_time' => $found_time !== '' ? $found_time : null,
+        ':custody_state' => $custody_state,
+        ':office_id' => ($custody_state === 'at_office') ? $office_id : null,
+        ':user_id' => $currentUserId, // Automatically assigned!
+        ':reporter_visibility' => $visibility
+      ]);
 
       $item_id = (int)$pdo->lastInsertId();
 
@@ -310,158 +336,158 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
         <div class="step-error" id="step1Error" aria-live="polite"></div>
         <div id="previewContainer" class="preview-container"></div>
 
-        <div class="nav-actions">
-          <button type="button" class="btn-primary nextBtn">Continue</button>
+        <div class="step-actions">
+          <button type="button" class="report-btn-primary nextBtn">Continue</button>
         </div>
       </section>
 
-      <!-- STEP 2 -->
-      <section class="report-card" data-step="2">
+      <section class="report-card" data-step="2" hidden>
         <h2>Identify the Item</h2>
-
+        <p class="helper" style="margin-bottom: 15px; color: #6b7280;">Select a category and provide a brief description.</p>
+        
         <label>Category <span class="req">*</span></label>
+        <input type="hidden" name="category_id" id="categoryId" value="<?= h($oldCategoryId) ?>" required>
+        
         <div class="category-grid" id="categoryGrid">
           <?php foreach ($categories as $cat): ?>
-            <button type="button" class="cat" data-id="<?= (int)$cat['id'] ?>" data-name="<?= h($cat['name']) ?>">
+            <div class="cat <?= ($oldCategoryId === (int)$cat['id']) ? 'active' : '' ?>" 
+                 data-id="<?= (int)$cat['id'] ?>" 
+                 data-name="<?= h($cat['name']) ?>">
               <?= h($cat['name']) ?>
-            </button>
+            </div>
           <?php endforeach; ?>
         </div>
-        <input type="hidden" name="category_id" id="categoryId" value="<?= (int)$oldCategoryId ?>">
 
-        <!-- ID-only -->
-        <div class="id-extra" id="idExtra" <?= ($idCategoryId !== null && $oldCategoryId === $idCategoryId) ? '' : 'hidden' ?>>
+        <div id="idExtra" class="id-extra" <?= ($oldCategoryId === $idCategoryId) ? '' : 'hidden' ?>>
           <div class="id-extra-head">
-            <strong>ID Card Details</strong>
-            <span class="muted">Provide recognition details only.</span>
+            <strong>ID Details</strong>
+            <span class="muted">Required for Identification Cards</span>
           </div>
-
+          
           <label>Type of ID <span class="req">*</span></label>
-          <select name="id_type" id="idType">
-            <option value="">Select one</option>
-            <?php
-              $idTypes = [
-                "School ID","Driver’s License","National ID (PhilSys)","Passport","Postal ID","PRC ID","Voter’s ID","Company ID","Other"
-              ];
-              foreach ($idTypes as $t):
-            ?>
-              <option value="<?= h($t) ?>" <?= (($old['id_type'] ?? '') === $t) ? 'selected' : '' ?>><?= h($t) ?></option>
-            <?php endforeach; ?>
-          </select>
-
-          <label>Name visible on the ID <span class="req">*</span></label>
-          <input type="text" name="name_on_id" id="nameOnId" value="<?= h($old['name_on_id'] ?? '') ?>" placeholder="Enter exactly as printed">
-
-          <label>Department / College (optional)</label>
-          <input type="text" name="department" value="<?= h($old['department'] ?? '') ?>" placeholder="e.g., CCS, Nursing, Arts & Sciences">
-
-          <label>Distinct feature (optional)</label>
-          <input type="text" name="distinct_feature" value="<?= h($old['distinct_feature'] ?? '') ?>" placeholder="e.g., blue lanyard, sticker, cracked holder">
+          <input type="text" name="id_type" placeholder="e.g., Student ID, Driver's License" value="<?= h($old['id_type'] ?? '') ?>">
+          
+          <label>Name on ID <span class="req">*</span></label>
+          <input type="text" name="name_on_id" placeholder="Full name as it appears on the ID" value="<?= h($old['name_on_id'] ?? '') ?>">
+          
+          <label>Department / Course (optional)</label>
+          <input type="text" name="department" placeholder="e.g., College of Nursing" value="<?= h($old['department'] ?? '') ?>">
+          
+          <label>Distinct Feature (optional)</label>
+          <input type="text" name="distinct_feature" placeholder="e.g., with blue lanyard, cracked case" value="<?= h($old['distinct_feature'] ?? '') ?>">
         </div>
 
-        <label>Short Title <span class="req">*</span></label>
-        <input type="text" name="title" id="titleInput" value="<?= h($old['title'] ?? '') ?>" placeholder="e.g., Black wallet, School ID with lanyard">
+        <label for="title">Item Title <span class="req">*</span></label>
+        <input type="text" name="title" id="title" placeholder="e.g., Blue Hydro Flask, Black Leather Wallet" value="<?= h($old['title'] ?? '') ?>" required>
 
-        <label>Description (optional)</label>
-        <textarea name="description" class="desc" rows="4" placeholder="Add helpful recognition details (avoid sensitive info)."><?= h($old['description'] ?? '') ?></textarea>
+        <label for="description">Additional Description (optional)</label>
+        <textarea name="description" id="description" rows="3" placeholder="Any distinct features? Brand? Color?"><?= h($old['description'] ?? '') ?></textarea>
 
         <div class="step-error" id="step2Error" aria-live="polite"></div>
 
-        <div class="nav-actions">
-          <button type="button" class="btn-secondary prevBtn">Back</button>
-          <button type="button" class="btn-primary nextBtn">Continue</button>
+        <div class="step-actions">
+          <button type="button" class="report-btn-secondary prevBtn">Back</button>
+          <button type="button" class="report-btn-primary nextBtn">Continue</button>
         </div>
       </section>
 
-      <!-- STEP 3 -->
-      <section class="report-card" data-step="3">
+      <section class="report-card" data-step="3" hidden>
         <h2>Where did you find it?</h2>
-
-        <label>Main Location <span class="req">*</span></label>
-        <select name="found_location_id" id="foundLocation">
+        <p class="helper" style="margin-bottom: 15px; color: #6b7280;">Provide the location and date details.</p>
+        
+        <label>Campus Area / Building <span class="req">*</span></label>
+        
+        <label>Campus Area / Building <span class="req">*</span></label>
+        <select name="found_location_id" required>
           <option value="">Select location</option>
           <?php foreach ($locations as $loc): ?>
-            <option value="<?= (int)$loc['id'] ?>" <?= ((int)($old['found_location_id'] ?? 0) === (int)$loc['id']) ? 'selected' : '' ?>>
-              <?= h($loc['name']) ?>
-            </option>
+            <option value="<?= (int)$loc['id'] ?>"><?= h($loc['name']) ?></option>
           <?php endforeach; ?>
         </select>
 
-        <label>Exact Spot (optional)</label>
-        <input type="text" name="found_at_detail" value="<?= h($old['found_at_detail'] ?? '') ?>" placeholder="e.g., near stairs, table by entrance">
+        <label>Specific details (optional)</label>
+        <input type="text" name="found_at_detail" placeholder="e.g., Room 204, near the entrance">
 
         <label>Date Found <span class="req">*</span></label>
-        <input type="date" name="found_date" id="foundDate"
-               value="<?= h(($old['found_date'] ?? date('Y-m-d'))) ?>">
+        <input type="date" name="found_date" required>
 
         <label>Time Found (optional)</label>
-        <input type="time" name="found_time" value="<?= h($old['found_time'] ?? '') ?>">
+        <input type="time" name="found_time">
 
         <div class="step-error" id="step3Error" aria-live="polite"></div>
 
-        <div class="nav-actions">
-          <button type="button" class="btn-secondary prevBtn">Back</button>
-          <button type="button" class="btn-primary nextBtn">Continue</button>
+        <div class="step-actions">
+          <button type="button" class="report-btn-secondary prevBtn">Back</button>
+          <button type="button" class="report-btn-primary nextBtn">Continue</button>
         </div>
       </section>
 
-      <!-- STEP 4 -->
-      <section class="report-card" data-step="4">
-        <h2>Where is the item now?</h2>
+      <section class="report-card" data-step="4" hidden>
+        <h2>Custody</h2>
+        <p class="helper" style="margin-bottom: 15px; color: #6b7280;">Where can the owner find the item?</p>
 
         <div class="radio-group">
           <label class="radio">
-            <input type="radio" name="custody_state" value="with_finder" <?= ($oldCustody === 'with_finder') ? 'checked' : '' ?>>
-            <span>I still have the item</span>
+            <input type="radio" name="custody_state" value="with_finder" checked>
+            <div class="radio-content">
+              <span style="display: block;">I still have it</span>
+              <span style="font-size: 0.85rem; color: #6b7280; font-weight: normal;">The owner will contact you directly to claim it.</span>
+            </div>
           </label>
 
           <label class="radio">
-            <input type="radio" name="custody_state" value="at_office" <?= ($oldCustody === 'at_office') ? 'checked' : '' ?>>
-            <span>I left it at a campus office</span>
+            <input type="radio" name="custody_state" value="at_office">
+            <div class="radio-content">
+              <span style="display: block;">I left it at a campus office</span>
+              <span style="font-size: 0.85rem; color: #6b7280; font-weight: normal;">The owner will claim it directly from the office staff.</span>
+            </div>
           </label>
         </div>
 
-        <div id="officeWrap" class="office-wrap" <?= ($oldCustody === 'at_office') ? '' : 'hidden' ?>>
-          <label>Office holding the item <span class="req">*</span></label>
-          <select name="office_id" id="officeSelect">
-            <option value="">Select office</option>
-            <?php foreach ($offices as $o): ?>
-              <option value="<?= (int)$o['id'] ?>" <?= ((int)($old['office_id'] ?? 0) === (int)$o['id']) ? 'selected' : '' ?>>
-                <?= h($o['name']) ?>
-              </option>
+        <div id="officeDropdownWrap" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+          <label for="office_id">Which office did you leave it at? <span class="req">*</span></label>
+          <select name="office_id" id="office_id">
+            <option value="">-- Choose an office --</option>
+            <?php foreach ($offices as $office): ?>
+              <option value="<?= (int)$office['id'] ?>"><?= h($office['name']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
 
         <div class="step-error" id="step4Error" aria-live="polite"></div>
 
-        <div class="nav-actions">
-          <button type="button" class="btn-secondary prevBtn">Back</button>
-          <button type="button" class="btn-primary nextBtn">Continue</button>
+        <div class="step-actions">
+          <button type="button" class="report-btn-secondary prevBtn">Back</button>
+          <button type="button" class="report-btn-primary nextBtn">Continue</button>
         </div>
       </section>
 
-      <!-- STEP 5 -->
-      <section class="report-card" data-step="5">
-        <h2>Contact & Privacy</h2>
-
-        <label>Email <span class="req">*</span></label>
-        <input type="email" name="reporter_email" id="emailInput" value="<?= h($old['reporter_email'] ?? '') ?>" placeholder="you@su.edu.ph">
-
-        <label>Phone Number <span class="req">*</span></label>
-        <input type="text" name="reporter_phone" id="phoneInput" value="<?= h($old['reporter_phone'] ?? '') ?>" placeholder="09XX XXX XXXX">
+      <section class="report-card" data-step="5" hidden>
+        <h2>Finish & Privacy</h2>
+        
+        <div class="id-extra" style="margin-bottom: 20px;">
+          <div class="id-extra-head">
+            <strong>Reporting as:</strong>
+          </div>
+          <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Name:</strong> <?= h($userFullName) ?></p>
+          <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Email:</strong> <?= h($user['email']) ?></p>
+          <?php if (!empty($user['phone'])): ?>
+            <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Phone:</strong> <?= h($user['phone']) ?></p>
+          <?php endif; ?>
+          <p class="upload-hint" style="margin-top: 10px; font-style: italic;">These details are pulled securely from your account.</p>
+        </div>
 
         <label>Owner Contact Preference <span class="req">*</span></label>
         <select name="reporter_visibility" id="visSelect">
-          <option value="share_with_owner" <?= (($old['reporter_visibility'] ?? '') === 'share_with_owner') ? 'selected' : '' ?>>Owner may contact me</option>
-          <option value="anonymous_to_owner" <?= (($old['reporter_visibility'] ?? 'anonymous_to_owner') === 'anonymous_to_owner') ? 'selected' : '' ?>>Keep my identity private</option>
+          <option value="anonymous_to_owner">Keep me anonymous (Owner contacts the office)</option>
+          <option value="share_with_owner">Share my contact info with the owner</option>
         </select>
 
         <div class="step-error" id="step5Error" aria-live="polite"></div>
 
-        <div class="nav-actions">
-          <button type="button" class="btn-secondary prevBtn">Back</button>
-          <button type="submit" class="btn-primary">Submit Report</button>
+        <div class="step-actions">
+          <button type="button" class="report-btn-secondary prevBtn">Back</button>
+          <button type="submit" class="report-btn-primary">Submit Report</button>
         </div>
       </section>
 
@@ -657,20 +683,49 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   });
 
   // Step navigation
+  // Step navigation (WITH STRICT VALIDATION)
   document.querySelectorAll('.nextBtn').forEach(btn => {
     btn.addEventListener('click', () => {
+      let isValid = true;
+      const currentSection = document.querySelector(`.report-card[data-step="${currentStep}"]`);
+
+      // 1. Validation for Step 1 (Photos)
       if (currentStep === 1) {
         if (selectedFiles.length === 0) {
           step1Error.textContent = 'Please upload at least 1 photo';
           step1Error.style.display = 'block';
           dropZone.classList.add('input-error');
-          return;
-        } else {
-          console.log('Moving to next step with', selectedFiles.length, 'files');
+          return; // Stop immediately
         }
       }
-      
-      if (currentStep < 5) {
+
+      // 2. Validation for Step 2 (Category Grid Hidden Input)
+      if (currentStep === 2) {
+        const catId = document.getElementById('categoryId').value;
+        const step2Error = document.getElementById('step2Error');
+        if (!catId || catId === "0") {
+          step2Error.textContent = 'Please select a category from the grid.';
+          step2Error.style.display = 'block';
+          isValid = false;
+        } else {
+          step2Error.style.display = 'none';
+        }
+      }
+
+      // 3. HTML5 Required Fields Validation
+      const requiredInputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+      requiredInputs.forEach(input => {
+        // Skip hidden inputs (like the office dropdown when 'I still have it' is selected)
+        if (input.offsetParent === null) return; 
+
+        if (!input.checkValidity()) {
+          input.reportValidity(); // Show browser's default required tooltip
+          isValid = false;
+        }
+      });
+
+      // Move to next step ONLY if everything is valid
+      if (isValid && currentStep < 5) {
         showStep(currentStep + 1);
       }
     });
@@ -752,6 +807,26 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
       }
     }
   });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const officeRadios = document.querySelectorAll('input[name="custody_state"]');
+  const officeWrap = document.getElementById('officeDropdownWrap');
+  const officeSelect = document.getElementById('office_id');
+
+  officeRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.value === 'at_office') {
+        // Use flex/block to match your CSS, then fade in
+        officeWrap.style.display = 'block';
+        officeSelect.setAttribute('required', 'required');
+      } else {
+        officeWrap.style.display = 'none';
+        officeSelect.removeAttribute('required');
+        officeSelect.value = ''; // Reset selection
+      }
+    });
+  });
+});
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

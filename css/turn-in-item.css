@@ -176,6 +176,8 @@
   background:#fafafa;
   cursor:pointer;
   font-weight: 500;
+  font-size: small;
+  text-align: center;
   color: #4b5563;
   transition: all 0.2s;
 }
@@ -220,25 +222,25 @@ input:focus, select:focus, textarea:focus {
 }
 .radio {
   display: flex;
-  align-items: center; /* Vertically center */
+  align-items: flex-start; /* Fix: Align to top instead of center */
   padding: 16px;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   background: #fff;
-  gap: 12px; /* Space between radio and text */
+  gap: 12px;
 }
 .radio:hover {
   border-color: #9B2C2C;
   background: #FFF5F5;
 }
 .radio input {
-  margin: 0;
+  margin-top: 2px; /* Fix: align radio circle with text */
   width: 20px;
   height: 20px;
   accent-color: #9B2C2C;
-  flex-shrink: 0; /* Prevent radio squishing */
+  flex-shrink: 0;
 }
 .radio span {
   font-weight: 600;
@@ -246,14 +248,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* Buttons */
-.nav-actions{
+.step-actions{
   display:flex;
   justify-content:space-between;
   margin-top:20px;
   padding-top: 20px;
   border-top: 1px solid #f3f4f6;
 }
-.btn-primary{
+.report-btn-primary{
   background:#9B2C2C;
   color:white;
   border:none;
@@ -263,9 +265,9 @@ input:focus, select:focus, textarea:focus {
   font-weight: 600;
   transition: background 0.2s;
 }
-.btn-primary:hover { background: #742A2A; }
+.report-btn-primary:hover { background: #742A2A; }
 
-.btn-secondary{
+.report-btn-secondary{
   background:#e5e7eb;
   border:none;
   padding:12px 24px;
@@ -274,7 +276,7 @@ input:focus, select:focus, textarea:focus {
   color: #4b5563;
   cursor: pointer;
 }
-.btn-secondary:hover { background: #d1d5db; }
+.report-btn-secondary:hover { background: #d1d5db; }
 
 .form-alert{
   background: rgba(155,44,44,0.06);
@@ -320,7 +322,7 @@ input:focus, select:focus, textarea:focus {
   .preview-container { grid-template-columns: repeat(4, 1fr); }
   
   /* Sticky Action Bar for Mobile */
-  .nav-actions {
+  .step-actions {
     position: fixed;
     bottom: 0;
     left: 0;
