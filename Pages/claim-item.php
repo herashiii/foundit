@@ -55,7 +55,7 @@ if ($itemId > 0) {
 
     if (!$item) {
         $errorMsg = 'Item not found.';
-    } elseif ($item['status'] !== 'recent' && $item['status'] !== 'pending') {
+    } elseif ($item['status'] !== 'unclaimed') {
         $errorMsg = 'This item is no longer available for claims.';
     } elseif ($item['owner_id'] == $currentUserId) {
         // HCI: Prevent users from claiming their own items

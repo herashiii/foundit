@@ -146,13 +146,11 @@ include __DIR__ . '/../includes/header.php';
                              id="mainImage" 
                              class="main-photo clickable">
                         
-                        <?php if($item['status'] === 'pending_claim'): ?>
-                            <span class="badge badge-pending">Pending Claim</span>
-                        <?php elseif($item['status'] === 'unclaimed' && $isRecentItem): ?>
-                            <span class="badge badge-recent">Recent</span>
-                        <?php elseif($item['status'] === 'unclaimed' && !$isRecentItem): ?>
+                        <?php if ($item['status'] === 'pending'): ?>
+                            <span class="badge badge-pending">Pending</span>
+                        <?php elseif ($item['status'] === 'unclaimed'): ?>
                             <span class="badge badge-unclaimed">Unclaimed</span>
-                        <?php else: ?>
+                        <?php elseif ($item['status'] === 'claimed'): ?>
                             <span class="badge badge-claimed">Claimed</span>
                         <?php endif; ?>
                     </div>
@@ -230,7 +228,7 @@ include __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="cta-panel">
-    <?php if ($item['status'] === 'recent'): ?>
+    <?php if ($item['status'] === 'unclaimed'): ?>
         <h3 class="cta-title">Is this yours?</h3>
         <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
         <div class="cta-actions">
@@ -241,7 +239,7 @@ include __DIR__ . '/../includes/header.php';
                 Proceed to Claim
             </a>
         </div>
-    <?php elseif ($item['status'] === 'pending_claim' || $item['status'] === 'pending'): ?>
+    <?php elseif ($item['status'] === 'pending'): ?>
         <div class="alert alert-warning" style="margin-bottom: 0;">
             <span class="icon" aria-hidden="true">⏳</span>
             <div>
@@ -249,7 +247,7 @@ include __DIR__ . '/../includes/header.php';
                 Someone has submitted a claim for this item. It is currently awaiting staff verification.
             </div>
         </div>
-    <?php else: ?>
+    <?php elseif ($item['status'] === 'claimed'): ?>
         <div class="alert alert-success" style="margin-bottom: 0;">
             <span class="icon" aria-hidden="true">✔</span>
             <div>

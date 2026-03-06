@@ -13,15 +13,20 @@ function h($s): string {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
-// Helper function for status badges
-function getStatusBadge($status) {
+// Dynamic Badge Helper (incorporates the 24h rule)
+function getStatusBadge($status, $createdAt = null) {
+    if ($status === 'unclaimed' && $createdAt) {
+        $createdTime = strtotime($createdAt);
+        $isRecent = (time() - $createdTime) <= (24 * 3600);
+        return $isRecent ? 'badge-recent' : 'badge-unclaimed';
+    }
+    
     $badges = [
-        'recent' => 'badge-recent',
         'pending' => 'badge-pending',
         'claimed' => 'badge-claimed',
-        'returned' => 'badge-returned',
         'approved' => 'badge-approved',
-        'rejected' => 'badge-rejected'
+        'rejected' => 'badge-rejected',
+        'unclaimed' => 'badge-unclaimed'
     ];
     return $badges[$status] ?? 'badge-default';
 }
@@ -29,13 +34,12 @@ function getStatusBadge($status) {
 $pdo = db();
 $adminId = $_SESSION['user_id'];
 
-// Get admin info - QUERY FOR EXISTING ADMIN
+// Get admin info
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND role = 'admin'");
 $stmt->execute([$adminId]);
 $admin = $stmt->fetch();
 
 if (!$admin) {
-    // If somehow not an admin, redirect
     header('Location: ../Login/login.php?error=' . urlencode('Admin account not found.'));
     exit;
 }
@@ -64,11 +68,10 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
                 $updateStmt = $pdo->prepare("UPDATE claim_requests SET status = ? WHERE id = ?");
                 $updateStmt->execute([$newStatus, $claimId]);
                 
-                // If approved, update item status to 'claimed'
-                if ($action === 'approve') {
-                    $itemStmt = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE id = ?");
-                    $itemStmt->execute([$claim['item_id']]);
-                }
+                // If approved, update item status to 'claimed'. If rejected, revert to 'unclaimed'.
+                $itemNewStatus = ($action === 'approve') ? 'claimed' : 'unclaimed';
+                $itemStmt = $pdo->prepare("UPDATE items SET status = ? WHERE id = ?");
+                $itemStmt->execute([$itemNewStatus, $claim['item_id']]);
                 
                 $pdo->commit();
                 $actionMessage = "Claim #$claimId has been " . ($action === 'approve' ? 'approved' : 'rejected') . " successfully.";
@@ -85,7 +88,7 @@ if (isset($_POST['update_item_status']) && isset($_POST['item_id']) && isset($_P
     $itemId = (int)$_POST['item_id'];
     $newStatus = $_POST['new_status'];
     
-    $allowedStatuses = ['recent', 'pending', 'claimed', 'returned'];
+    $allowedStatuses = ['unclaimed', 'pending', 'claimed'];
     if (in_array($newStatus, $allowedStatuses)) {
         try {
             $stmt = $pdo->prepare("UPDATE items SET status = ? WHERE id = ?");
@@ -116,17 +119,14 @@ if (isset($_GET['toggle_user']) && isset($_GET['user_id'])) {
     }
 }
 
-// Get statistics
+// Get statistics (Updated 4-Stat Logic)
 $stats = [];
 
-// Total items
 $stats['total_items'] = $pdo->query("SELECT COUNT(*) FROM items")->fetchColumn();
-
-// Items by status
-$stats['recent_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'recent'")->fetchColumn();
+$stats['recent_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'unclaimed' AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)")->fetchColumn();
+$stats['unclaimed_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'unclaimed' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)")->fetchColumn();
 $stats['pending_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'pending'")->fetchColumn();
 $stats['claimed_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'claimed'")->fetchColumn();
-$stats['returned_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'returned'")->fetchColumn();
 
 // Total users
 $stats['total_users'] = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
@@ -140,24 +140,20 @@ $stats['pending_claims'] = $pdo->query("SELECT COUNT(*) FROM claim_requests WHER
 $stats['approved_claims'] = $pdo->query("SELECT COUNT(*) FROM claim_requests WHERE status = 'approved'")->fetchColumn();
 $stats['rejected_claims'] = $pdo->query("SELECT COUNT(*) FROM claim_requests WHERE status = 'rejected'")->fetchColumn();
 
-// Get pending claims (priority)
+// Get pending claims (Fixed Crash: Removed invalid JOIN)
 $pendingClaims = $pdo->query("
-    SELECT cr.*, i.title as item_title, i.status as item_status, 
-           u.first_name, u.last_name, u.email, u.student_id
+    SELECT cr.*, i.title as item_title, i.status as item_status
     FROM claim_requests cr
     JOIN items i ON cr.item_id = i.id
-    LEFT JOIN users u ON cr.user_id = u.id
     WHERE cr.status = 'pending'
     ORDER BY cr.created_at ASC
 ")->fetchAll();
 
-// Get recent claims (all)
+// Get recent claims (Fixed Crash: Removed invalid JOIN)
 $recentClaims = $pdo->query("
-    SELECT cr.*, i.title as item_title, i.status as item_status,
-           u.first_name, u.last_name, u.email, u.student_id
+    SELECT cr.*, i.title as item_title, i.status as item_status
     FROM claim_requests cr
     JOIN items i ON cr.item_id = i.id
-    LEFT JOIN users u ON cr.user_id = u.id
     ORDER BY cr.created_at DESC
     LIMIT 20
 ")->fetchAll();
@@ -186,10 +182,8 @@ $allUsers = $pdo->query("
         created_at DESC
 ")->fetchAll();
 
-// Get all categories for management
+// Get categories & locations
 $categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
-
-// Get all locations
 $locations = $pdo->query("SELECT * FROM locations ORDER BY name")->fetchAll();
 
 include __DIR__ . '/../includes/header.php';
@@ -236,10 +230,10 @@ include __DIR__ . '/../includes/header.php';
                     <span class="stat-label">Total Items</span>
                 </div>
                 <div class="stat-breakdown">
-                    <span class="stat-mini" style="color: #3498db;">Recent: <?= $stats['recent_items'] ?></span>
-                    <span class="stat-mini" style="color: #f39c12;">Pending: <?= $stats['pending_items'] ?></span>
+                    <span class="stat-mini" style="color: #f39c12;">Recent (< 24h): <?= $stats['recent_items'] ?></span>
+                    <span class="stat-mini" style="color: #e74c3c;">Unclaimed: <?= $stats['unclaimed_items'] ?></span>
+                    <span class="stat-mini" style="color: #3498db;">Pending: <?= $stats['pending_items'] ?></span>
                     <span class="stat-mini" style="color: #27ae60;">Claimed: <?= $stats['claimed_items'] ?></span>
-                    <span class="stat-mini" style="color: #95a5a6;">Returned: <?= $stats['returned_items'] ?></span>
                 </div>
             </div>
 
@@ -299,10 +293,10 @@ include __DIR__ . '/../includes/header.php';
                                 <strong><?= h($claim['item_title']) ?></strong>
                             </td>
                             <td>
-                                <?= h($claim['first_name'] . ' ' . $claim['last_name']) ?><br>
-                                <small><?= h($claim['student_id'] ?? $claim['email']) ?></small>
+                                <?= h($claim['claimer_name']) ?><br>
+                                <small><?= h($claim['claimer_email']) ?></small>
                             </td>
-                            <td><?= h($claim['claimer_phone'] ?? 'N/A') ?></td>
+                            <td><?= h($claim['claimer_phone'] ?: 'N/A') ?></td>
                             <td>
                                 <div class="proof-preview">
                                     <?= h(substr($claim['proof_description'], 0, 50)) ?>...
@@ -319,7 +313,7 @@ include __DIR__ . '/../includes/header.php';
                                    onclick="return confirm('Approve this claim? The item will be marked as claimed.')">✓ Approve</a>
                                 <a href="?action=reject&claim_id=<?= $claim['id'] ?>" 
                                    class="btn-reject" 
-                                   onclick="return confirm('Reject this claim? This action cannot be undone.')">✗ Reject</a>
+                                   onclick="return confirm('Reject this claim? The item will return to unclaimed status.')">✗ Reject</a>
                                 <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn-view">View Item</a>
                             </td>
                         </tr>
@@ -363,6 +357,10 @@ include __DIR__ . '/../includes/header.php';
                         </thead>
                         <tbody>
                             <?php foreach ($recentItems as $item): ?>
+                            <?php 
+                                $isRecent = (time() - strtotime($item['created_at'])) <= (24 * 3600);
+                                $displayStatus = ($item['status'] === 'unclaimed' && $isRecent) ? 'Recent' : ucfirst($item['status']);
+                            ?>
                             <tr>
                                 <td>#<?= $item['id'] ?></td>
                                 <td>
@@ -378,8 +376,8 @@ include __DIR__ . '/../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="status-badge <?= getStatusBadge($item['status']) ?>">
-                                        <?= ucfirst($item['status']) ?>
+                                    <span class="status-badge <?= getStatusBadge($item['status'], $item['created_at']) ?>">
+                                        <?= $displayStatus ?>
                                     </span>
                                 </td>
                                 <td><?= $item['claim_count'] ?></td>
@@ -389,10 +387,9 @@ include __DIR__ . '/../includes/header.php';
                                         <input type="hidden" name="item_id" value="<?= $item['id'] ?>">
                                         <select name="new_status" onchange="this.form.submit()" style="padding: 4px; font-size: 12px;">
                                             <option value="">Change Status</option>
-                                            <option value="recent">Recent</option>
+                                            <option value="unclaimed">Unclaimed</option>
                                             <option value="pending">Pending</option>
                                             <option value="claimed">Claimed</option>
-                                            <option value="returned">Returned</option>
                                         </select>
                                         <input type="hidden" name="update_item_status" value="1">
                                     </form>
@@ -435,10 +432,10 @@ include __DIR__ . '/../includes/header.php';
                                     <br><small>Status: <?= $claim['item_status'] ?></small>
                                 </td>
                                 <td>
-                                    <?= h($claim['first_name'] . ' ' . $claim['last_name']) ?><br>
-                                    <small><?= h($claim['email']) ?></small>
+                                    <?= h($claim['claimer_name']) ?><br>
+                                    <small><?= h($claim['claimer_email']) ?></small>
                                 </td>
-                                <td><?= h($claim['claimer_phone'] ?? 'N/A') ?></td>
+                                <td><?= h($claim['claimer_phone'] ?: 'N/A') ?></td>
                                 <td>
                                     <span class="status-badge <?= getStatusBadge($claim['status']) ?>">
                                         <?= ucfirst($claim['status']) ?>
@@ -518,7 +515,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Categories Tab -->
+        <!-- Categories & Locations Tab -->
         <div id="tab-categories" class="tab-content">
             <div class="dashboard-section">
                 <div class="section-header">
@@ -553,23 +550,15 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </main>
 
-<!-- JavaScript for Tabs and Proof View -->
 <script>
 function showTab(tabName) {
-    // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
-    
-    // Remove active class from all buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    
-    // Show selected tab
     document.getElementById('tab-' + tabName).classList.add('active');
-    
-    // Add active class to clicked button
     event.target.classList.add('active');
 }
 
