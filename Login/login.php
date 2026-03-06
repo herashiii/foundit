@@ -74,23 +74,19 @@ function h($s) {
                                 placeholder="e.g., 22-1-00065" 
                                 required
                             >
-                            <div class="input-hint">Enter your student ID</div>
                         </div>
 
                         <div class="form-group">
                             <label for="student_password">
-                                Birthdate <span class="required-indicator" aria-hidden="true">*</span>
+                                Password <span class="required-indicator" aria-hidden="true">*</span>
                             </label>
                             <input 
                                 type="password" 
                                 name="password" 
                                 id="student_password" 
-                                placeholder="e.g., 4172003" 
+                                placeholder="Enter your password" 
                                 required
                             >
-                            <div class="input-hint">
-                                Enter your birthdate as MMDDYYYY (e.g., April 17, 2003 = 4172003)
-                            </div>
                         </div>
 
                         <div class="form-actions">
