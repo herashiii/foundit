@@ -1,9 +1,13 @@
 <?php 
 session_start();
 
-// If already logged in, redirect to home
+// If already logged in, redirect based on role
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../Pages/index.php');
+    if ($_SESSION['role'] === 'admin') {
+        header('Location: ../Pages/admindash.php');
+    } else {
+        header('Location: ../Pages/index.php');
+    }
     exit;
 }
 
@@ -20,189 +24,237 @@ function h($s) {
         <div class="container auth-container">
             <div class="auth-card">
                 <div class="auth-header">
-                    <h1 id="login-heading">Login to Your Account</h1>
-                    <p>Use your Student ID and Birthdate to login.</p>
+                    <h1 id="login-heading">Login to FoundiT</h1>
+                    <p>Choose your login type below</p>
                 </div>
 
                 <?php if (isset($_GET['error'])): ?>
                     <?php 
-                    // Determine error type for better messaging
                     $error = $_GET['error'];
                     $errorTitle = 'Login Failed';
                     $errorIcon = '⚠️';
-                    
-                    // Check if this is a redirect from turn-in-item
-                    if (strpos($error, 'turn in an item') !== false) {
-                        $errorTitle = 'Action Required';
-                        $errorIcon = '🔒';
-                    }
-                    // Check for registration needed
-                    elseif (strpos($error, 'register') !== false || strpos($error, 'not found') !== false) {
-                        $errorTitle = 'Account Not Found';
-                        $errorIcon = '❓';
-                    }
-                    // Check for wrong password
-                    elseif (strpos($error, 'password') !== false || strpos($error, 'birthdate') !== false) {
-                        $errorTitle = 'Incorrect Password';
-                        $errorIcon = '🔑';
-                    }
                     ?>
                     
-                    <div class="error-message" role="alert" aria-labelledby="error-heading" data-error-type="<?= $errorTitle ?>">
+                    <div class="error-message" role="alert">
                         <div class="error-icon" aria-hidden="true"><?= $errorIcon ?></div>
                         <div class="error-content">
-                            <h3 id="error-heading" class="error-title"><?= $errorTitle ?></h3>
+                            <h3 class="error-title"><?= $errorTitle ?></h3>
                             <p class="error-text"><?= h($error) ?></p>
                         </div>
                     </div>
                 <?php endif; ?>
 
                 <?php if (isset($_GET['registered'])): ?>
-                    <div class="success-message" role="status" aria-labelledby="success-heading">
+                    <div class="success-message" role="status">
                         <div class="success-icon" aria-hidden="true">✅</div>
                         <div class="success-content">
-                            <h3 id="success-heading" class="success-title">Registration Successful!</h3>
+                            <h3 class="success-title">Registration Successful!</h3>
                             <p class="success-text">Please login with your Student ID and birthdate.</p>
                         </div>
                     </div>
                 <?php endif; ?>
 
-                <?php if (isset($_GET['logout'])): ?>
-                    <div class="success-message" role="status" aria-labelledby="logout-heading">
-                        <div class="success-icon" aria-hidden="true">👋</div>
-                        <div class="success-content">
-                            <h3 id="logout-heading" class="success-title">Logged Out Successfully</h3>
-                            <p class="success-text">You have been logged out of your account.</p>
+                <!-- Login Tabs -->
+                <div class="login-tabs">
+                    <button class="tab-btn active" id="tab-student-btn" onclick="switchTab('student')">🎓 Student Login</button>
+                    <button class="tab-btn" id="tab-admin-btn" onclick="switchTab('admin')">👤 Admin Login</button>
+                </div>
+
+                <!-- Student Login Form -->
+                <div id="student-login" class="tab-content active">
+                    <form action="../Pages/process-student-login.php" method="POST" class="auth-form">
+                        <div class="form-group">
+                            <label for="student_id">
+                                Student ID <span class="required-indicator" aria-hidden="true">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="student_id" 
+                                id="student_id" 
+                                placeholder="e.g., 22-1-00065" 
+                                required
+                            >
+                            <div class="input-hint">Enter your student ID</div>
                         </div>
-                    </div>
-                <?php endif; ?>
 
-                <form action="../Pages/process-login.php" method="POST" class="auth-form" aria-labelledby="login-heading">
-                    <div class="form-group">
-                        <label for="student_id">
-                            Student ID <span class="required-indicator" aria-hidden="true">*</span>
-                            <span class="sr-only">(required)</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="student_id" 
-                            id="student_id" 
-                            placeholder="e.g., 22-1-00065" 
-                            required
-                            aria-required="true"
-                            aria-describedby="student-id-hint"
-                            class="<?= isset($_GET['error']) ? 'error' : '' ?>"
-                        >
-                        <div id="student-id-hint" class="input-hint">Enter your student ID (e.g., 22-1-00065)</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password">
-                            Birthdate Password <span class="required-indicator" aria-hidden="true">*</span>
-                            <span class="sr-only">(required)</span>
-                        </label>
-                        <input 
-                            type="password" 
-                            name="password" 
-                            id="password" 
-                            placeholder="e.g., 4172003" 
-                            required
-                            aria-required="true"
-                            aria-describedby="password-hint password-format"
-                            class="<?= isset($_GET['error']) ? 'error' : '' ?>"
-                        >
-                        <div id="password-hint" class="input-hint">Enter your birthdate as MMDDYYYY</div>
-                        <div id="password-format" class="input-format">
-                            <strong>Format:</strong> MMDDYYYY (no leading zeros, no separators)
-                            <br>
-                            <strong>Example:</strong> April 17, 2003 = 4172003
+                        <div class="form-group">
+                            <label for="student_password">
+                                Birthdate <span class="required-indicator" aria-hidden="true">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                id="student_password" 
+                                placeholder="e.g., 4172003" 
+                                required
+                            >
+                            <div class="input-hint">
+                                Enter your birthdate as MMDDYYYY (e.g., April 17, 2003 = 4172003)
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-actions">
-    <button type="submit" class="auth-btn" id="login-btn">
-        <span id="btn-text">Sign In</span>
-        <span id="btn-loading" style="display: none;">Logging in...</span>
-    </button>
-</div>
+                        <div class="form-actions">
+                            <button type="submit" class="auth-btn">Sign In as Student</button>
+                        </div>
 
-                    <div class="form-footer">
-                        <p>
-                            Don't have an account? 
-                            <a href="../Pages/register.php" class="register-link">Register here</a>
-                        </p>
-                        <p class="help-text">
-                            <a href="#" class="forgot-link">Forgot your password?</a>
-                        </p>
-                    </div>
-                </form>
+                        <div class="form-footer">
+                            <p>
+                                Don't have an account? 
+                                <a href="../Pages/register.php" class="register-link">Register here</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Admin Login Form -->
+                <div id="admin-login" class="tab-content">
+                    <form action="../Pages/process-admin-login.php" method="POST" class="auth-form">
+                        <div class="form-group">
+                            <label for="admin_email">
+                                Admin Email <span class="required-indicator" aria-hidden="true">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                id="admin_email" 
+                                placeholder="admin@foundit.edu.ph" 
+                                value="admin@foundit.edu.ph"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="admin_password">
+                                Password <span class="required-indicator" aria-hidden="true">*</span>
+                            </label>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                id="admin_password" 
+                                placeholder="Enter your admin password" 
+                                required
+                            >
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="auth-btn admin-btn">Sign In as Admin</button>
+                        </div>
+
+                        <div class="form-footer">
+                            <p class="help-text">
+                                <a href="#" class="forgot-link">Forgot admin password?</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </section>
 </main>
 
 <script>
-// Only allow numbers in password field
-document.getElementById('password').addEventListener('input', function(e) {
+// Tab switching
+function switchTab(tab) {
+    // Hide all tabs
+    document.getElementById('student-login').classList.remove('active');
+    document.getElementById('admin-login').classList.remove('active');
+    
+    // Remove active class from buttons
+    document.getElementById('tab-student-btn').classList.remove('active');
+    document.getElementById('tab-admin-btn').classList.remove('active');
+    
+    // Show selected tab
+    document.getElementById(tab + '-login').classList.add('active');
+    document.getElementById('tab-' + tab + '-btn').classList.add('active');
+}
+
+// For students: only allow numbers in password field
+document.getElementById('student_password')?.addEventListener('input', function(e) {
     let value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length > 8) value = value.slice(0, 8);
     e.target.value = value;
 });
 
-// Make sure button starts in normal state
-document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.querySelector('.auth-btn');
-    const btnText = btn?.querySelector('.btn-text');
-    const btnLoading = btn?.querySelector('.btn-loading');
-    
-    if (btn && btnText && btnLoading) {
-        btn.disabled = false;
-        btnText.hidden = false;
-        btnLoading.hidden = true;
-    }
-});
-
-// Add loading state on form submit
-document.querySelector('.auth-form')?.addEventListener('submit', function(e) {
-    const btn = this.querySelector('.auth-btn');
-    const btnText = btn?.querySelector('.btn-text');
-    const btnLoading = btn?.querySelector('.btn-loading');
-    
-    // Only proceed if elements exist
-    if (!btn || !btnText || !btnLoading) return;
-    
-    // Only show loading if form is valid
-    if (this.checkValidity()) {
-        btn.disabled = true;
-        btnText.hidden = true;
-        btnLoading.hidden = false;
+// Form loading states
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
         
-        // Safety timeout - reset after 10 seconds if something goes wrong
-        setTimeout(function() {
-            if (btn.disabled) {
-                btn.disabled = false;
-                btnText.hidden = false;
-                btnLoading.hidden = true;
-            }
-        }, 10000);
-    }
+        if (this.checkValidity()) {
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+        }
+    });
 });
-
-// Reset button when page is shown (back/forward navigation)
-window.addEventListener('pageshow', function() {
-    const btn = document.querySelector('.auth-btn');
-    const btnText = btn?.querySelector('.btn-text');
-    const btnLoading = btn?.querySelector('.btn-loading');
-    
-    if (btn && btnText && btnLoading) {
-        btn.disabled = false;
-        btnText.hidden = false;
-        btnLoading.hidden = true;
-    }
-});
-</script>   
+</script>
 
 <style>
+/* Login Tabs */
+.login-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--neut-gray-3, #E2E8F0);
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--split-char-2, #4A5568);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--mono-red-3, #9B2C2C);
+    background: var(--mono-red-5, #FFF5F5);
+}
+
+.tab-btn.active {
+    color: var(--mono-red-3, #9B2C2C);
+    font-weight: 700;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--mono-red-3, #9B2C2C);
+    border-radius: 3px 3px 0 0;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.admin-btn {
+    background: #2C3E50 !important;
+}
+
+.admin-btn:hover {
+    background: #34495E !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 /* Enhanced Error Messages */
 .error-message {
     display: flex;

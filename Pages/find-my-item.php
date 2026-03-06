@@ -68,8 +68,31 @@ $whereClause = implode(' AND ', $where);
 $sortParam = $_GET['sort'] ?? 'newest';
 $orderBy = $sortParam === 'oldest' ? 'i.created_at ASC' : 'i.created_at DESC';
 
-// Fetch items - Strictly using existing columns and tables
-// Update your $itemsStmt to fetch both unclaimed and pending_claim
+// Build the WHERE clause with filters
+$where = ["i.status IN ('recent', 'pending')"];  // Start with status condition
+$params = [];
+
+if ($searchQuery !== '') {
+    $where[] = "(i.title LIKE ? OR i.description LIKE ?)";
+    $params[] = "%$searchQuery%";
+    $params[] = "%$searchQuery%";
+}
+
+if ($catFilter > 0) {
+    $where[] = "i.category_id = ?";
+    $params[] = $catFilter;
+}
+
+// Freshness logic
+if ($isRecent && !$isUnclaimed) {
+    $where[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 48 HOUR)";
+} elseif (!$isRecent && $isUnclaimed) {
+    $where[] = "i.created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)";
+}
+
+$whereClause = implode(' AND ', $where);
+
+// Fetch items with filters applied
 $itemsStmt = $pdo->prepare("
     SELECT 
         i.id, 
@@ -83,11 +106,11 @@ $itemsStmt = $pdo->prepare("
     FROM items i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN locations l ON i.found_location_id = l.id
-    WHERE i.status IN ('recent', 'pending') 
-    ORDER BY i.created_at DESC
+    WHERE $whereClause
+    ORDER BY $orderBy
 ");
-$itemsStmt->execute($params);
-$items = $itemsStmt->fetchAll();
+$itemsStmt->execute($params);  // Now params matches the placeholders
+$items = $itemsStmt->fetchAll(); 
 ?>
 
 <main class="portal-main-wrapper">

@@ -65,14 +65,20 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
 
         <div class="nav-actions">
             <?php if ($isLoggedIn): ?>
-                <a href="../Pages/dashboard.php" class="btn btn-primary" style="padding: 8px 20px;">
-                    User Dashboard
-                </a>
+                <?php if ($_SESSION['role'] === 'admin'): ?>
+                    <a href="../Pages/admindash.php" class="btn btn-primary" style="padding: 8px 20px;">
+                        Admin Dashboard
+                    </a>
+                <?php else: ?>
+                    <a href="../Pages/dashboard.php" class="btn btn-primary" style="padding: 8px 20px;">
+                        User Dashboard
+                    </a>
+                <?php endif; ?>
             <?php else: ?>
                 <a href="../Login/login.php" class="btn btn-secondary" style="padding: 8px 20px;">Log In</a>
             <?php endif; ?>
             <a href="../Pages/turn-in-item.php" class="btn btn-primary" style="padding: 8px 20px;">Turn In Item</a>
         </div>
-    </div>
+     </div>
 </nav>
     </nav>
