@@ -45,144 +45,318 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$user_id]);
 $my_claims = $stmt->fetchAll();
+
+// Calculate stats
+$total_items = count($my_items);
+$total_claims = count($my_claims);
+$pending_claims = array_filter($my_claims, function($claim) {
+    return $claim['status'] === 'pending';
+});
 ?>
 
 <main class="dashboard-page">
     <div class="container">
-        <div class="dashboard-header">
-            <h1>My Dashboard</h1>
-            <p>Welcome back, <?= h($user['first_name'] . ' ' . $user['last_name']) ?></p>
+        <!-- Welcome Header -->
+        <div class="welcome-header">
+            <div class="welcome-text">
+                <h1>Welcome back, <?= h($user['first_name']) ?>! 👋</h1>
+                <p>Here's what's happening with your lost & found items</p>
+            </div>
+            <div class="header-actions">
+                <a href="turn-in-item.php" class="btn btn-primary btn-large">
+                    <span class="btn-icon">+</span>
+                    Report Found Item
+                </a>
+            </div>
         </div>
 
+        <!-- Quick Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-content">
+                    <span class="stat-value"><?= $total_items ?></span>
+                    <span class="stat-label">Items Reported</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📋</div>
+                <div class="stat-content">
+                    <span class="stat-value"><?= $total_claims ?></span>
+                    <span class="stat-label">Claims Received</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-content">
+                    <span class="stat-value"><?= count($pending_claims) ?></span>
+                    <span class="stat-label">Pending Claims</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <span class="stat-value"><?= count(array_filter($my_items, function($item) { return $item['status'] === 'returned'; })) ?></span>
+                    <span class="stat-label">Resolved Items</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
         <div class="dashboard-grid">
-            <!-- User Info Card -->
-            <div class="dashboard-card user-info">
-                <h2>Account Information</h2>
-                <div class="info-row">
-                    <span class="info-label">Student ID:</span>
-                    <span class="info-value"><?= h($user['student_id'] ?? 'Not set') ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Name:</span>
-                    <span class="info-value"><?= h($user['first_name'] . ' ' . $user['last_name']) ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Email:</span>
-                    <span class="info-value"><?= h($user['email']) ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Phone:</span>
-                    <span class="info-value"><?= h($user['phone'] ?? 'Not provided') ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Member since:</span>
-                    <span class="info-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
+            
+            <!-- Profile Card -->
+            <div class="dashboard-card profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <?= strtoupper(substr($user['first_name'], 0, 1) . substr($user['last_name'], 0, 1)) ?>
+                    </div>
+                    <div class="profile-title">
+                        <h2><?= h($user['first_name'] . ' ' . $user['last_name']) ?></h2>
+                        <span class="profile-role">Student</span>
+                    </div>
                 </div>
                 
-                <div class="dashboard-actions">
-                    <button onclick="confirmLogout()" 
-                            class="btn btn-logout" 
-                            aria-label="Logout from your account"
-                            title="Click to securely logout">
-                        <span class="btn-icon" aria-hidden="true">🚪</span>
-                        <span>Logout</span>
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Student ID</span>
+                        <span class="detail-value"><?= h($user['student_id'] ?? 'Not set') ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value"><?= h($user['email']) ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value"><?= h($user['phone'] ?? 'Not provided') ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Member Since</span>
+                        <span class="detail-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button onclick="confirmLogout()" class="btn btn-logout">
+                        <span class="btn-icon">🚪</span>
+                        Sign Out
                     </button>
                 </div>
             </div>
 
-            <!-- Stats Card -->
-            <div class="dashboard-card stats">
-                <h2>My Activity</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-number"><?= count($my_items) ?></span>
-                        <span class="stat-label">Items Reported</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number"><?= count($my_claims) ?></span>
-                        <span class="stat-label">Claims Received</span>
-                    </div>
+            <!-- Recent Activity Card -->
+            <div class="dashboard-card activity-card">
+                <div class="card-header">
+                    <h2>
+                        <span class="card-icon">⏱️</span>
+                        Recent Activity
+                    </h2>
+                    <a href="my-activity.php" class="view-all-link">View All →</a>
+                </div>
+                
+                <div class="activity-list">
+                    <?php 
+                    $recent_activities = array_merge(
+                        array_map(function($item) { 
+                            return ['type' => 'item', 'data' => $item, 'date' => $item['created_at']]; 
+                        }, array_slice($my_items, 0, 3)),
+                        array_map(function($claim) { 
+                            return ['type' => 'claim', 'data' => $claim, 'date' => $claim['created_at']]; 
+                        }, array_slice($my_claims, 0, 3))
+                    );
+                    
+                    usort($recent_activities, function($a, $b) {
+                        return strtotime($b['date']) - strtotime($a['date']);
+                    });
+                    
+                    $recent_activities = array_slice($recent_activities, 0, 5);
+                    
+                    if (empty($recent_activities)): ?>
+                        <div class="empty-activity">
+                            <p>No recent activity</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($recent_activities as $activity): ?>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <?= $activity['type'] === 'item' ? '📦' : '📋' ?>
+                                </div>
+                                <div class="activity-details">
+                                    <div class="activity-title">
+                                        <?php if ($activity['type'] === 'item'): ?>
+                                            You reported "<?= h($activity['data']['title']) ?>"
+                                        <?php else: ?>
+                                            New claim received for "<?= h($activity['data']['item_title']) ?>"
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="activity-meta">
+                                        <?= date('M d, Y g:i A', strtotime($activity['date'])) ?>
+                                    </div>
+                                </div>
+                                <span class="status-badge status-<?= h($activity['type'] === 'item' ? $activity['data']['status'] : $activity['data']['status']) ?>">
+                                    <?= ucfirst(h($activity['type'] === 'item' ? $activity['data']['status'] : $activity['data']['status'])) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <!-- My Items Card -->
-            <div class="dashboard-card my-items">
+            <!-- My Items Section -->
+            <div class="dashboard-card items-card full-width">
                 <div class="card-header">
-                    <h2>Items I've Reported</h2>
-                    <a href="turn-in-item.php" class="btn btn-small btn-primary">+ Report New</a>
+                    <h2>
+                        <span class="card-icon">📦</span>
+                        Items I've Reported
+                        <span class="item-count">(<?= $total_items ?>)</span>
+                    </h2>
+                    <div class="card-filters">
+                        <select class="filter-select" onchange="filterItems(this.value)">
+                            <option value="all">All Items</option>
+                            <option value="recent">Recent</option>
+                            <option value="pending">Pending</option>
+                            <option value="claimed">Claimed</option>
+                            <option value="returned">Returned</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <?php if (count($my_items) > 0): ?>
-                    <div class="items-list">
-                        <?php foreach ($my_items as $item): ?>
-                            <div class="item-row">
-                                <div class="item-info">
-                                    <strong><?= h($item['title']) ?></strong>
-                                    <span class="item-meta">
-                                        <?= h($item['category_name']) ?> • 
-                                        Found at <?= h($item['location_name']) ?> • 
-                                        <?= date('M d, Y', strtotime($item['found_date'])) ?>
-                                    </span>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-badge status-<?= h($item['status']) ?>">
-                                        <?= ucfirst(h($item['status'])) ?>
-                                    </span>
-                                    <a href="view-item.php?id=<?= $item['id'] ?>" class="btn btn-small btn-secondary">View</a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                    <div class="table-responsive">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Found At</th>
+                                    <th>Date Found</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($my_items as $item): ?>
+                                    <tr class="item-row" data-status="<?= $item['status'] ?>">
+                                        <td>
+                                            <strong><?= h($item['title']) ?></strong>
+                                        </td>
+                                        <td><?= h($item['category_name']) ?></td>
+                                        <td><?= h($item['location_name']) ?></td>
+                                        <td><?= date('M d, Y', strtotime($item['found_date'])) ?></td>
+                                        <td>
+                                            <span class="status-badge status-<?= h($item['status']) ?>">
+                                                <?= ucfirst(h($item['status'])) ?>
+                                            </span>
+                                        </td>
+                                        <td class="actions-cell">
+                                            <a href="view-item.php?id=<?= $item['id'] ?>" class="btn-action view-btn" title="View item details">
+                                                <span class="action-text">View</span>
+                                            </a>
+                                            <?php if ($item['status'] === 'recent'): ?>
+                                                <a href="edit-item.php?id=<?= $item['id'] ?>" class="btn-action edit-btn" title="Edit item">
+                                                    <span class="action-text">Edit</span>
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 <?php else: ?>
-                    <p class="empty-message">You haven't reported any items yet.</p>
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <h3>No items reported yet</h3>
+                        <p>When you find and report lost items, they'll appear here.</p>
+                        <a href="turn-in-item.php" class="btn btn-primary">Report Your First Item</a>
+                    </div>
                 <?php endif; ?>
             </div>
 
-            <!-- Claims Received Card -->
-            <div class="dashboard-card my-claims">
-                <h2>Claims on My Items</h2>
+            <!-- Claims Received Section -->
+            <div class="dashboard-card claims-card full-width">
+                <div class="card-header">
+                    <h2>
+                        <span class="card-icon">📋</span>
+                        Claims on My Items
+                        <span class="item-count">(<?= $total_claims ?>)</span>
+                    </h2>
+                </div>
                 
                 <?php if (count($my_claims) > 0): ?>
-                    <div class="claims-list">
+                    <div class="claims-grid">
                         <?php foreach ($my_claims as $claim): ?>
-                            <div class="claim-row">
-                                <div class="claim-info">
-                                    <strong>Item: <?= h($claim['item_title']) ?></strong>
-                                    <span class="claim-meta">
-                                        Claimant: <?= h($claim['claimer_name']) ?> • 
-                                        <?= date('M d, Y', strtotime($claim['created_at'])) ?>
-                                    </span>
-                                    <?php if (!empty($claim['proof_description'])): ?>
-                                        <div class="claim-proof">
-                                            <strong>Proof provided:</strong> 
-                                            <p><?= h(substr($claim['proof_description'], 0, 100)) ?>...</p>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="claim-status">
+                            <div class="claim-card">
+                                <div class="claim-header">
+                                    <h3><?= h($claim['item_title']) ?></h3>
                                     <span class="status-badge status-<?= h($claim['status']) ?>">
                                         <?= ucfirst(h($claim['status'])) ?>
                                     </span>
-                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-small btn-secondary">View Item</a>
+                                </div>
+                                
+                                <div class="claim-details">
+                                    <div class="claimant-info">
+                                        <strong>Claimant:</strong> <?= h($claim['claimer_name'] ?? 'Anonymous') ?>
+                                    </div>
+                                    <div class="claim-date">
+                                        <strong>Date:</strong> <?= date('M d, Y', strtotime($claim['created_at'])) ?>
+                                    </div>
+                                    
+                                    <?php if (!empty($claim['proof_description'])): ?>
+                                        <div class="claim-proof">
+                                            <strong>Proof provided:</strong>
+                                            <p><?= h(substr($claim['proof_description'], 0, 150)) ?>...</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="claim-footer">
+                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small">View Item</a>
+                                    <?php if ($claim['status'] === 'pending'): ?>
+                                        <a href="view-claim.php?id=<?= $claim['id'] ?>" class="btn btn-primary btn-small">Review Claim</a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="empty-message">No claims received yet.</p>
+                    <div class="empty-state compact">
+                        <p>No claims received yet.</p>
+                    </div>
                 <?php endif; ?>
             </div>
+
         </div>
     </div>
+
     <script>
         // Accessible logout confirmation
         function confirmLogout() {
-            if (confirm('Are you sure you want to logout? This will end your current session.')) {
+            if (confirm('Are you sure you want to sign out? This will end your current session.')) {
                 window.location.href = 'logout.php';
             }
         }
 
-        // Optional: Add keyboard support (Enter key)
+        // Filter items by status
+        function filterItems(status) {
+            const rows = document.querySelectorAll('.item-row');
+            rows.forEach(row => {
+                if (status === 'all') {
+                    row.style.display = 'table-row';
+                } else {
+                    if (row.dataset.status === status) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Add keyboard support for logout button
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtn = document.querySelector('.btn-logout');
             if (logoutBtn) {
@@ -194,204 +368,570 @@ $my_claims = $stmt->fetchAll();
                 });
             }
         });
-        </script>
+    </script>
 </main>
 
 <style>
+/* ======================================= */
+/* DASHBOARD PAGE - HCI FRIENDLY DESIGN   */
+/* ======================================= */
+
 .dashboard-page {
-    padding: 40px 0;
-    background: #f8f9fa;
+    padding: 40px 0 60px;
+    background: #f8fafc;
     min-height: calc(100vh - 200px);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.dashboard-header {
+/* Welcome Header */
+.welcome-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.welcome-text h1 {
+    font-size: 2rem;
+    color: #1e293b;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.welcome-text p {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.btn-large {
+    padding: 14px 28px;
+    font-size: 1rem;
+}
+
+.btn-icon {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+/* Stats Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
     margin-bottom: 30px;
 }
 
-.dashboard-header h1 {
-    color: #333;
-    margin-bottom: 5px;
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
 }
 
-.dashboard-header p {
-    color: #666;
-    font-size: 16px;
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    border-color: #9B2C2C;
 }
 
+.stat-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef2f2;
+    border-radius: 12px;
+    color: #9B2C2C;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dashboard Grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 24px;
 }
 
 .dashboard-card {
     background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s;
 }
 
-.dashboard-card h2 {
-    color: #333;
-    font-size: 18px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+.dashboard-card:hover {
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
-/* User Info Card */
-.user-info {
-    grid-column: 1;
-}
-
-.info-row {
-    display: flex;
-    margin-bottom: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f5f5f5;
-}
-
-.info-label {
-    width: 120px;
-    color: #666;
-    font-weight: 500;
-}
-
-.info-value {
-    flex: 1;
-    color: #333;
-}
-
-/* Stats Card */
-.stats {
-    grid-column: 2;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    text-align: center;
-}
-
-.stat-item {
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.stat-number {
-    display: block;
-    font-size: 32px;
-    font-weight: 700;
-    color: #9B2C2C;
-}
-
-.stat-label {
-    color: #666;
-    font-size: 14px;
-}
-
-/* My Items Card */
-.my-items {
+.full-width {
     grid-column: span 2;
 }
 
+/* Card Header */
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-.btn-small {
-    padding: 6px 12px;
-    font-size: 13px;
+.card-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1e293b;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
 }
 
-.items-list, .claims-list {
+.card-icon {
+    font-size: 1.4rem;
+}
+
+.item-count {
+    color: #64748b;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+.view-all-link {
+    color: #9B2C2C;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.view-all-link:hover {
+    color: #601515;
+    text-decoration: underline;
+}
+
+/* Profile Card */
+.profile-card {
+    grid-column: 1;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #9B2C2C 0%, #601515 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.profile-title h2 {
+    margin: 0 0 4px;
+    color: #1e293b;
+    font-size: 1.3rem;
+}
+
+.profile-role {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.profile-details {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    width: 110px;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    flex: 1;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.btn-logout {
+    background: #fef2f2;
+    color: #9B2C2C;
+    border: 1px solid #fee2e2;
+    padding: 10px 24px;
+    width: 100%;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    background: #fee2e2;
+    border-color: #9B2C2C;
+    transform: translateY(-1px);
+}
+
+/* Activity Card */
+.activity-card {
+    grid-column: 2;
+}
+
+.activity-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
-.item-row, .claim-row {
+.activity-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    gap: 16px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 12px;
     transition: transform 0.2s;
 }
 
-.item-row:hover, .claim-row:hover {
+.activity-item:hover {
     transform: translateX(5px);
-    background: #f0f2f5;
+    background: #f1f5f9;
 }
 
-.item-info, .claim-info {
+.activity-icon {
+    font-size: 1.5rem;
+}
+
+.activity-details {
     flex: 1;
 }
 
-.item-info strong, .claim-info strong {
-    display: block;
-    margin-bottom: 4px;
-    color: #333;
-}
-
-.item-meta, .claim-meta {
-    font-size: 13px;
-    color: #666;
-}
-
-.item-status, .claim-status {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+.activity-title {
+    color: #1e293b;
     font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.activity-meta {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.empty-activity {
+    text-align: center;
+    color: #94a3b8;
+    padding: 30px;
+}
+
+/* Items Table */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.items-table th {
+    text-align: left;
+    padding: 16px;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.items-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+.items-table tr:hover {
+    background: #f8fafc;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 12px;
+}
+
+.action-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.action-link:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Filter Select */
+.filter-select {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: #334155;
+    background: white;
+    cursor: pointer;
+    outline: none;
+}
+
+.filter-select:hover {
+    border-color: #9B2C2C;
+}
+
+.filter-select:focus {
+    border-color: #9B2C2C;
+    box-shadow: 0 0 0 3px rgba(155,44,44,0.1);
+}
+
+/* Status Badges - keeping your colors */
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .status-recent {
     background: #e3f2fd;
     color: #1976d2;
+    border: 1px solid #90caf9;
 }
 
 .status-pending {
     background: #fff3e0;
     color: #f57c00;
+    border: 1px solid #ffb74d;
 }
 
 .status-claimed {
     background: #e8f5e9;
     color: #388e3c;
+    border: 1px solid #a5d6a7;
 }
 
 .status-returned {
     background: #f3e5f5;
     color: #8e24aa;
+    border: 1px solid #ce93d8;
 }
 
-.empty-message {
+.status-approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.status-rejected {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+/* Claims Grid */
+.claims-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.claim-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.claim-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    border-color: #9B2C2C;
+}
+
+.claim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.claim-header h3 {
+    color: #1e293b;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.claim-details {
+    margin-bottom: 16px;
+}
+
+.claimant-info, .claim-date {
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.claim-proof {
+    margin-top: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.claim-proof p {
+    margin-top: 6px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.claim-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+/* Empty States */
+.empty-state {
     text-align: center;
-    color: #999;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+.empty-state.compact {
     padding: 30px;
 }
 
-.dashboard-actions {
-    margin-top: 20px;
-    text-align: right;
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    gap: 8px;
 }
 
-/* My Claims Card */
-.my-claims {
-    grid-column: span 2;
+.btn-primary {
+    background: #9B2C2C;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #601515;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(155,44,44,0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #9B2C2C;
+    color: #9B2C2C;
+}
+
+.btn-small {
+    padding: 6px 16px;
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -399,19 +939,77 @@ $my_claims = $stmt->fetchAll();
         grid-template-columns: 1fr;
     }
     
-    .user-info, .stats, .my-items, .my-claims {
+    .profile-card,
+    .activity-card,
+    .full-width {
         grid-column: 1;
     }
     
-    .item-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .stats-row {
+        grid-template-columns: 1fr;
     }
     
-    .item-status {
+    .welcome-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .claims-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .detail-label {
         width: 100%;
-        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-card {
+        padding: 20px;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .items-table td {
+        padding: 12px;
+    }
+    
+    .actions-cell {
+        flex-direction: column;
+    }
+}
+
+/* Loading State */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Focus Visible for Accessibility */
+*:focus-visible {
+    outline: 3px solid #9B2C2C;
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .btn,
+    .btn-logout,
+    .filter-select {
+        display: none !important;
     }
 }
 </style>
