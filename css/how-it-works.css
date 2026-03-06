@@ -1,0 +1,202 @@
+/* ===============================
+   PAGE SECTION
+================================ */
+
+.how-section-page{
+padding:15px 0 50px 0;
+background:#f5f6f8;
+}
+
+
+/* ===============================
+   BREADCRUMBS
+================================ */
+
+.breadcrumb{
+font-size:14px;
+margin-top:0;
+margin-bottom:25px;
+color:#6b7280;
+}
+
+.breadcrumb a{
+color:#a62323;
+text-decoration:none;
+border-bottom:1px solid transparent;
+transition:0.2s;
+}
+
+.breadcrumb a:hover{
+border-bottom:1px solid #a62323;
+}
+
+.breadcrumb span{
+margin:0 5px;
+}
+
+
+/* ===============================
+   HEADER
+================================ */
+
+.how-header{
+text-align:center;
+margin-bottom:20px; /* was around 30–40 */
+}
+
+.how-header h1{
+font-size:36px;
+font-weight:700;
+color:#1f2933;
+margin-bottom:8px;
+}
+
+.how-header p{
+color:#6b7280;
+font-size:16px;
+}
+
+
+/* ===============================
+   VIDEO PLACEHOLDER
+================================ */
+
+.video-placeholder{
+display:flex;
+justify-content:center;
+margin-bottom:30px; /* smaller gap before steps */
+}
+
+.video-box{
+width:100%;
+max-width:720px;
+height:400px;
+
+background:#ffffff;
+border:2px dashed #d1d5db;
+border-radius:14px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+color:#6b7280;
+font-weight:600;
+font-size:16px;
+
+box-shadow:0 10px 25px rgba(0,0,0,0.05);
+}
+
+
+/* ===============================
+   HOW BLOCK SECTIONS
+================================ */
+
+.how-block{
+margin-bottom:70px;
+}
+
+.how-block h2{
+color:#a62323;
+font-weight:700;
+margin-bottom:25px;
+font-size:24px;
+}
+
+
+/* ===============================
+   STEPS GRID
+================================ */
+
+.steps-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:25px;
+}
+
+
+/* ===============================
+   STEP CARD
+================================ */
+
+.step-card{
+background:#ffffff;
+padding:28px;
+border-radius:14px;
+
+border:1px solid #e5e7eb;
+
+box-shadow:0 8px 25px rgba(0,0,0,0.06);
+
+border-left:5px solid #a62323;
+
+transition:all .25s ease;
+}
+
+.step-card:hover{
+transform:translateY(-5px);
+box-shadow:0 15px 35px rgba(0,0,0,0.1);
+}
+
+
+/* ===============================
+   STEP NUMBER
+================================ */
+
+.step-number{
+width:42px;
+height:42px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:#a62323;
+color:white;
+
+font-weight:700;
+border-radius:50%;
+
+margin-bottom:12px;
+}
+
+
+/* ===============================
+   TEXT
+================================ */
+
+.step-card h4{
+margin:0;
+font-size:18px;
+font-weight:600;
+color:#1f2933;
+}
+
+.step-card p{
+margin-top:8px;
+font-size:14px;
+line-height:1.6;
+color:#6b7280;
+}
+
+
+/* ===============================
+   RESPONSIVE
+================================ */
+
+@media(max-width:900px){
+
+.steps-grid{
+grid-template-columns:1fr;
+}
+
+.video-box{
+height:260px;
+}
+
+.how-section-page{
+padding:30px 0 50px 0; /* reduced top spacing */
+background:#f5f6f8;
+}
+
+}
