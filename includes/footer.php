@@ -46,7 +46,7 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                         <li><a href="<?= $pagePrefix ?>how-it-works.php">How It Works</a></li>
                         <li><a href="<?= $pagePrefix ?>faq.php">Frequently Asked Questions (FAQs)</a></li>
                         <li><a href="<?= $pagePrefix ?>contactus.php">Contact Us</a></li>
-                        <li><a href="#">Site Map</a></li>
+                        <li><a href="<?= $pagePrefix ?>site-map.php">Site Map</a></li>
                     </ul>
                 </div>
             </div>
