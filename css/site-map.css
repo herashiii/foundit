@@ -1,0 +1,163 @@
+/* ========================================
+   PAGE BACKGROUND
+======================================== */
+
+.site-map-bg{
+background:
+    linear-gradient(135deg, rgba(155, 44, 44, 0.85) 0%, rgba(96, 21, 21, 0.9) 100%),
+    url('../silliman-hall.jpg');
+padding:60px 0;
+}
+
+
+/* ========================================
+   MAIN CONTAINER
+======================================== */
+
+.site-map-container{
+max-width:950px;
+margin:0 auto;
+
+background:white;
+border:1px solid #d1d5db;
+border-radius:14px;
+
+padding:40px 50px;
+
+box-shadow:0 10px 20px rgba(0,0,0,0.05);
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.site-map-header{
+text-align:center;
+margin-bottom:30px;
+}
+
+.site-map-header h1{
+font-size:28px;
+font-weight:600;
+margin-bottom:4px;
+color:#1f2933;
+}
+
+.site-map-header p{
+font-size:14px;
+color:#6b7280;
+}
+
+
+/* ========================================
+   GRID LAYOUT (FIXES YOUR PROBLEM)
+======================================== */
+
+.nav-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px 24px;
+}
+
+/* ========================================
+   NAV CARD
+======================================== */
+
+.nav-card{
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+background:#f9fafb;
+
+border:1px solid #d1d5db;
+border-radius:10px;
+
+padding:14px 18px;
+
+text-decoration:none;
+
+transition:all .2s ease;
+}
+
+.nav-card:hover{
+background:white;
+border-color:#9b2323;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+
+/* ========================================
+   LEFT CONTENT
+======================================== */
+
+.nav-left{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+
+/* ========================================
+   ICON
+======================================== */
+
+.nav-icon{
+width:36px;
+height:36px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:#eef2f7;
+border-radius:8px;
+
+font-size:18px;
+}
+
+
+/* ========================================
+   TEXT
+======================================== */
+
+.nav-text h4{
+margin:0;
+font-size:15px;
+font-weight:600;
+color:#1f2933;
+}
+
+.nav-text p{
+margin:0;
+font-size:13px;
+color:#6b7280;
+}
+
+
+/* ========================================
+   ARROW
+======================================== */
+
+.nav-arrow{
+font-size:18px;
+color:#9b2323;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width:768px){
+
+.nav-grid{
+grid-template-columns:1fr;
+}
+
+.site-map-container{
+padding:30px 20px;
+}
+
+}
