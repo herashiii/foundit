@@ -1,7 +1,7 @@
 <?php
-
-// view-item.php (DB-connected)
 declare(strict_types=1);
+session_start();
+
 
 require_once __DIR__ . '/../includes/db.php';
 
@@ -92,14 +92,17 @@ if (!$notFound) {
    Claim request submission
 ---------------------------- */
 if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'claim') {
-  $fullName = trim($_POST['full_name'] ?? '');
-  $studentOrEmail = trim($_POST['student_or_email'] ?? '');
+  
+  // Check if user is logged in
+  if (!isset($_SESSION['user_id'])) {
+    header('Location: ../Login/login.php?error=' . urlencode('Please login to submit a claim request'));
+    exit;
+  }
+  
   $contact = trim($_POST['contact'] ?? '');
-  $whereLost = trim($_POST['where_lost'] ?? '');
   $proof = trim($_POST['proof'] ?? '');
 
-  if ($fullName === '') $claimErrors[] = "Please enter your full name.";
-  if ($studentOrEmail === '') $claimErrors[] = "Please enter your Student ID or email.";
+  // Validation
   if ($contact === '') $claimErrors[] = "Please enter a contact number.";
   if ($proof === '' || mb_strlen($proof) < 12) $claimErrors[] = "Please add a short proof/description (at least 12 characters).";
 
@@ -107,20 +110,33 @@ if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? 
     try {
       $pdo->beginTransaction();
 
-      // Insert claim request directly
-      $pdo->prepare("
+      // Get user details from session
+      $user_id = $_SESSION['user_id'];
+      $fullName = $_SESSION['first_name'] . ' ' . $_SESSION['last_name'];
+      $studentOrEmail = $_SESSION['student_id'] ?? $_SESSION['email'];
+
+      // Insert claim request - matching your table structure
+      $stmt = $pdo->prepare("
         INSERT INTO claim_requests (
-          item_id, claimer_name, claimer_email, claimer_phone, proof_description, status
+          item_id, user_id, claimer_name, claimer_email, claimer_phone, proof_description, status
         ) VALUES (
-          :item_id, :claimer_name, :claimer_email, :claimer_phone, :proof_description, 'pending'
+          :item_id, :user_id, :claimer_name, :claimer_email, :claimer_phone, :proof_description, 'pending'
         )
-      ")->execute([
+      ");
+      
+      $result = $stmt->execute([
         ':item_id' => $itemId,
+        ':user_id' => $user_id,
         ':claimer_name' => $fullName,
-        ':claimer_email' => (filter_var($studentOrEmail, FILTER_VALIDATE_EMAIL) ? $studentOrEmail : $studentOrEmail . '@foundit.local'),
+        ':claimer_email' => $studentOrEmail,
         ':claimer_phone' => $contact,
         ':proof_description' => $proof
       ]);
+
+      if (!$result) {
+        $errorInfo = $stmt->errorInfo();
+        throw new Exception("Insert failed: " . $errorInfo[2]);
+      }
 
       // Update item status to pending if currently recent
       if (($item['status'] ?? '') === 'recent') {
@@ -134,11 +150,11 @@ if (!$notFound && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? 
       header("Location: view-item.php?id={$itemId}&claim=success");
       exit;
 
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
       if ($pdo->inTransaction()) $pdo->rollBack();
-      $claimError = "Could not submit claim request. Please try again.";
+      $claimError = "Could not submit claim request: " . $e->getMessage();
       // Log error for debugging
-      error_log($e->getMessage());
+      error_log("Claim error: " . $e->getMessage());
     }
   }
 }
@@ -381,104 +397,154 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <?php if ($item['status'] === 'recent' || $item['status'] === 'pending'): ?>
-            <section class="panel panel-claim" aria-label="Claim request">
-              <div class="panel-title-row">
-                <h2>Claim Request</h2>
-                <span class="helper">Staff verified</span>
-              </div>
+<section class="panel panel-claim" aria-label="Claim request">
+  <div class="panel-title-row">
+    <h2>Claim Request</h2>
+    <span class="helper">Staff verified</span>
+  </div>
 
-              <?php if ($claimError): ?>
-                <div class="panel" style="padding:12px; border-color: rgba(155,44,44,0.20); background: rgba(155,44,44,0.06);">
-                  <strong><?= h($claimError) ?></strong>
-                </div>
-                <div style="height: 10px;"></div>
-              <?php endif; ?>
+  <?php if ($claimError): ?>
+    <div class="panel" style="padding:12px; border-color: rgba(155,44,44,0.20); background: rgba(155,44,44,0.06);">
+      <strong><?= h($claimError) ?></strong>
+    </div>
+    <div style="height: 10px;"></div>
+  <?php endif; ?>
 
-              <?php if (!empty($claimErrors)): ?>
-                <div class="panel" style="padding:12px; border-color: rgba(155,44,44,0.20); background: rgba(155,44,44,0.06);">
-                  <strong>Please fix the following:</strong>
-                  <ul style="margin:8px 0 0 18px;">
-                    <?php foreach ($claimErrors as $e): ?>
-                      <li><?= h($e) ?></li>
-                    <?php endforeach; ?>
-                  </ul>
-                </div>
-                <div style="height: 10px;"></div>
-              <?php endif; ?>
+  <?php if (!empty($claimErrors)): ?>
+    <div class="panel" style="padding:12px; border-color: rgba(155,44,44,0.20); background: rgba(155,44,44,0.06);">
+      <strong>Please fix the following:</strong>
+      <ul style="margin:8px 0 0 18px;">
+        <?php foreach ($claimErrors as $e): ?>
+          <li><?= h($e) ?></li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <div style="height: 10px;"></div>
+  <?php endif; ?>
 
-              <details class="claim-details">
-                <summary class="claim-summary">
-                  <div class="summary-left">
-                    <div class="summary-ico" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" class="ico" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 1l3 5 5 .7-3.7 3.6.9 5.1L12 13.8 7.8 15.4l.9-5.1L5 6.7 10 6z"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <strong>Submit a claim request</strong>
-                      <small>We'll ask a few details to verify ownership.</small>
-                    </div>
-                  </div>
-                  <div class="summary-arrow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" class="ico" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M6 9l6 6 6-6"></path>
-                    </svg>
-                  </div>
-                </summary>
+  <details class="claim-details">
+    <summary class="claim-summary">
+      <div class="summary-left">
+        <div class="summary-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="ico" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1l3 5 5 .7-3.7 3.6.9 5.1L12 13.8 7.8 15.4l.9-5.1L5 6.7 10 6z"></path>
+          </svg>
+        </div>
+        <div>
+          <strong>Submit a claim request</strong>
+          <small>We'll ask a few details to verify ownership.</small>
+        </div>
+      </div>
+      <div class="summary-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="ico" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"></path>
+        </svg>
+      </div>
+    </summary>
 
-                <form class="claim-form" method="post" novalidate>
-                  <input type="hidden" name="action" value="claim">
+    <?php if (!isset($_SESSION['user_id'])): ?>
+      <!-- Not logged in - Show login prompt -->
+      <div class="login-prompt" style="padding: 30px 20px; text-align: center; background: #f8f9fa; border-radius: 8px; margin-top: 16px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+        <h3 style="margin-bottom: 12px; color: #333;">Login Required</h3>
+        <p style="margin-bottom: 20px; color: #666;">Please log in to submit a claim request for this item.</p>
+        <a href="../Login/login.php?redirect=<?= urlencode('view-item.php?id=' . $itemId) ?>" class="btn btn-primary" style="padding: 12px 24px;">Log In to Claim</a>
+        <p style="margin-top: 16px; font-size: 14px;">
+          Don't have an account? <a href="register.php" style="color: #9B2C2C;">Register here</a>
+        </p>
+      </div>
+    <?php else: ?>
+      <!-- Logged in - Show simplified claim form -->
+      <?php
+      // Get user's phone from database
+      $userStmt = $pdo->prepare("SELECT phone FROM users WHERE id = ?");
+      $userStmt->execute([$_SESSION['user_id']]);
+      $userPhone = $userStmt->fetchColumn();
+      ?>
+      
+      <form class="claim-form" method="post" novalidate style="margin-top: 20px;">
+        <input type="hidden" name="action" value="claim">
+        <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?>">
+        
+        <!-- Auto-filled user info (read-only) -->
+        <div class="form-grid" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <div class="field" style="margin-bottom: 12px;">
+            <label style="font-weight: 600; color: #555;">Your Name</label>
+            <div style="padding: 10px 12px; background: white; border: 1px solid #ddd; border-radius: 8px;">
+              <?= h($_SESSION['first_name'] . ' ' . $_SESSION['last_name']) ?>
+            </div>
+          </div>
+          
+          <div class="field" style="margin-bottom: 12px;">
+            <label style="font-weight: 600; color: #555;">Student ID / Email</label>
+            <div style="padding: 10px 12px; background: white; border: 1px solid #ddd; border-radius: 8px;">
+              <?= h($_SESSION['student_id'] ?? $_SESSION['email']) ?>
+            </div>
+          </div>
+          
+          <div class="field">
+            <label for="contact" style="font-weight: 600; color: #555;">Contact Number</label>
+            <input 
+              type="text" 
+              name="contact" 
+              id="contact" 
+              value="<?= h($userPhone ?? '') ?>" 
+              placeholder="09XX XXX XXXX" 
+              required
+              style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;"
+            >
+            <p class="field-hint" style="font-size: 13px; color: #666; margin-top: 4px;">Your contact is visible to staff only.</p>
+          </div>
+        </div>
 
-                  <div class="form-grid">
-                    <div class="field">
-                      <label>Full Name</label>
-                      <input name="full_name" type="text" value="<?= h($_POST['full_name'] ?? '') ?>" placeholder="e.g., Juan Dela Cruz" required>
-                    </div>
+        <!-- Only ask for proof/description -->
+        <div class="field">
+          <label for="proof" style="font-weight: 600; color: #555;">Proof / Description <span style="color: #9B2C2C;">*</span></label>
+          <textarea 
+            name="proof" 
+            id="proof" 
+            rows="4" 
+            placeholder="Describe a detail only the owner would know (stickers, contents, scratches, etc.)." 
+            required
+            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;"
+          ><?= h($_POST['proof'] ?? '') ?></textarea>
+          <p class="field-hint" style="font-size: 13px; color: #666; margin-top: 4px;">Do not share sensitive numbers (ID numbers, addresses).</p>
+        </div>
 
-                    <div class="field">
-                      <label>Student ID or Email</label>
-                      <input name="student_or_email" type="text" value="<?= h($_POST['student_or_email'] ?? '') ?>" placeholder="e.g., 22-1-00065 or name@su.edu.ph" required>
-                    </div>
-                  </div>
+        <div class="field">
+          <label for="where_lost" style="font-weight: 600; color: #555;">Where did you lose it? (optional)</label>
+          <input 
+            type="text" 
+            name="where_lost" 
+            id="where_lost" 
+            value="<?= h($_POST['where_lost'] ?? '') ?>" 
+            placeholder="e.g., SU Main Library, 2nd floor"
+            style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;"
+          >
+        </div>
 
-                  <div class="field">
-                    <label>How can we reach you?</label>
-                    <input name="contact" type="text" value="<?= h($_POST['contact'] ?? '') ?>" placeholder="09XX XXX XXXX" required>
-                    <p class="field-hint">Your contact is visible to staff only.</p>
-                  </div>
+        <div class="claim-actions" style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">Submit Claim Request</button>
+          <a class="btn btn-muted" href="find-my-item.php" style="padding: 12px 24px; background: #f0f0f0; color: #666; border-radius: 8px; text-decoration: none;">Cancel</a>
+        </div>
 
-                  <div class="field">
-                    <label>Where did you lose it? (optional)</label>
-                    <input name="where_lost" type="text" value="<?= h($_POST['where_lost'] ?? '') ?>" placeholder="e.g., SU Main Library, 2nd floor">
-                  </div>
-
-                  <div class="field">
-                    <label>Proof / Description</label>
-                    <textarea name="proof" rows="4" placeholder="Describe a detail only the owner would know (stickers, contents, scratches, etc.)." required><?= h($_POST['proof'] ?? '') ?></textarea>
-                    <p class="field-hint">Do not share sensitive numbers (ID numbers, addresses).</p>
-                  </div>
-
-                  <div class="claim-actions">
-                    <button type="submit" class="btn btn-primary">Submit Claim Request</button>
-                    <a class="btn btn-muted" href="find-my-item.php">Back to list</a>
-                  </div>
-
-                  <p class="fineprint">
-                    Once verified, staff will provide the official pickup instructions.
-                  </p>
-                </form>
-              </details>
-            </section>
-            <?php else: ?>
-            <section class="panel" style="background: rgba(155,44,44,0.04);">
-              <div class="panel-title-row">
-                <h2>Claim Status</h2>
-              </div>
-              <p class="notes-text">
-                This item is <?= $item['status'] === 'claimed' ? 'already claimed' : 'no longer available for claiming' ?>.
-              </p>
-            </section>
-            <?php endif; ?>
+        <p class="fineprint" style="font-size: 13px; color: #999; margin-top: 16px; text-align: center;">
+          Once verified, staff will provide the official pickup instructions.
+        </p>
+      </form>
+    <?php endif; ?>
+  </details>
+</section>
+<?php else: ?>
+<section class="panel" style="background: rgba(155,44,44,0.04);">
+  <div class="panel-title-row">
+    <h2>Claim Status</h2>
+  </div>
+  <p class="notes-text">
+    This item is <?= $item['status'] === 'claimed' ? 'already claimed' : 'no longer available for claiming' ?>.
+  </p>
+</section>
+<?php endif; ?>
 
           </aside>
         </div>

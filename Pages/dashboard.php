@@ -152,11 +152,18 @@ $my_claims = $stmt->fetchAll();
                                         Claimant: <?= h($claim['claimer_name']) ?> • 
                                         <?= date('M d, Y', strtotime($claim['created_at'])) ?>
                                     </span>
+                                    <?php if (!empty($claim['proof_description'])): ?>
+                                        <div class="claim-proof">
+                                            <strong>Proof provided:</strong> 
+                                            <p><?= h(substr($claim['proof_description'], 0, 100)) ?>...</p>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="claim-status">
                                     <span class="status-badge status-<?= h($claim['status']) ?>">
                                         <?= ucfirst(h($claim['status'])) ?>
                                     </span>
+                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-small btn-secondary">View Item</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>

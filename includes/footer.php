@@ -32,10 +32,10 @@
                 <div>
                     <h3 class="footer-title">Information</h3>
                     <ul class="footer-links">
-                        <li><a href="about.php">About Us</a></li>
+                        <li><a href="../Pages/aboutus.php">About Us</a></li>
                         <li><a href="how-it-works.php">How It Works</a></li>
                         <li><a href="faq.php">Frequently Asked Questions (FAQs)</a></li>
-                        <li><a href="contact.php">Contact Us</a></li>
+                        <li><a href="../Pages/contactus.php">Contact Us</a></li>
                         <li><a href="sitemap.php">Site Map</a></li>
                     </ul>
                 </div>
