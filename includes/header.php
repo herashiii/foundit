@@ -18,6 +18,9 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoundiT - Campus Lost & Found</title>
     
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../favicon2.ico">
     <link rel="shortcut icon" href="../favicon2.ico">
@@ -95,12 +98,13 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                         <!-- 1. ADMIN LOGIC: Admins manage items, they don't turn them in -->
                         <a href="../Pages/admindash.php" class="btn btn-primary" style="padding: 8px 20px;">Admin Dashboard</a>
-                        <a href="../Pages/logout.php" class="btn btn-secondary" style="padding: 8px 20px;">Log Out</a>
+                        <button onclick="confirmLogout()" class="btn btn-secondary" style="padding: 8px 20px; border: 2px solid #9B2C2C; background: white; color: #9B2C2C; cursor: pointer;">Log Out</button>
                         
                     <?php else: ?>
                         <!-- 2. STUDENT LOGIC: Students track their portal and turn in items -->
                         <a href="../Pages/dashboard.php" class="btn btn-secondary" style="padding: 8px 20px;">User Dashboard</a>
-                        <a href="../Pages/logout.php" class="btn btn-primary" style="padding: 8px 20px;">Log Out</a>
+                        <button onclick="confirmLogout()" class="btn btn-primary" style="padding: 8px 20px; border: 2px solid #9B2C2C; background: #9B2C2C; color: white; cursor: pointer;">Log Out</button>
+                        
                     <?php endif; ?>
                     
                 <?php else: ?>
@@ -114,3 +118,31 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
             
         </div>
     </nav>
+
+    <!-- Logout Confirmation Script -->
+    <script>
+        // Accessible logout confirmation
+        function confirmLogout() {
+            if (confirm('Are you sure you want to sign out? This will end your current session.')) {
+                window.location.href = '../Pages/logout.php';
+            }
+        }
+
+        // Add keyboard support for logout buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtns = document.querySelectorAll('.nav-actions button[onclick="confirmLogout()"]');
+            logoutBtns.forEach(btn => {
+                btn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        confirmLogout();
+                    }
+                });
+                
+                // Add proper ARIA attributes for accessibility
+                btn.setAttribute('aria-label', 'Log out of your account');
+                btn.setAttribute('role', 'button');
+                btn.setAttribute('tabindex', '0');
+            });
+        });
+    </script>

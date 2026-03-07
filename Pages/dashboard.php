@@ -59,12 +59,12 @@ $pending_claims = array_filter($my_claims, function($claim) {
         <!-- Welcome Header -->
         <div class="welcome-header">
             <div class="welcome-text">
-                <h1>Welcome back, <?= h($user['first_name']) ?>! 👋</h1>
+                <h1>Welcome back, <?= h($user['first_name']) ?>! <i class="fas fa-hand-wave" style="color: #9B2C2C;"></i></h1>
                 <p>Here's what's happening with your lost & found items</p>
             </div>
             <div class="header-actions">
                 <a href="turn-in-item.php" class="btn btn-primary btn-large">
-                    <span class="btn-icon">+</span>
+                    <i class="fas fa-plus-circle btn-icon"></i>
                     Report Found Item
                 </a>
             </div>
@@ -73,7 +73,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
         <!-- Quick Stats Row -->
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-icon">📦</div>
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $total_items ?></span>
                     <span class="stat-label">Items Reported</span>
@@ -81,7 +81,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">📋</div>
+                <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $total_claims ?></span>
                     <span class="stat-label">Claims Received</span>
@@ -89,7 +89,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">⏳</div>
+                <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= count($pending_claims) ?></span>
                     <span class="stat-label">Pending Claims</span>
@@ -97,7 +97,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">✅</div>
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= count(array_filter($my_items, function($item) { return $item['status'] === 'returned'; })) ?></span>
                     <span class="stat-label">Resolved Items</span>
@@ -116,34 +116,27 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     </div>
                     <div class="profile-title">
                         <h2><?= h($user['first_name'] . ' ' . $user['last_name']) ?></h2>
-                        <span class="profile-role">Student</span>
+                        <span class="profile-role"><i class="fas fa-graduation-cap" style="margin-right: 4px;"></i> Student</span>
                     </div>
                 </div>
                 
                 <div class="profile-details">
                     <div class="detail-item">
-                        <span class="detail-label">Student ID</span>
+                        <span class="detail-label"><i class="fas fa-id-card" style="margin-right: 6px;"></i> Student ID</span>
                         <span class="detail-value"><?= h($user['student_id'] ?? 'Not set') ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Email</span>
+                        <span class="detail-label"><i class="fas fa-envelope" style="margin-right: 6px;"></i> Email</span>
                         <span class="detail-value"><?= h($user['email']) ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Phone</span>
+                        <span class="detail-label"><i class="fas fa-phone" style="margin-right: 6px;"></i> Phone</span>
                         <span class="detail-value"><?= h($user['phone'] ?? 'Not provided') ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Member Since</span>
+                        <span class="detail-label"><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> Member Since</span>
                         <span class="detail-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
                     </div>
-                </div>
-                
-                <div class="profile-actions">
-                    <button onclick="confirmLogout()" class="btn btn-logout">
-                        <span class="btn-icon">🚪</span>
-                        Sign Out
-                    </button>
                 </div>
             </div>
 
@@ -151,10 +144,9 @@ $pending_claims = array_filter($my_claims, function($claim) {
             <div class="dashboard-card activity-card">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon">⏱️</span>
+                        <span class="card-icon"><i class="fas fa-clock"></i></span>
                         Recent Activity
                     </h2>
-                    <a href="my-activity.php" class="view-all-link">View All →</a>
                 </div>
                 
                 <div class="activity-list">
@@ -176,13 +168,14 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     
                     if (empty($recent_activities)): ?>
                         <div class="empty-activity">
+                            <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 10px;"></i>
                             <p>No recent activity</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_activities as $activity): ?>
                             <div class="activity-item">
                                 <div class="activity-icon">
-                                    <?= $activity['type'] === 'item' ? '📦' : '📋' ?>
+                                    <?= $activity['type'] === 'item' ? '<i class="fas fa-box"></i>' : '<i class="fas fa-file-signature"></i>' ?>
                                 </div>
                                 <div class="activity-details">
                                     <div class="activity-title">
@@ -193,6 +186,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                         <?php endif; ?>
                                     </div>
                                     <div class="activity-meta">
+                                        <i class="far fa-calendar-alt" style="margin-right: 4px;"></i>
                                         <?= date('M d, Y g:i A', strtotime($activity['date'])) ?>
                                     </div>
                                 </div>
@@ -209,7 +203,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             <div class="dashboard-card items-card full-width">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon">📦</span>
+                        <span class="card-icon"><i class="fas fa-boxes"></i></span>
                         Items I've Reported
                         <span class="item-count">(<?= $total_items ?>)</span>
                     </h2>
@@ -245,7 +239,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                         </td>
                                         <td><?= h($item['category_name']) ?></td>
                                         <td><?= h($item['location_name']) ?></td>
-                                        <td><?= date('M d, Y', strtotime($item['found_date'])) ?></td>
+                                        <td><i class="far fa-calendar-alt" style="margin-right: 4px; color: #64748b;"></i><?= date('M d, Y', strtotime($item['found_date'])) ?></td>
                                         <td>
                                             <span class="status-badge status-<?= h($item['status']) ?>">
                                                 <?= ucfirst(h($item['status'])) ?>
@@ -253,11 +247,11 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                         </td>
                                         <td class="actions-cell">
                                             <a href="view-item.php?id=<?= $item['id'] ?>" class="btn-action view-btn" title="View item details">
-                                                <span class="action-text">View</span>
+                                                <i class="fas fa-eye"></i> <span class="action-text">View</span>
                                             </a>
                                             <?php if ($item['status'] === 'recent'): ?>
                                                 <a href="edit-item.php?id=<?= $item['id'] ?>" class="btn-action edit-btn" title="Edit item">
-                                                    <span class="action-text">Edit</span>
+                                                    <i class="fas fa-edit"></i> <span class="action-text">Edit</span>
                                                 </a>
                                             <?php endif; ?>
                                         </td>
@@ -268,7 +262,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     </div>
                 <?php else: ?>
                     <div class="empty-state">
-                        <div class="empty-icon">📭</div>
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
                         <h3>No items reported yet</h3>
                         <p>When you find and report lost items, they'll appear here.</p>
                         <a href="turn-in-item.php" class="btn btn-primary">Report Your First Item</a>
@@ -280,7 +274,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             <div class="dashboard-card claims-card full-width">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon">📋</span>
+                        <span class="card-icon"><i class="fas fa-file-signature"></i></span>
                         Claims on My Items
                         <span class="item-count">(<?= $total_claims ?>)</span>
                     </h2>
@@ -299,24 +293,30 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                 
                                 <div class="claim-details">
                                     <div class="claimant-info">
+                                        <i class="fas fa-user" style="margin-right: 6px; color: #64748b;"></i>
                                         <strong>Claimant:</strong> <?= h($claim['claimer_name'] ?? 'Anonymous') ?>
                                     </div>
                                     <div class="claim-date">
+                                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: #64748b;"></i>
                                         <strong>Date:</strong> <?= date('M d, Y', strtotime($claim['created_at'])) ?>
                                     </div>
                                     
                                     <?php if (!empty($claim['proof_description'])): ?>
                                         <div class="claim-proof">
-                                            <strong>Proof provided:</strong>
+                                            <strong><i class="fas fa-file-alt" style="margin-right: 4px;"></i> Proof provided:</strong>
                                             <p><?= h(substr($claim['proof_description'], 0, 150)) ?>...</p>
                                         </div>
                                     <?php endif; ?>
                                 </div>
                                 
                                 <div class="claim-footer">
-                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small">View Item</a>
+                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small">
+                                        <i class="fas fa-eye"></i> View Item
+                                    </a>
                                     <?php if ($claim['status'] === 'pending'): ?>
-                                        <a href="view-claim.php?id=<?= $claim['id'] ?>" class="btn btn-primary btn-small">Review Claim</a>
+                                        <a href="view-claim.php?id=<?= $claim['id'] ?>" class="btn btn-primary btn-small">
+                                            <i class="fas fa-check-circle"></i> Review Claim
+                                        </a>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -324,6 +324,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     </div>
                 <?php else: ?>
                     <div class="empty-state compact">
+                        <i class="fas fa-inbox" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;"></i>
                         <p>No claims received yet.</p>
                     </div>
                 <?php endif; ?>
@@ -604,22 +605,6 @@ $pending_claims = array_filter($my_claims, function($claim) {
     font-weight: 500;
 }
 
-.btn-logout {
-    background: #fef2f2;
-    color: #9B2C2C;
-    border: 1px solid #fee2e2;
-    padding: 10px 24px;
-    width: 100%;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.btn-logout:hover {
-    background: #fee2e2;
-    border-color: #9B2C2C;
-    transform: translateY(-1px);
-}
-
 /* Activity Card */
 .activity-card {
     grid-column: 2;
@@ -648,6 +633,9 @@ $pending_claims = array_filter($my_claims, function($claim) {
 
 .activity-icon {
     font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+    color: #9B2C2C;
 }
 
 .activity-details {
@@ -710,16 +698,25 @@ $pending_claims = array_filter($my_claims, function($claim) {
     gap: 12px;
 }
 
-.action-link {
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 1.2rem;
-    opacity: 0.7;
-    transition: opacity 0.2s, transform 0.2s;
+    color: #475569;
+    background: #f1f5f9;
+    transition: all 0.2s;
 }
 
-.action-link:hover {
-    opacity: 1;
-    transform: scale(1.1);
+.btn-action:hover {
+    background: #e2e8f0;
+    color: #9B2C2C;
+}
+
+.action-text {
+    font-size: 0.85rem;
 }
 
 /* Filter Select */
@@ -866,7 +863,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
 .empty-icon {
     font-size: 4rem;
     margin-bottom: 16px;
-    opacity: 0.5;
+    color: #cbd5e1;
 }
 
 .empty-state h3 {
@@ -989,6 +986,11 @@ $pending_claims = array_filter($my_claims, function($claim) {
     
     .actions-cell {
         flex-direction: column;
+    }
+    
+    .btn-action {
+        width: 100%;
+        justify-content: center;
     }
 }
 
