@@ -71,7 +71,7 @@ function h($s) {
                                 <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"></path>
                             </svg>
                         </span>
-                        <span class="tab-label">Student Login</span>
+                        <span class="tab-label">Student</span>
                     </button>
 
                     <button
@@ -89,7 +89,7 @@ function h($s) {
                                 <path d="M4 20a8 8 0 0 1 16 0"></path>
                             </svg>
                         </span>
-                        <span class="tab-label">Admin Login</span>
+                        <span class="tab-label">Admin</span>
                     </button>
                 </div>
 
@@ -127,10 +127,8 @@ function h($s) {
                         </div>
 
                         <div class="form-footer">
-                            <p>
-                                Don't have an account? 
-                                <a href="../Pages/register.php" class="register-link">Register here</a>
-                            </p>
+                            <p class="footer-text">Don't have an account?</p>
+                            <a href="../Pages/register.php" class="register-link">Register here</a>
                         </div>
                     </form>
                 </div>
@@ -534,7 +532,7 @@ input.error:focus {
 }
 
 .form-footer p {
-    margin: 8px 0;
+    margin: 2px 0;
 }
 
 .register-link {
