@@ -34,7 +34,7 @@ $stmt = $pdo->prepare("
     FROM items i
     JOIN categories c ON i.category_id = c.id
     JOIN locations l ON i.found_location_id = l.id
-    WHERE i.status = 'recent'
+    WHERE i.status IN ('unclaimed', 'pending')
     ORDER BY i.found_date DESC, i.created_at DESC
     LIMIT 3
 ");

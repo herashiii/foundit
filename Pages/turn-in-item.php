@@ -27,8 +27,10 @@ $currentUserId = $_SESSION['user_id'];
 // 1. Fetch Logged-in User Data for the Finish section
 $userStmt = $pdo->prepare("SELECT first_name, last_name, email, phone FROM users WHERE id = ?");
 $userStmt->execute([$currentUserId]);
-$user = $userStmt->fetch();
-$userFullName = $user['first_name'] . ' ' . $user['last_name'];
+$loggedInUser = $userStmt->fetch();
+$userFullName = $loggedInUser['first_name'] . ' ' . $loggedInUser['last_name'];
+$userEmail = $loggedInUser['email'];
+$userPhone = $loggedInUser['phone'] ?? null;
 
 // 2. RE-ADD THESE: Fetch data for Step 1 (Categories) and Step 2 (Locations)
 $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
@@ -41,15 +43,6 @@ $offices = $pdo->query("SELECT id, name FROM offices WHERE is_active = 1 ORDER B
 $idCategoryId = null;
 foreach ($categories as $c) {
   if (mb_strtolower($c['name']) === 'ids' || mb_strtolower($c['name']) === 'identification cards') {
-    $idCategoryId = (int)$c['id'];
-    break;
-  }
-}
-
-// Find IDs category id
-$idCategoryId = null;
-foreach ($categories as $c) {
-  if (mb_strtolower($c['name']) === 'ids') {
     $idCategoryId = (int)$c['id'];
     break;
   }
@@ -183,22 +176,25 @@ if ($idCategoryId !== null && $category_id === $idCategoryId) {
       }
 
       // Insert item
-$pdo->prepare("
-        INSERT INTO items (
-          category_id, status, title, description,
-          found_location_id, found_at_detail,
-          found_date, found_time,
-          custody_state, office_id,
-          user_id, reporter_visibility
-        ) VALUES (
-          :category_id, 'recent', :title, :description,
-          :found_location_id, :found_at_detail,
-          :found_date, :found_time,
-          :custody_state, :office_id,
-          :user_id, :reporter_visibility
-        )
+      $pdo->prepare("
+          INSERT INTO items (
+            category_id, status, title, description,
+            found_location_id, found_at_detail,
+            found_date, found_time,
+            custody_state, office_id,
+            user_id, reporter_visibility,
+            contact_email, contact_phone
+          ) VALUES (
+            :category_id, :status, :title, :description,
+            :found_location_id, :found_at_detail,
+            :found_date, :found_time,
+            :custody_state, :office_id,
+            :user_id, :reporter_visibility,
+            :contact_email, :contact_phone
+          )
       ")->execute([
         ':category_id' => $category_id,
+        ':status' => 'unclaimed', 
         ':title' => $title,
         ':description' => $description !== '' ? $description : null,
         ':found_location_id' => $found_location_id,
@@ -207,10 +203,11 @@ $pdo->prepare("
         ':found_time' => $found_time !== '' ? $found_time : null,
         ':custody_state' => $custody_state,
         ':office_id' => ($custody_state === 'at_office') ? $office_id : null,
-        ':user_id' => $currentUserId, // Automatically assigned!
-        ':reporter_visibility' => $visibility
+        ':user_id' => $currentUserId,
+        ':reporter_visibility' => $visibility,
+        ':contact_email' => $userEmail,
+        ':contact_phone' => $userPhone
       ]);
-
       $item_id = (int)$pdo->lastInsertId();
 
       // ID details table (only if you created it)
@@ -470,10 +467,10 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
             <strong>Reporting as:</strong>
           </div>
           <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Name:</strong> <?= h($userFullName) ?></p>
-          <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Email:</strong> <?= h($user['email']) ?></p>
-          <?php if (!empty($user['phone'])): ?>
-            <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Phone:</strong> <?= h($user['phone']) ?></p>
-          <?php endif; ?>
+          <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Email:</strong> <?= h($userEmail) ?></p>
+            <?php if (!empty($userPhone)): ?>
+              <p style="margin: 5px 0; color: #374151; font-size: 0.95rem;"><strong>Phone:</strong> <?= h($userPhone) ?></p>
+            <?php endif; ?>
           <p class="upload-hint" style="margin-top: 10px; font-style: italic;">These details are pulled securely from your account.</p>
         </div>
 
@@ -514,20 +511,20 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   
   showStep(currentStep);
 
-  // Photo upload - IMPROVED VERSION
+  // SIMPLIFIED PHOTO UPLOAD
   const photoInput = document.getElementById('photoInput');
   const dropZone = document.getElementById('dropZone');
   const preview = document.getElementById('previewContainer');
   const step1Error = document.getElementById('step1Error');
   
-  // Store files in an array to persist them
+  // Store files globally
   let selectedFiles = [];
 
   // Style the drop zone
   dropZone.style.position = 'relative';
   dropZone.style.cursor = 'pointer';
   
-  // Make file input invisible but functional
+  // Make file input work
   photoInput.style.position = 'absolute';
   photoInput.style.top = '0';
   photoInput.style.left = '0';
@@ -538,74 +535,48 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   photoInput.style.zIndex = '10';
 
   // Click handler
-  dropZone.addEventListener('click', function(e) {
-    if (e.target !== photoInput) {
-      photoInput.click();
-    }
-  });
-
-  // Prevent click on photoInput from bubbling
-  photoInput.addEventListener('click', function(e) {
-    e.stopPropagation();
-  });
+  dropZone.addEventListener('click', () => photoInput.click());
 
   // Handle file selection
   photoInput.addEventListener('change', function(e) {
     const files = Array.from(this.files);
-    console.log('Files selected:', files.length);
     
-    // Add new files to our persistent array
+    // Add new files (limit to 5 total)
     files.forEach(file => {
-      if (selectedFiles.length < 5) {
-        if (file.type.startsWith('image/')) {
-          selectedFiles.push(file);
-        }
+      if (selectedFiles.length < 5 && file.type.startsWith('image/')) {
+        selectedFiles.push(file);
       }
     });
     
-    // Update the file input with all selected files
-    updateFileInput();
-    
-    // Show previews
-    renderPreviews();
-    
-    // Clear any errors
+    // Update display
+    updatePreviews();
     step1Error.style.display = 'none';
     dropZone.classList.remove('input-error');
+    
+    console.log('Total files:', selectedFiles.length);
   });
 
-  // Update the file input with our persistent file array
-  function updateFileInput() {
-    const dt = new DataTransfer();
-    selectedFiles.forEach(file => {
-      dt.items.add(file);
-    });
-    photoInput.files = dt.files;
-    console.log('File input updated, now has:', photoInput.files.length, 'files');
-  }
-
-  // Render previews from selectedFiles array
-  function renderPreviews() {
+  // Update previews
+  function updatePreviews() {
     preview.innerHTML = '';
     
     selectedFiles.forEach((file, index) => {
       const reader = new FileReader();
       
       reader.onload = function(e) {
-        const previewDiv = document.createElement('div');
-        previewDiv.className = 'preview-tile';
-        previewDiv.style.position = 'relative';
-        previewDiv.style.display = 'inline-block';
-        previewDiv.style.margin = '10px';
+        const div = document.createElement('div');
+        div.className = 'preview-tile';
+        div.style.position = 'relative';
+        div.style.display = 'inline-block';
+        div.style.margin = '5px';
         
         const img = document.createElement('img');
         img.src = e.target.result;
-        img.style.width = '100px';
-        img.style.height = '100px';
+        img.style.width = '80px';
+        img.style.height = '80px';
         img.style.objectFit = 'cover';
         img.style.borderRadius = '4px';
         
-        // Add remove button
         const removeBtn = document.createElement('button');
         removeBtn.innerHTML = '×';
         removeBtn.style.position = 'absolute';
@@ -618,24 +589,16 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
         removeBtn.style.color = 'white';
         removeBtn.style.border = 'none';
         removeBtn.style.cursor = 'pointer';
-        removeBtn.style.fontWeight = 'bold';
-        removeBtn.style.display = 'flex';
-        removeBtn.style.alignItems = 'center';
-        removeBtn.style.justifyContent = 'center';
         
         removeBtn.onclick = function(e) {
           e.stopPropagation();
-          // Remove file from array
           selectedFiles.splice(index, 1);
-          // Update file input
-          updateFileInput();
-          // Re-render previews
-          renderPreviews();
+          updatePreviews();
         };
         
-        previewDiv.appendChild(img);
-        previewDiv.appendChild(removeBtn);
-        preview.appendChild(previewDiv);
+        div.appendChild(img);
+        div.appendChild(removeBtn);
+        preview.appendChild(div);
       };
       
       reader.readAsDataURL(file);
@@ -653,79 +616,39 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   }
 
   ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => {
-      dropZone.classList.add('dragover');
-    });
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
   });
 
   ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => {
-      dropZone.classList.remove('dragover');
-    });
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
   });
 
   dropZone.addEventListener('drop', function(e) {
     const dt = e.dataTransfer;
     const files = Array.from(dt.files);
     
-    // Add dropped files to our persistent array
     files.forEach(file => {
-      if (selectedFiles.length < 5) {
-        if (file.type.startsWith('image/')) {
-          selectedFiles.push(file);
-        }
+      if (selectedFiles.length < 5 && file.type.startsWith('image/')) {
+        selectedFiles.push(file);
       }
     });
     
-    // Update file input and previews
-    updateFileInput();
-    renderPreviews();
+    updatePreviews();
   });
 
   // Step navigation
-  // Step navigation (WITH STRICT VALIDATION)
   document.querySelectorAll('.nextBtn').forEach(btn => {
     btn.addEventListener('click', () => {
-      let isValid = true;
-      const currentSection = document.querySelector(`.report-card[data-step="${currentStep}"]`);
-
-      // 1. Validation for Step 1 (Photos)
       if (currentStep === 1) {
         if (selectedFiles.length === 0) {
           step1Error.textContent = 'Please upload at least 1 photo';
           step1Error.style.display = 'block';
           dropZone.classList.add('input-error');
-          return; // Stop immediately
+          return;
         }
       }
-
-      // 2. Validation for Step 2 (Category Grid Hidden Input)
-      if (currentStep === 2) {
-        const catId = document.getElementById('categoryId').value;
-        const step2Error = document.getElementById('step2Error');
-        if (!catId || catId === "0") {
-          step2Error.textContent = 'Please select a category from the grid.';
-          step2Error.style.display = 'block';
-          isValid = false;
-        } else {
-          step2Error.style.display = 'none';
-        }
-      }
-
-      // 3. HTML5 Required Fields Validation
-      const requiredInputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
-      requiredInputs.forEach(input => {
-        // Skip hidden inputs (like the office dropdown when 'I still have it' is selected)
-        if (input.offsetParent === null) return; 
-
-        if (!input.checkValidity()) {
-          input.reportValidity(); // Show browser's default required tooltip
-          isValid = false;
-        }
-      });
-
-      // Move to next step ONLY if everything is valid
-      if (isValid && currentStep < 5) {
+      
+      if (currentStep < 5) {
         showStep(currentStep + 1);
       }
     });
@@ -737,10 +660,12 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
     });
   });
 
-  // Form submit - ensure files are in the input
+  // Form submit - attach files to input
   document.getElementById('reportForm').addEventListener('submit', function(e) {
-    // Make sure file input has all files before submitting
-    updateFileInput();
+    // Create new DataTransfer and add all files
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    photoInput.files = dt.files;
     
     console.log('Submitting with', photoInput.files.length, 'files');
     
@@ -768,26 +693,15 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
     const idExtra = document.getElementById('idExtra');
     
     if (categoryGrid) {
-      console.log('Category grid found, categories:', document.querySelectorAll('.cat').length);
-      
       document.querySelectorAll('.cat').forEach(cat => {
         cat.addEventListener('click', function(e) {
           e.preventDefault();
-          e.stopPropagation();
           
-          const catId = this.dataset.id;
-          const catName = this.dataset.name;
-          
-          console.log('Category clicked:', catName, 'ID:', catId);
-          
-          document.querySelectorAll('.cat').forEach(c => {
-            c.classList.remove('active');
-          });
-          
+          document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
           this.classList.add('active');
-          categoryId.value = catId;
+          categoryId.value = this.dataset.id;
           
-          if (catName.toLowerCase() === 'ids') {
+          if (this.dataset.name.toLowerCase() === 'ids') {
             idExtra.hidden = false;
           } else {
             idExtra.hidden = true;
@@ -795,12 +709,13 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
         });
       });
       
-      const savedCategoryId = categoryId.value;
-      if (savedCategoryId) {
-        const selectedCat = document.querySelector(`.cat[data-id="${savedCategoryId}"]`);
-        if (selectedCat) {
-          selectedCat.classList.add('active');
-          if (selectedCat.dataset.name.toLowerCase() === 'ids') {
+      // Restore selected category
+      const savedId = categoryId.value;
+      if (savedId) {
+        const selected = document.querySelector(`.cat[data-id="${savedId}"]`);
+        if (selected) {
+          selected.classList.add('active');
+          if (selected.dataset.name.toLowerCase() === 'ids') {
             idExtra.hidden = false;
           }
         }
@@ -808,25 +723,25 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
     }
   });
 
-document.addEventListener('DOMContentLoaded', function() {
-  const officeRadios = document.querySelectorAll('input[name="custody_state"]');
-  const officeWrap = document.getElementById('officeDropdownWrap');
-  const officeSelect = document.getElementById('office_id');
+  // Office dropdown toggle
+  document.addEventListener('DOMContentLoaded', function() {
+    const radios = document.querySelectorAll('input[name="custody_state"]');
+    const officeWrap = document.getElementById('officeDropdownWrap');
+    const officeSelect = document.getElementById('office_id');
 
-  officeRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-      if (this.value === 'at_office') {
-        // Use flex/block to match your CSS, then fade in
-        officeWrap.style.display = 'block';
-        officeSelect.setAttribute('required', 'required');
-      } else {
-        officeWrap.style.display = 'none';
-        officeSelect.removeAttribute('required');
-        officeSelect.value = ''; // Reset selection
-      }
+    radios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        if (this.value === 'at_office') {
+          officeWrap.style.display = 'block';
+          officeSelect.required = true;
+        } else {
+          officeWrap.style.display = 'none';
+          officeSelect.required = false;
+          officeSelect.value = '';
+        }
+      });
     });
   });
-});
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?> 

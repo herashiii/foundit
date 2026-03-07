@@ -104,7 +104,7 @@ if ($itemId > 0) {
 
 // 24-Hour Freshness Logic (Applied if status is unclaimed)
 $isRecentItem = false;
-if ($item && $item['status'] === 'recent') {
+if ($item && $item['status'] === 'unclaimed') {
     $createdTime = strtotime($item['created_at']);
     $isRecentItem = (time() - $createdTime) <= (24 * 3600);
 }
