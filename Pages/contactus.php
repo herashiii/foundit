@@ -72,27 +72,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section class="contact-section">
         <div class="container contact-grid">
 
-            <!-- CONTACT INFO -->
-            <div class="contact-card">
+            <!-- CONTACT INFO - Expanded -->
+            <div class="contact-card info-card">
                 <h2>Get in Touch</h2>
-                <p>If you need support regarding a lost or found item, you may reach us through the following:</p>
+                <p class="info-intro">If you need support regarding a lost or found item, you may reach us through the following:</p>
 
-                <div class="contact-info">
-                    <p><strong>Email:</strong> support@foundit.com</p>
-                    <p><strong>Phone:</strong> +63 912 345 6789</p>
-                    <p><strong>Office Hours:</strong> Monday – Friday, 8:00 AM – 5:00 PM</p>
-                    <p><strong>Location:</strong> Campus Administration Office</p>
+                <div class="contact-info-expanded">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3>Email</h3>
+                            <p><a href="mailto:support@foundit.com">support@foundit.com</a></p>
+                            <p class="info-note">We typically respond within 24 hours</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3>Phone</h3>
+                            <p><a href="tel:+639123456789">+63 912 345 6789</a></p>
+                            <p class="info-note">Monday – Friday, 8:00 AM – 5:00 PM</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3>Location</h3>
+                            <p>Campus Administration Office</p>
+                            <p class="info-note">2nd Floor, Main Building</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-content">
+                            <h3>Office Hours</h3>
+                            <p>Monday – Friday</p>
+                            <p class="info-note">8:00 AM – 5:00 PM (Closed on Weekends)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-additional">
+                    <p><i class="fas fa-info-circle"></i> For urgent concerns, please visit our office during operating hours or call the hotline.</p>
                 </div>
             </div>
 
             <!-- CONTACT FORM -->
-            <div class="contact-card">
+            <div class="contact-card form-card">
                 <h2>Send Us a Message</h2>
                 
                 <!-- Success Message -->
                 <?php if ($messageSent): ?>
                     <div class="alert alert-success" style="margin-bottom: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724;">
-                        <strong>✅ Message Sent!</strong>
+                        <strong><i class="fas fa-check-circle"></i> Message Sent!</strong>
                         <p style="margin-top: 8px; margin-bottom: 0;">Thank you for contacting us. We'll get back to you as soon as possible.</p>
                     </div>
                 <?php endif; ?>
@@ -100,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Error Message -->
                 <?php if ($messageError): ?>
                     <div class="alert alert-error" style="margin-bottom: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24;">
-                        <strong>❌ Error!</strong>
+                        <strong><i class="fas fa-exclamation-circle"></i> Error!</strong>
                         <p style="margin-top: 8px; margin-bottom: 0;"><?= $messageError ?></p>
                     </div>
                 <?php endif; ?>
@@ -123,16 +166,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-group">
                         <label for="message">Your Message <span style="color: #e74c3c;">*</span></label>
-                        <textarea id="message" name="message" rows="5" required 
-                                  placeholder="Please describe your concern or question..."><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
+                        <textarea id="message" name="message" rows="6" required 
+                                  placeholder="Please describe your concern or question in detail..."><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                     </div>
 
-                    <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem;">
-                        📨 Send Message
+                    <button type="submit" class="btn-primary submit-btn">
+                        <i class="fas fa-paper-plane"></i> Send Message
                     </button>
 
-                    <p style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: #666;">
-                        We'll respond to your message within 24-48 hours.
+                    <p class="response-note">
+                        <i class="fas fa-clock"></i> We'll respond within 24-48 hours
                     </p>
 
                 </form>
