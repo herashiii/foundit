@@ -192,7 +192,7 @@ footer { background: #1A202C; color: #CBD5E0; padding: 40px 0 20px; margin-top: 
 
     .logo {
         justify-content: center;
-        margin-bottom: 15px;
+        margin-bottom: 0px;
     }
 }
 

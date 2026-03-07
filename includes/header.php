@@ -1,8 +1,10 @@
 <?php
+// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Check if user is logged in
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName = $isLoggedIn ? ($_SESSION['first_name'] . ' ' . $_SESSION['last_name']) : '';
 
@@ -17,7 +19,9 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
     
     <link rel="icon" type="image/x-icon" href="../favicon2.ico">
     <link rel="shortcut icon" href="../favicon2.ico">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="../css/base.css">
 
     <?php if(file_exists(__DIR__ . "/../css/" . $current_page . ".css")): ?>
@@ -25,26 +29,18 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
     <?php endif; ?>
 
     <style>
-        /* Mobile Menu Toggle Logic */
-        #menu-toggle { display: none; }
-
-        .menu-icon {
-            display: none;
-            cursor: pointer;
-            padding: 10px;
-            user-select: none;
+        /* 1. Desktop Consistency (Ensures nothing moves) */
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative; /* Anchor for mobile positioning */
         }
 
-        .menu-icon span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background: var(--primary);
-            margin: 5px 0;
-            transition: var(--transition);
+        #menu-toggle, .menu-icon {
+            display: none; /* Completely hidden on desktop */
         }
 
-        /* Desktop Nav Actions Styling */
         .nav-actions .btn {
             display: inline-flex;
             justify-content: center;
@@ -57,25 +53,66 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .nav-actions .btn-primary { background-color: #9B2C2C; color: #FFFFFF; border: 2px solid #9B2C2C; }
-        .nav-actions .btn-primary:hover { background-color: #742A2A; transform: translateY(-1px); }
-        .nav-actions .btn-secondary { background-color: #FFFFFF; color: #9B2C2C; border: 2px solid #9B2C2C; }
-        .nav-actions .btn-secondary:hover { background-color: #FFF5F5; transform: translateY(-1px); }
+        .nav-actions .btn-primary {
+            background-color: #9B2C2C;
+            color: #FFFFFF;
+            border: 2px solid #9B2C2C;
+        }
+        
+        .nav-actions .btn-primary:hover {
+            background-color: #742A2A;
+            transform: translateY(-1px);
+        }
+        
+        .nav-actions .btn-secondary {
+            background-color: #FFFFFF;
+            color: #9B2C2C;
+            border: 2px solid #9B2C2C;
+        }
+        
+        .nav-actions .btn-secondary:hover {
+            background-color: #FFF5F5;
+            transform: translateY(-1px);
+        }
 
-        /* Responsive Breakpoint (Matches base.css) */
+        .mobile-only-links {
+            display: none;
+        }
+
+        /* 2. Mobile Responsiveness (Triggers at 992px) */
         @media (max-width: 992px) {
-            .menu-icon { display: block; }
+            .menu-icon {
+                /* Changed to flex to properly center the hamburger bars against the logo */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                order: 3; 
+                cursor: pointer;
+                padding: 5px 0 5px 10px; /* Adjusted padding to prevent misalignment */
+                margin: 0;
+            }
+
+            .menu-icon span {
+                display: block;
+                width: 25px;
+                height: 3px;
+                background: var(--primary);
+                margin: 3px 0; /* Tightened the gap for a cleaner look */
+                border-radius: 2px;
+                transition: 0.3s;
+            }
 
             .nav-links {
-                display: none; /* Controlled by checkbox hack in base.css */
+                display: none; 
                 flex-direction: column;
                 position: absolute;
                 top: var(--header-height);
                 left: 0;
                 width: 100%;
-                background: white;
+                background: #fff;
                 padding: 20px;
                 box-shadow: var(--shadow-md);
+                z-index: 1001;
                 gap: 15px;
             }
 
@@ -83,7 +120,19 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 display: flex;
             }
 
-            .nav-actions { display: none; } /* Actions usually move inside mobile menu or remain hidden */
+            .nav-actions {
+                display: none; 
+            }
+
+            .mobile-only-links {
+                /* Force mobile links to stack nicely */
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                border-top: 1px solid var(--border);
+                margin-top: 10px;
+                padding-top: 15px;
+            }
         }
     </style>
 </head>
@@ -95,13 +144,8 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <div>Found<span>iT</span></div>
             </a>
 
-            <input type="checkbox" id="menu-toggle">
-            <label for="menu-toggle" class="menu-icon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </label>
-
+            <input type="checkbox" id="menu-toggle" style="display: none;">
+            
             <div class="nav-links">
                 <a href="../Pages/index.php" class="nav-link <?= $current_page == 'index' ? 'active' : '' ?>">Home</a>
                 <a href="../Pages/site-map.php" class="nav-link <?= $current_page == 'site-map' ? 'active' : '' ?>">Site Map</a>
@@ -109,11 +153,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <a href="../Pages/faq.php" class="nav-link <?= $current_page == 'faq' || $current_page == 'faqs' ? 'active' : '' ?>">FAQs</a>
                 <a href="../Pages/aboutus.php" class="nav-link <?= $current_page == 'aboutus' ? 'active' : '' ?>">About Us</a>
                 
-                <div class="mobile-only-actions" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <div class="mobile-only-links">
                     <?php if ($isLoggedIn): ?>
                         <a href="../Pages/logout.php" class="nav-link">Log Out</a>
                     <?php else: ?>
                         <a href="../Login/login.php" class="nav-link">Log In</a>
+                        <a href="../Pages/turn-in-item.php" class="nav-link" style="color: var(--primary); font-weight: 700;">Turn In Item</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -132,5 +177,11 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                     <a href="../Pages/turn-in-item.php" class="btn btn-primary">Turn In Item</a>
                 <?php endif; ?>
             </div>
+
+            <label for="menu-toggle" class="menu-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
         </div>
     </nav>
