@@ -365,7 +365,6 @@ include __DIR__ . '/../includes/header.php';
             <button class="tab-btn active" onclick="showTab('items')">📦 Items Management</button>
             <button class="tab-btn" onclick="showTab('claims')">📋 Claims History</button>
             <button class="tab-btn" onclick="showTab('users')">👥 Users Management</button>
-            <button class="tab-btn" onclick="showTab('categories')">🏷️ Categories & Locations</button>
         </div>
 
         <!-- Items Tab - Updated status options to match your schema -->
