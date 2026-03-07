@@ -156,30 +156,30 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <a href="../Pages/faq.php" class="nav-link <?= $current_page == 'faq' || $current_page == 'faqs' ? 'active' : '' ?>">FAQs</a>
                 <a href="../Pages/aboutus.php" class="nav-link <?= $current_page == 'aboutus' ? 'active' : '' ?>">About Us</a>
                 
-<div class="mobile-only-links">
-    <?php if ($isLoggedIn): ?>
-        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-            <a href="../Pages/admindash.php" class="nav-link">Admin Dashboard</a>
-            <a href="../Pages/logout.php" class="nav-link">Log Out</a>
-        <?php else: ?>
-            <a href="../Pages/dashboard.php" class="nav-link">User Dashboard</a>
-            <a href="../Pages/logout.php" class="nav-link">Log Out</a>
-        <?php endif; ?>
-    <?php else: ?>
-        <a href="../Login/login.php" class="nav-link">Log In</a>
-        <a href="../Pages/turn-in-item.php" class="nav-link" style="color: var(--primary); font-weight: 700;">Turn In Item</a>
-    <?php endif; ?>
-</div>
+                <div class="mobile-only-links">
+                    <?php if ($isLoggedIn): ?>
+                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                            <a href="../Pages/admindash.php" class="nav-link">Admin Dashboard</a>
+                            <a href="#" onclick="confirmLogoutMobile(event)" class="nav-link">Log Out</a>
+                        <?php else: ?>
+                            <a href="../Pages/dashboard.php" class="nav-link">User Dashboard</a>
+                            <a href="#" onclick="confirmLogoutMobile(event)" class="nav-link">Log Out</a>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <a href="../Login/login.php" class="nav-link">Log In</a>
+                        <a href="../Pages/turn-in-item.php" class="nav-link" style="color: var(--primary); font-weight: 700;">Turn In Item</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <div class="nav-actions">
                 <?php if ($isLoggedIn): ?>
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                         <a href="../Pages/admindash.php" class="btn btn-primary">Admin Dashboard</a>
-                        <a href="../Pages/logout.php" class="btn btn-secondary">Log Out</a>
+                        <button onclick="confirmLogout()" class="btn btn-secondary" style="border: 2px solid #9B2C2C; background: white; color: #9B2C2C; cursor: pointer;">Log Out</button>
                     <?php else: ?>
                         <a href="../Pages/dashboard.php" class="btn btn-secondary">User Dashboard</a>
-                        <a href="../Pages/logout.php" class="btn btn-primary">Log Out</a>
+                        <button onclick="confirmLogout()" class="btn btn-primary" style="background: #9B2C2C; color: white; border: 2px solid #9B2C2C; cursor: pointer;">Log Out</button>
                     <?php endif; ?>
                 <?php else: ?>
                     <a href="../Login/login.php" class="btn btn-secondary">Log In</a>
@@ -194,3 +194,39 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             </label>
         </div>
     </nav>
+
+    <!-- Logout Confirmation Script -->
+    <script>
+        // Accessible logout confirmation for desktop
+        function confirmLogout() {
+            if (confirm('Are you sure you want to sign out? This will end your current session.')) {
+                window.location.href = '../Pages/logout.php';
+            }
+        }
+
+        // Accessible logout confirmation for mobile
+        function confirmLogoutMobile(event) {
+            event.preventDefault();
+            if (confirm('Are you sure you want to sign out? This will end your current session.')) {
+                window.location.href = '../Pages/logout.php';
+            }
+        }
+
+        // Add keyboard support for logout buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtns = document.querySelectorAll('.nav-actions button[onclick="confirmLogout()"]');
+            logoutBtns.forEach(btn => {
+                btn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        confirmLogout();
+                    }
+                });
+                
+                // Add proper ARIA attributes for accessibility
+                btn.setAttribute('aria-label', 'Log out of your account');
+                btn.setAttribute('role', 'button');
+                btn.setAttribute('tabindex', '0');
+            });
+        });
+    </script>
