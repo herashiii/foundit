@@ -138,6 +138,13 @@ $pending_claims = array_filter($my_claims, function($claim) {
                         <span class="detail-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
                     </div>
                 </div>
+                
+                <div class="dashboard-actions">
+                    <button onclick="confirmLogout()" class="btn btn-logout" aria-label="Logout from your account">
+                        <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Recent Activity Card -->
@@ -147,6 +154,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                         <span class="card-icon"><i class="fas fa-clock"></i></span>
                         Recent Activity
                     </h2>
+                    <a href="my-activity.php" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
                 
                 <div class="activity-list">
@@ -603,6 +611,22 @@ $pending_claims = array_filter($my_claims, function($claim) {
     flex: 1;
     color: #1e293b;
     font-weight: 500;
+}
+
+.btn-logout {
+    background: #fef2f2;
+    color: #9B2C2C;
+    border: 1px solid #fee2e2;
+    padding: 10px 24px;
+    width: 100%;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    background: #fee2e2;
+    border-color: #9B2C2C;
+    transform: translateY(-1px);
 }
 
 /* Activity Card */
