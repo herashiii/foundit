@@ -144,7 +144,7 @@ function h($s) {
                                 type="email" 
                                 name="email" 
                                 id="admin_email" 
-                                placeholder="admin@foundit.edu.ph" 
+                                placeholder="Enter your admin email address" 
                                 value="admin@foundit.edu.ph"
                                 required
                             >
