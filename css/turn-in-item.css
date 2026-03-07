@@ -367,3 +367,14 @@ input:focus, select:focus, textarea:focus {
   background-color: #f0f0f0;
   transform: translateY(-1px);
 }
+
+.input-error {
+  border: 2px solid #dc2626 !important;
+  background-color: #fff5f5;
+}
+
+.step-error {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}

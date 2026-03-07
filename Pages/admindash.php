@@ -226,10 +226,6 @@ include __DIR__ . '/../includes/header.php';
                     Last login: <?= date('M d, Y h:i A', strtotime($admin['created_at'] ?? 'now')) ?>
                 </span>
             </div>
-            <div class="admin-actions">
-                <a href="../Pages/index.php" class="btn btn-secondary">View Site</a>
-                <a href="logout.php" class="btn btn-primary">Logout</a>
-            </div>
         </div>
 
         <!-- Action Messages -->

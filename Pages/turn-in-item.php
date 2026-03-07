@@ -391,9 +391,7 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
       <section class="report-card" data-step="3" hidden>
         <h2>Where did you find it?</h2>
         <p class="helper" style="margin-bottom: 15px; color: #6b7280;">Provide the location and date details.</p>
-        
-        <label>Campus Area / Building <span class="req">*</span></label>
-        
+          
         <label>Campus Area / Building <span class="req">*</span></label>
         <select name="found_location_id" required>
           <option value="">Select location</option>
@@ -511,7 +509,7 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   
   showStep(currentStep);
 
-  // SIMPLIFIED PHOTO UPLOAD
+    // SIMPLE PHOTO UPLOAD - GUARANTEED TO WORK
   const photoInput = document.getElementById('photoInput');
   const dropZone = document.getElementById('dropZone');
   const preview = document.getElementById('previewContainer');
@@ -534,12 +532,20 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   photoInput.style.cursor = 'pointer';
   photoInput.style.zIndex = '10';
 
-  // Click handler
-  dropZone.addEventListener('click', () => photoInput.click());
-
-  // Handle file selection
+  
+  // Handle file selection - ONE TIME ONLY
+  let isProcessing = false;
+  
   photoInput.addEventListener('change', function(e) {
+    // Prevent multiple processing
+    if (isProcessing) return;
+    isProcessing = true;
+    
     const files = Array.from(this.files);
+    console.log('Files selected:', files.length);
+    
+    // Clear existing files (replace, don't add)
+    selectedFiles = [];
     
     // Add new files (limit to 5 total)
     files.forEach(file => {
@@ -554,6 +560,14 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
     dropZone.classList.remove('input-error');
     
     console.log('Total files:', selectedFiles.length);
+    
+    // Clear the input value
+    this.value = '';
+    
+    // Reset processing flag after a short delay
+    setTimeout(() => {
+      isProcessing = false;
+    }, 100);
   });
 
   // Update previews
@@ -606,26 +620,35 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   }
 
   // Drag and drop
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-  });
-
-  function preventDefaults(e) {
+  let isDragover = false;
+  
+  dropZone.addEventListener('dragover', function(e) {
     e.preventDefault();
     e.stopPropagation();
-  }
-
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
+    if (!isDragover) {
+      dropZone.classList.add('dragover');
+      isDragover = true;
+    }
   });
 
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragover');
+    isDragover = false;
   });
 
   dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove('dragover');
+    isDragover = false;
+    
     const dt = e.dataTransfer;
     const files = Array.from(dt.files);
+    
+    // Clear existing files (replace, don't add)
+    selectedFiles = [];
     
     files.forEach(file => {
       if (selectedFiles.length < 5 && file.type.startsWith('image/')) {
@@ -636,29 +659,142 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
     updatePreviews();
   });
 
-  // Step navigation
+function showError(stepErrorId, message, element = null) {
+  const errorBox = document.getElementById(stepErrorId);
+  errorBox.textContent = message;
+  errorBox.style.display = 'block';
+
+  if (element) {
+    element.classList.add('input-error');
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function clearErrors(stepErrorId) {
+  const errorBox = document.getElementById(stepErrorId);
+  errorBox.textContent = "";
+  errorBox.style.display = "none";
+
+  document.querySelectorAll('.input-error').forEach(el => {
+    el.classList.remove('input-error');
+  });
+}
+    
   document.querySelectorAll('.nextBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (currentStep === 1) {
-        if (selectedFiles.length === 0) {
-          step1Error.textContent = 'Please upload at least 1 photo';
-          step1Error.style.display = 'block';
-          dropZone.classList.add('input-error');
+  btn.addEventListener('click', () => {
+
+    // STEP 1 VALIDATION
+    if (currentStep === 1) {
+      clearErrors('step1Error');
+
+      if (selectedFiles.length === 0) {
+        showError(
+          'step1Error',
+          "Please upload at least one photo of the item.",
+          dropZone
+        );
+        return;
+      }
+    }
+
+    // STEP 2 VALIDATION
+    if (currentStep === 2) {
+      clearErrors('step2Error');
+
+      const category = document.getElementById('categoryId');
+      const title = document.getElementById('title');
+
+      if (!category.value) {
+        showError(
+          'step2Error',
+          "Please select a category so we know what item was found."
+        );
+        return;
+      }
+
+      if (!title.value.trim()) {
+        showError(
+          'step2Error',
+          "Please enter a short title for the item.",
+          title
+        );
+        return;
+      }
+
+      // If ID category
+      if (document.getElementById('idExtra') && !document.getElementById('idExtra').hidden) {
+        const idType = document.querySelector('[name="id_type"]');
+        const nameOnId = document.querySelector('[name="name_on_id"]');
+
+        if (!idType.value.trim()) {
+          showError(
+            'step2Error',
+            "Please enter the type of ID.",
+            idType
+          );
+          return;
+        }
+
+        if (!nameOnId.value.trim()) {
+          showError(
+            'step2Error',
+            "Please enter the name shown on the ID.",
+            nameOnId
+          );
           return;
         }
       }
-      
-      if (currentStep < 5) {
-        showStep(currentStep + 1);
-      }
-    });
-  });
+    }
 
-  document.querySelectorAll('.prevBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (currentStep > 1) showStep(currentStep - 1);
-    });
+    // STEP 3 VALIDATION
+    if (currentStep === 3) {
+      clearErrors('step3Error');
+
+      const location = document.querySelector('[name="found_location_id"]');
+      const date = document.querySelector('[name="found_date"]');
+
+      if (!location.value) {
+        showError(
+          'step3Error',
+          "Please select where you found the item.",
+          location
+        );
+        return;
+      }
+
+      if (!date.value) {
+        showError(
+          'step3Error',
+          "Please enter the date the item was found.",
+          date
+        );
+        return;
+      }
+    }
+
+    // STEP 4 VALIDATION
+    if (currentStep === 4) {
+      clearErrors('step4Error');
+
+      const custody = document.querySelector('input[name="custody_state"]:checked').value;
+      const office = document.getElementById('office_id');
+
+      if (custody === 'at_office' && !office.value) {
+        showError(
+          'step4Error',
+          "Please select the office where you left the item.",
+          office
+        );
+        return;
+      }
+    }
+
+    if (currentStep < 5) {
+      showStep(currentStep + 1);
+    }
+
   });
+});
 
   // Form submit - attach files to input
   document.getElementById('reportForm').addEventListener('submit', function(e) {
@@ -744,4 +880,4 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
   });
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?> 
+<?php include __DIR__ . '/../includes/footer.php'; ?>   

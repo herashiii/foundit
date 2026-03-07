@@ -94,13 +94,13 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
                     
                     <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                         <!-- 1. ADMIN LOGIC: Admins manage items, they don't turn them in -->
-     <a href="../Pages/admindash.php" class="btn btn-primary" style="padding: 8px 20px;">Admin Dashboard</a>
+                        <a href="../Pages/admindash.php" class="btn btn-primary" style="padding: 8px 20px;">Admin Dashboard</a>
                         <a href="../Pages/logout.php" class="btn btn-secondary" style="padding: 8px 20px;">Log Out</a>
                         
                     <?php else: ?>
                         <!-- 2. STUDENT LOGIC: Students track their portal and turn in items -->
                         <a href="../Pages/dashboard.php" class="btn btn-secondary" style="padding: 8px 20px;">User Dashboard</a>
-                        <a href="../Pages/turn-in-item.php" class="btn btn-primary" style="padding: 8px 20px;">Turn In Item</a>
+                        <a href="../Pages/logout.php" class="btn btn-primary" style="padding: 8px 20px;">Log Out</a>
                     <?php endif; ?>
                     
                 <?php else: ?>
