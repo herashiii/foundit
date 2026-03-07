@@ -29,7 +29,7 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                         <?php if(!isset($_SESSION['user_role']) || $_SESSION['user_role'] === 'guest'): ?>
                             <li>
                             <a href="<?= ($currentFolder === 'Login') ? 'login.php' : '../Login/login.php' ?>">
-                                Student / Staff Login
+                                Student / Admin Login
                             </a>
                             </li>
                         <?php else: ?>

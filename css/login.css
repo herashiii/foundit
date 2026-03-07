@@ -53,6 +53,7 @@
 .auth-header p {
   font-size: 0.85rem;
   color: var(--text-muted);
+  margin-top: 5px;
 }
 
 /* FORM */
@@ -119,4 +120,3 @@
 .auth-submit {
   margin-top: 6px;
 }
-
