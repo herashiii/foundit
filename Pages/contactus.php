@@ -124,7 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="info-additional">
-                    <p><i class="fas fa-info-circle"></i> For urgent concerns, please visit our office during operating hours or call the hotline.</p>
+                    <div class="alert alert-info" role="note">
+                        <span class="icon" aria-hidden="true">ℹ</span>
+                        <p>For urgent concerns, please visit our office during operating hours or call the hotline.</p>
+                    </div>
                 </div>
             </div>
 

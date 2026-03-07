@@ -121,27 +121,6 @@
     font-size: 0.85rem !important;
 }
 
-.info-additional {
-    padding: 16px;
-    background: #f1f5f9;
-    border-radius: 12px;
-    border-left: 4px solid #9B2C2C;
-}
-
-.info-additional p {
-    color: #475569;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-}
-
-.info-additional i {
-    color: #9B2C2C;
-    font-size: 1rem;
-}
-
 /* FORM */
 .contact-form {
     margin-top: 10px;
@@ -257,6 +236,48 @@
 
 .alert i {
     margin-right: 8px;
+}
+
+/* Alert Info - Matching the first photo */
+.alert-info {
+    background-color: #EBF8FF !important;
+    border: 1px solid #BEE3F8 !important;
+    color: #2C5282 !important;
+}
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 0; /* Override the 20px margin for this specific alert */
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alert .icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: inline-block;
+}
+
+.alert p {
+    flex: 1;
+    margin: 0;
+    color: inherit;
+}
+
+/* Override the existing info-additional styles */
+.info-additional {
+    padding: 0;
+    background: transparent;
+    border-left: none;
+    margin-top: 20px;
+}
+
+.info-additional .alert {
+    margin-bottom: 0;
 }
 
 /* Responsive */
