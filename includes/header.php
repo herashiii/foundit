@@ -49,11 +49,11 @@ $page_css_path = __DIR__ . "/../css/" . $current_page . ".css";
             <a href="../Pages/index.php" class="nav-link <?= $current_page == 'index' ? 'active' : '' ?>">
                 Home
             </a>
-            <a href="../Pages/find-my-item.php" class="nav-link <?= $current_page == 'find-my-item' ? 'active' : '' ?>">
-                Find My Item
-            </a>
             <a href="../Pages/site-map.php" class="nav-link <?= $current_page == 'site-map' ? 'active' : '' ?>">
                 Site Map
+            </a>
+            <a href="../Pages/find-my-item.php" class="nav-link <?= $current_page == 'find-my-item' ? 'active' : '' ?>">
+                Find My Item
             </a>
             <a href="../Pages/faq.php" class="nav-link <?= $current_page == 'faqs' ? 'active' : '' ?>">
                 FAQs

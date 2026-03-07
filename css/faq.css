@@ -1,151 +1,135 @@
-/* ========================================
-   FAQ HERO BANNER
-======================================== */
+/* -------------------------------------------------------------------------- */
+/* FAQ.CSS - FAQ Page aligned with find-my-item header text styles            */
+/* -------------------------------------------------------------------------- */
 
-.faq-hero{
-background: linear-gradient(rgba(110,15,15,0.95), rgba(110,15,15,0.95)),
-url('../silliman-hall.jpg');
-background-size: cover;
-background-position: center;
-padding: 35px 0 45px 0;   /* reduced top padding */
-color: white;
-}
-/* FAQ TITLE */
-
-.faq-title{
-color:#ffffff;
-font-size:38px;
-font-weight:700;
-margin-bottom:6px;
+.faq-page {
+    background-color: var(--neut-gray-1, #F7FAFC);
+    min-height: calc(100vh - 200px);
+    padding-bottom: 60px;
+    font-family: 'Inter', sans-serif;
 }
 
-/* SUBTITLE */
-
-.faq-subtitle{
-color:#f3f3f3;
-font-size:16px;
+/* --- PORTAL HEADER STRIP (Matches Find My Item EXACTLY - Solid Color) --- */
+.portal-header-strip {
+    background-color: var(--mono-red-2, #742A2A); /* Solid color as requested */
+    padding: 32px 0;
+    color: var(--neut-gray-2, #FFFFFF);
+    margin-bottom: 32px;
+    border-bottom: 4px solid var(--split-gold-1, #D69E2E);
+    text-align: left;
 }
 
-
-/* ========================================
-   BREADCRUMB
-======================================== */
-
-.breadcrumb{
-margin-top:-12px;   /* moves breadcrumb upward */
-margin-bottom:10px;
-font-size:14px;
+.portal-header-strip .header-content h1 {
+    color: var(--neut-gray-2, #FFFFFF);
+    font-size: 2.2rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    font-weight: 700;
 }
 
-.breadcrumb a{
-color:#ffd6d6;
-text-decoration:none;
-transition:0.2s;
+.portal-header-strip .header-content p {
+    color: var(--mono-red-5, #FFF5F5);
+    font-size: 1rem;
+    margin: 0;
 }
 
-/* HOVER EFFECT */
-
-.breadcrumb a:hover{
-text-decoration: underline;
+/* Breadcrumbs matching find-my-item */
+.portal-header-strip .breadcrumb {
+    font-size: 0.85rem;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    opacity: 0.9;
+    justify-content: flex-start;
 }
 
-.breadcrumb span{
-color:#ffffff;
+.portal-header-strip .breadcrumb a {
+    color: var(--mono-red-5, #FFF5F5);
+    text-decoration: none;
 }
 
-
-/* ========================================
-   FAQ SECTION
-======================================== */
-
-.faq-section{
-background:#f5f6f8;
-padding:70px 0;
+.portal-header-strip .breadcrumb a:hover {
+    text-decoration: underline;
+    color: var(--split-gold-1, #D69E2E);
 }
 
-
-/* ========================================
-   FAQ ITEM CARD
-======================================== */
-
-.faq-item{
-background:white;
-border-radius:12px;
-box-shadow:0 8px 18px rgba(0,0,0,0.08);
-margin-bottom:18px;
-overflow:hidden;
+.portal-header-strip .breadcrumb .sep {
+    color: var(--mono-red-5, #FFF5F5);
+    opacity: 0.6;
 }
 
-
-/* ========================================
-   QUESTION
-======================================== */
-
-.faq-question{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:18px 22px;
-font-weight:600;
-font-size:16px;
-color:#333;
-cursor:pointer;
-border-left:5px solid #9b2323;
+.portal-header-strip .breadcrumb .active {
+    color: var(--split-gold-1, #D69E2E);
+    font-weight: 700;
 }
 
-
-/* HOVER EFFECT */
-
-.faq-question:hover{
-background: rgba(155, 44, 44, 0.06);
+/* --- FAQ CONTENT SECTION --- */
+.faq-section {
+    padding: 0 20px;
 }
 
-
-/* ========================================
-   ICON
-======================================== */
-
-.faq-icon{
-color:#9b2323;
-font-size:14px;
-transition:0.3s;
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-.faq-item.active .faq-icon{
-transform:rotate(180deg);
+.faq-item {
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
 }
 
-
-/* ========================================
-   ANSWER
-======================================== */
-
-.faq-answer{
-display:none;
-padding:18px 22px;
-font-size:15px;
-color:#555;
-border-top:1px solid #eee;
-line-height:1.6;
+.faq-item:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
 }
 
-.faq-item.active .faq-answer{
-display:block;
+.faq-question {
+    padding: 20px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2D3748;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    transition: background 0.2s;
+    user-select: none;
 }
 
-
-/* ========================================
-   RESPONSIVE
-======================================== */
-
-@media (max-width:768px){
-
-.faq-title{
-font-size:30px;
+.faq-question:hover {
+    background: #F8FAFC;
 }
 
-.faq-section{
-padding:50px 20px;
+.faq-icon {
+    font-size: 0.9rem;
+    color: var(--primary-color, #8A1538);
+    transition: transform 0.3s ease;
 }
 
+.faq-answer {
+    padding: 0 24px;
+    max-height: 0;
+    overflow: hidden;
+    color: #4A5568;
+    line-height: 1.6;
+    font-size: 1rem;
+    transition: max-height 0.3s ease-out, padding 0.3s ease;
+    background: #F8FAFC;
+    border-top: 1px solid transparent;
+}
+
+/* Active State toggled by Javascript */
+.faq-item.active .faq-icon {
+    transform: rotate(180deg);
+}
+
+.faq-item.active .faq-answer {
+    padding: 20px 24px;
+    max-height: 800px; 
+    border-top-color: #E2E8F0;
 }

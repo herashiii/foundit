@@ -109,7 +109,7 @@ $items = $itemsStmt->fetchAll();
                 <span class="active">Find My Item</span>
             </nav>
             <div class="header-content">
-                <h1>Items Turned In</h1>
+                <h1>Find My Item</h1>
                 <p>Search and browse items found across campus grounds.</p>
             </div>
         </div>

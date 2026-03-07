@@ -42,8 +42,7 @@
 
 /* 1. Header Strip - Uses Monochromatic & Split Complementary */
 .portal-header-strip {
-    background-color: var(--mono-red-3);
-    background-image: linear-gradient(135deg, var(--mono-red-3) 0%, var(--mono-red-2) 100%);
+    background-color: var(--mono-red-2);
     padding: 32px 0;
     color: var(--neut-gray-2);
     margin-bottom: 32px;
