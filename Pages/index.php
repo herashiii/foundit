@@ -202,7 +202,7 @@ $recentItems = $stmt->fetchAll();
                     </a>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state" style="grid-column: 1 / -1; text-align: center;">
                     <p>No recently found items reported yet.</p>
                 </div>
             <?php endif; ?>
