@@ -90,6 +90,20 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
     }
 }
 
+// Handle marking message as read via AJAX
+if (isset($_POST['mark_message_read'])) {
+    $messageId = (int)$_POST['mark_message_read'];
+    if ($messageId > 0) {
+        try {
+            $stmt = $pdo->prepare("UPDATE contact_messages SET status = 'read' WHERE id = ? AND status = 'unread'");
+            $stmt->execute([$messageId]);
+        } catch (Exception $e) {
+            // Silently fail
+        }
+    }
+    exit; // Stop further execution for AJAX requests
+}
+
 // Handle message from redirect
 if (isset($_GET['message'])) {
     $actionMessage = $_GET['message'];
@@ -205,11 +219,39 @@ $allUsers = $pdo->query("
         created_at DESC
 ")->fetchAll();
 
-// Get all categories
-$categories = $pdo->query("SELECT * FROM categories ORDER BY name")->fetchAll();
+// Get contact messages
+$contactMessages = $pdo->query("
+    SELECT * FROM contact_messages 
+    ORDER BY 
+        CASE status 
+            WHEN 'unread' THEN 1 
+            WHEN 'read' THEN 2 
+            WHEN 'replied' THEN 3 
+        END,
+        created_at DESC
+")->fetchAll();
 
-// Get all locations
-$locations = $pdo->query("SELECT * FROM locations ORDER BY name")->fetchAll();
+// Handle message deletion
+if (isset($_GET['delete_message'])) {
+    $messageId = (int)$_GET['delete_message'];
+    
+    try {
+        $stmt = $pdo->prepare("DELETE FROM contact_messages WHERE id = ?");
+        $stmt->execute([$messageId]);
+        
+        $actionMessage = "Message #$messageId has been deleted successfully.";
+        header('Location: admindash.php?message=' . urlencode($actionMessage) . '&tab=messages');
+        exit;
+    } catch (Exception $e) {
+        $actionError = "Error deleting message: " . $e->getMessage();
+    }
+}
+
+// Count unread messages for the badge
+$unreadMessages = array_filter($contactMessages, function($m) { 
+    return $m['status'] === 'unread'; 
+});
+$unreadCount = count($unreadMessages);
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -231,14 +273,14 @@ include __DIR__ . '/../includes/header.php';
         <!-- Action Messages -->
         <?php if ($actionMessage): ?>
             <div class="alert alert-success">
-                <span class="icon">✅</span>
+                <span class="icon"><i class="fas fa-check-circle"></i></span>
                 <span><?= h($actionMessage) ?></span>
             </div>
         <?php endif; ?>
 
         <?php if ($actionError): ?>
             <div class="alert alert-error">
-                <span class="icon">⚠️</span>
+                <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
                 <span><?= h($actionError) ?></span>
             </div>
         <?php endif; ?>
@@ -246,7 +288,7 @@ include __DIR__ . '/../includes/header.php';
         <!-- Quick Stats Grid - Updated to match your schema -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">📦</div>
+                <div class="stat-icon"><i class="fas fa-box"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $stats['total_items'] ?></span>
                     <span class="stat-label">Total Items</span>
@@ -259,7 +301,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $stats['total_users'] ?></span>
                     <span class="stat-label">Total Users</span>
@@ -272,7 +314,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon">📋</div>
+                <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $stats['total_claims'] ?></span>
                     <span class="stat-label">Total Claims</span>
@@ -289,10 +331,7 @@ include __DIR__ . '/../includes/header.php';
         <?php if (count($pendingClaims) > 0): ?>
         <div class="dashboard-section">
             <div class="section-header">
-                <h2>
-                    <span>⚠️</span>
-                    Pending Claims - Action Required
-                </h2>
+                <h2><i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i> Pending Claims - Action Required</h2>
                 <span class="section-badge"><?= count($pendingClaims) ?> pending</span>
             </div>
             
@@ -362,13 +401,25 @@ include __DIR__ . '/../includes/header.php';
 
         <!-- Tabs Navigation -->
         <div class="dashboard-tabs">
-            <button class="tab-btn active" onclick="showTab('items')">📦 Items Management</button>
-            <button class="tab-btn" onclick="showTab('claims')">📋 Claims History</button>
-            <button class="tab-btn" onclick="showTab('users')">👥 Users Management</button>
+            <button class="tab-btn active" onclick="showTab('items')">
+                <i class="fas fa-boxes"></i> Items Management
+            </button>
+            <button class="tab-btn" onclick="showTab('claims')">
+                <i class="fas fa-file-signature"></i> Claims History
+            </button>
+            <button class="tab-btn" onclick="showTab('users')">
+                <i class="fas fa-user-cog"></i> Users Management
+            </button>
+            <button class="tab-btn" onclick="showTab('messages')" id="messages-tab-btn">
+                <i class="fas fa-envelope"></i> Messages
+                <?php if ($unreadCount > 0): ?>
+                    <span class="tab-unread-badge"><?= $unreadCount ?></span>
+                <?php endif; ?>
+            </button>
         </div>
 
         <!-- Items Tab - Updated status options to match your schema -->
-        <div id="tab-items" class="tab-content active">
+        <div id="tab-items" class="tab-content">
             <div class="dashboard-section">
                 <div class="section-header">
                     <h2>All Items</h2>
@@ -436,10 +487,7 @@ include __DIR__ . '/../includes/header.php';
         <div id="tab-claims" class="tab-content">
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2>
-                        <span>📋</span>
-                        Claims History
-                    </h2>
+                    <h2><i class="fas fa-file-signature"></i> Claims History</h2>
                     <span class="section-badge">Total: <?= count($allClaims) ?></span>
                 </div>
                 
@@ -491,7 +539,7 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 <?php else: ?>
                     <div class="empty-state">
-                        <div class="empty-icon">📭</div>
+                        <div class="empty-icon"><i class="fas fa-inbox fa-4x"></i></div>
                         <h3>No Claims Yet</h3>
                         <p>When users submit claim requests, they will appear here.</p>
                     </div>
@@ -556,45 +604,235 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Categories Tab -->
-        <div id="tab-categories" class="tab-content">
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="tab-content">
             <div class="dashboard-section">
-                <div class="section-header">
-                    <h2>Categories</h2>
-                    <span class="section-badge">Total: <?= count($categories) ?></span>
-                </div>
-                
-                <div class="category-list">
-                    <?php foreach ($categories as $cat): ?>
-                    <div class="category-item">
-                        <span><?= h($cat['name']) ?></span>
-                        <span class="category-id">ID: <?= $cat['id'] ?></span>
+                <!-- Header with Unread Counter -->
+                <div class="messages-header">
+                    <div class="header-title">
+                        <h2>
+                            <i class="fas fa-inbox"></i>
+                            Messages
+                        </h2>
+                        <?php if ($unreadCount > 0): ?>
+                            <div class="unread-count-badge">
+                                <span class="unread-count"><?= $unreadCount ?></span> unread
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endforeach; ?>
+                    <div class="header-actions">
+                        <button class="btn-refresh" onclick="refreshWithTab()" title="Refresh messages">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h2>Locations</h2>
-                    <span class="section-badge">Total: <?= count($locations) ?></span>
+                <!-- Message Filters -->
+                <div class="message-filters">
+                    <button class="filter-btn active" onclick="filterMessages('all', this)">
+                        <i class="fas fa-envelope"></i> All
+                        <span class="filter-count"><?= count($contactMessages) ?></span>
+                    </button>
+                    <button class="filter-btn" onclick="filterMessages('unread', this)">
+                        <i class="fas fa-circle" style="color: #9B2C2C;"></i> Unread
+                        <?php if ($unreadCount > 0): ?>
+                            <span class="filter-count unread"><?= $unreadCount ?></span>
+                        <?php endif; ?>
+                    </button>
+                    <button class="filter-btn" onclick="filterMessages('replied', this)">
+                        <i class="fas fa-check-circle" style="color: #27ae60;"></i> Replied
+                    </button>
                 </div>
                 
-                <div class="category-list">
-                    <?php foreach ($locations as $loc): ?>
-                    <div class="category-item">
-                        <span><?= h($loc['name']) ?></span>
-                        <span class="category-id">ID: <?= $loc['id'] ?></span>
+                <?php if (count($contactMessages) > 0): ?>
+                    <div class="messages-list">
+                        <?php foreach ($contactMessages as $msg): 
+                            $isUnread = $msg['status'] === 'unread';
+                        ?>
+                            <div class="message-item <?= $isUnread ? 'message-unread' : '' ?>" 
+                                data-status="<?= $msg['status'] ?>"
+                                data-message-id="<?= $msg['id'] ?>">
+                                
+                                <!-- Unread Indicator - Pulsing dot for unread messages -->
+                                <?php if ($isUnread): ?>
+                                    <div class="unread-indicator" title="Unread message"></div>
+                                <?php endif; ?>
+
+                                <!-- Message Header (click to expand) -->
+                                <div class="message-header-compact" onclick="toggleMessageExpand(<?= $msg['id'] ?>)">
+                                    <div class="message-sender-info">
+                                        <div class="sender-avatar <?= $isUnread ? 'avatar-unread' : '' ?>">
+                                            <?= strtoupper(substr($msg['name'], 0, 1)) ?>
+                                        </div>
+                                        <div class="message-details">
+                                            <div class="message-title-row">
+                                                <span class="sender-name">
+                                                    <strong><?= h($msg['name']) ?></strong>
+                                                    <?php if ($isUnread): ?>
+                                                        <span class="new-badge">NEW</span>
+                                                    <?php endif; ?>
+                                                </span>
+                                                <span class="message-time">
+                                                    <i class="far fa-clock"></i>
+                                                    <?= date('M d, Y', strtotime($msg['created_at'])) ?>
+                                                </span>
+                                            </div>
+                                            <div class="message-subject-row">
+                                                <span class="sender-email">
+                                                    <i class="fas fa-envelope"></i> <?= h($msg['email']) ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Message Preview (visible when collapsed) -->
+                                <div class="message-preview" onclick="toggleMessageExpand(<?= $msg['id'] ?>)">
+                                    <p><?= h(substr($msg['message'], 0, 120)) ?><?= strlen($msg['message']) > 120 ? '...' : '' ?></p>
+                                </div>
+                                
+                                <!-- Expandable Full Message -->
+                                <div id="message-full-<?= $msg['id'] ?>" class="message-full" style="display: none;">
+                                    <div class="full-message-container">
+                                        <div class="full-message-header">
+                                            <h4><i class="fas fa-quote-left"></i> Full Message</h4>
+                                            <button class="btn-expand" onclick="toggleMessageExpand(<?= $msg['id'] ?>)">
+                                                <i class="fas fa-chevron-up"></i> Collapse
+                                            </button>
+                                        </div>
+                                        <div class="full-message-content">
+                                            <p><?= nl2br(h($msg['message'])) ?></p>
+                                        </div>
+                                        
+                                        <?php if (!empty($msg['admin_reply'])): ?>
+                                            <div class="reply-history">
+                                                <h4><i class="fas fa-reply"></i> Your Reply</h4>
+                                                <p><?= nl2br(h($msg['admin_reply'])) ?></p>
+                                                <small class="reply-date">
+                                                    <i class="far fa-calendar-alt"></i> 
+                                                    Replied on <?= date('M d, Y', strtotime($msg['updated_at'])) ?>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                
+                                <!-- Message Actions -->
+                                <div class="message-actions">
+                                    <div class="action-left">
+                                        <span class="message-status-indicator status-<?= $msg['status'] ?>">
+                                            <?php if ($msg['status'] === 'unread'): ?>
+                                                <i class="fas fa-circle"></i> Unread
+                                            <?php elseif ($msg['status'] === 'replied'): ?>
+                                                <i class="fas fa-check-circle"></i> Replied
+                                            <?php else: ?>
+                                                <i class="fas fa-envelope-open"></i> Read
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="action-right">
+                                        <!-- Always show Reply button, regardless of status -->
+                                        <button onclick="openReplyModal(<?= $msg['id'] ?>, '<?= h(addslashes($msg['name'])) ?>', '<?= h($msg['email']) ?>')" 
+                                                class="action-icon-btn reply-btn">
+                                            <i class="fas fa-reply"></i>
+                                            <span>Reply</span>
+                                        </button>
+                                        
+                                        <a href="mailto:<?= h($msg['email']) ?>" 
+                                        class="action-icon-btn email-btn">
+                                            <i class="fas fa-envelope"></i>
+                                            <span>Email</span>
+                                        </a>
+                                        
+                                        <button onclick="deleteMessage(<?= $msg['id'] ?>)" 
+                                                class="action-icon-btn delete-btn">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-inbox fa-4x"></i>
+                        </div>
+                        <h3>No Messages Yet</h3>
+                        <p>When users send messages through the contact form, they will appear here.</p>
+                    </div>
+                <?php endif; ?>
             </div>
+        </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-reply" style="color: #9B2C2C;"></i> Reply to Message</h2>
+                <button class="modal-close" onclick="closeReplyModal()" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="replyForm" method="POST" action="reply-message.php">
+                <input type="hidden" name="message_id" id="replyMessageId">
+                
+                <div class="modal-body">
+                    <!-- Recipient Card -->
+                    <div class="recipient-card">
+                        <div class="recipient-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="recipient-details">
+                            <div class="recipient-name" id="replyToName"></div>
+                            <div class="recipient-email" id="replyToEmail"></div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Line (Read-only) -->
+                    <div class="form-group">
+                        <label for="reply_subject">
+                            <i class="fas fa-tag"></i> Subject
+                        </label>
+                        <div class="subject-display">
+                            Re: Message from FoundiT Contact Form
+                        </div>
+                        <input type="hidden" name="subject" value="Re: Message from FoundiT Contact Form">
+                    </div>
+
+                    <!-- Reply Message -->
+                    <div class="form-group">
+                        <label for="reply_message">
+                            <i class="fas fa-pencil-alt"></i> Your Reply <span class="required-star">*</span>
+                        </label>
+                        <textarea name="reply_message" id="reply_message" rows="6" required 
+                                placeholder="Type your reply here..." autofocus></textarea>
+                        <small class="field-hint">
+                            <i class="fas fa-info-circle"></i> 
+                            Your reply will be saved and the message will be marked as replied.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeReplyModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Reply
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </main>
 
 <!-- JavaScript for Tabs and Proof View -->
 <script>
+// Store current tab in sessionStorage when changing tabs
 function showTab(tabName) {
     // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -611,7 +849,73 @@ function showTab(tabName) {
     
     // Add active class to clicked button
     event.target.classList.add('active');
+    
+    // Save current tab to sessionStorage
+    sessionStorage.setItem('activeTab', tabName);
 }
+
+// On page load, restore the last active tab
+document.addEventListener('DOMContentLoaded', function() {
+    // Check URL for tab parameter first
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTab = urlParams.get('tab');
+    
+    // Restore active tab from URL or sessionStorage
+    let activeTab = urlTab || sessionStorage.getItem('activeTab') || 'items';
+    
+    // Find the corresponding tab button
+    const tabBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+        btn.getAttribute('onclick')?.includes(activeTab)
+    );
+    
+    if (tabBtn) {
+        // Manually trigger the tab change without waiting
+        const tabName = activeTab;
+        
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Add active class to clicked button
+        tabBtn.classList.add('active');
+    }
+    
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert && alert.style) {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    if (alert && alert.style) {
+                        alert.style.display = 'none';
+                    }
+                }, 500);
+            }
+        }, 5000);
+    });
+    
+    // Add click handler to remove alerts manually
+    alerts.forEach(alert => {
+        alert.addEventListener('click', function() {
+            this.style.transition = 'opacity 0.3s ease';
+            this.style.opacity = '0';
+            setTimeout(() => {
+                this.style.display = 'none';
+            }, 300);
+        });
+    });
+});
 
 function showProof(claimId) {
     const proofDiv = document.getElementById('proof-' + claimId);
@@ -619,6 +923,200 @@ function showProof(claimId) {
         proofDiv.style.display = 'block';
     } else {
         proofDiv.style.display = 'none';
+    }
+}
+
+// Show full message
+function showMessage(messageId) {
+    const messageDiv = document.getElementById('message-' + messageId);
+    if (messageDiv.style.display === 'none') {
+        messageDiv.style.display = 'block';
+    } else {
+        messageDiv.style.display = 'none';
+    }
+}
+
+// Show reply
+function showReply(messageId) {
+    const replyDiv = document.getElementById('reply-' + messageId);
+    if (replyDiv.style.display === 'none') {
+        replyDiv.style.display = 'block';
+    } else {
+        replyDiv.style.display = 'none';
+    }
+}
+
+// Open reply modal
+function openReplyModal(messageId, name, email) {
+    document.getElementById('replyMessageId').value = messageId;
+    document.getElementById('replyToName').textContent = name;
+    document.getElementById('replyToEmail').textContent = email;
+    document.getElementById('replyModal').style.display = 'flex';
+    
+    // Mark as read when replying
+    const messageItem = document.querySelector(`.message-item[data-message-id="${messageId}"]`);
+    if (messageItem && messageItem.classList.contains('message-unread')) {
+        messageItem.classList.remove('message-unread');
+        messageItem.dataset.status = 'read'; // Update data-status for filtering
+        const unreadIndicator = messageItem.querySelector('.unread-indicator');
+        if (unreadIndicator) unreadIndicator.remove();
+        const newBadge = messageItem.querySelector('.new-badge');
+        if (newBadge) newBadge.remove();
+        
+        // Update status indicator text
+        const statusIndicator = messageItem.querySelector('.message-status-indicator');
+        if (statusIndicator) {
+            statusIndicator.className = 'message-status-indicator status-read';
+            statusIndicator.innerHTML = '<i class="fas fa-envelope-open"></i> Read';
+        }
+        
+        fetch('admindash.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'mark_message_read=' + messageId
+        }).then(() => {
+            updateUnreadCount();
+            
+            // If currently on 'unread' filter, hide this message
+            const activeFilter = document.querySelector('.filter-btn.active');
+            if (activeFilter && activeFilter.textContent.includes('Unread')) {
+                messageItem.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Close reply modal
+function closeReplyModal() {
+    document.getElementById('replyModal').style.display = 'none';
+    document.getElementById('reply_message').value = '';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('replyModal');
+    if (event.target === modal) {
+        closeReplyModal();
+    }
+}
+
+// Filter messages by status
+function filterMessages(status, btn) {
+    const messages = document.querySelectorAll('.message-item');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    
+    // Update active button
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Filter messages
+    messages.forEach(msg => {
+        if (status === 'all') {
+            msg.style.display = 'block';
+        } else {
+            if (msg.dataset.status === status) {
+                msg.style.display = 'block';
+            } else {
+                msg.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Toggle message expansion
+function toggleMessageExpand(messageId) {
+    const fullMessage = document.getElementById('message-full-' + messageId);
+    const messageItem = document.querySelector(`.message-item[data-message-id="${messageId}"]`);
+    
+    if (fullMessage.style.display === 'none') {
+        fullMessage.style.display = 'block';
+        
+        // If message is unread, mark it as read when expanded
+        if (messageItem && messageItem.classList.contains('message-unread')) {
+            // Update UI immediately - remove unread styling but keep visible
+            messageItem.classList.remove('message-unread');
+            messageItem.dataset.status = 'read'; // Update data-status for filtering
+            const unreadIndicator = messageItem.querySelector('.unread-indicator');
+            if (unreadIndicator) unreadIndicator.remove();
+            const newBadge = messageItem.querySelector('.new-badge');
+            if (newBadge) newBadge.remove();
+            
+            // Update status indicator text
+            const statusIndicator = messageItem.querySelector('.message-status-indicator');
+            if (statusIndicator) {
+                statusIndicator.className = 'message-status-indicator status-read';
+                statusIndicator.innerHTML = '<i class="fas fa-envelope-open"></i> Read';
+            }
+            
+            // Update status in database via AJAX
+            fetch('admindash.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'mark_message_read=' + messageId
+            }).then(() => {
+                // Update unread count in UI
+                updateUnreadCount();
+                // DON'T hide the message - let it stay visible until filter changes
+            });
+        }
+    } else {
+        fullMessage.style.display = 'none';
+    }
+}
+
+// Update unread count in UI
+function updateUnreadCount() {
+    // Count current unread messages in DOM
+    const unreadMessages = document.querySelectorAll('.message-item.message-unread').length;
+    
+    // Update tab badge
+    const tabBadge = document.querySelector('#messages-tab-btn .tab-unread-badge');
+    if (tabBadge) {
+        if (unreadMessages > 0) {
+            tabBadge.textContent = unreadMessages;
+            tabBadge.style.display = 'inline-block';
+        } else {
+            tabBadge.style.display = 'none';
+        }
+    }
+    
+    // Update header unread badge
+    const headerBadge = document.querySelector('.unread-count-badge .unread-count');
+    if (headerBadge) {
+        if (unreadMessages > 0) {
+            headerBadge.textContent = unreadMessages;
+            document.querySelector('.unread-count-badge').style.display = 'inline-flex';
+        } else {
+            document.querySelector('.unread-count-badge').style.display = 'none';
+        }
+    }
+    
+    // Update filter unread count
+    const filterUnread = document.querySelector('.filter-btn[onclick*="unread"] .filter-count.unread');
+    if (filterUnread) {
+        if (unreadMessages > 0) {
+            filterUnread.textContent = unreadMessages;
+            filterUnread.style.display = 'inline-block';
+        } else {
+            filterUnread.style.display = 'none';
+        }
+    }
+}
+
+// Refresh while staying in current tab
+function refreshWithTab() {
+    const currentTab = sessionStorage.getItem('activeTab') || 'items';
+    window.location.href = 'admindash.php?tab=' + currentTab;
+}
+
+// Delete message with confirmation
+function deleteMessage(messageId) {
+    if (confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+        window.location.href = 'admindash.php?delete_message=' + messageId + '&tab=messages';
     }
 }
 </script>
