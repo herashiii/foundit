@@ -12,9 +12,17 @@
     text-align: center;
 }
 
+.about-hero h1 {
+    text-shadow: 0 3px 5px rgba(0,0,0,0.3);
+}
+
+.about-hero p {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
 /* SECTION SPACING */
 .about-section {
-    padding: 80px 0;
+    padding: 40px 0;
 }
 
 .light-bg {
