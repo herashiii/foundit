@@ -153,14 +153,20 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <a href="../Pages/faq.php" class="nav-link <?= $current_page == 'faq' || $current_page == 'faqs' ? 'active' : '' ?>">FAQs</a>
                 <a href="../Pages/aboutus.php" class="nav-link <?= $current_page == 'aboutus' ? 'active' : '' ?>">About Us</a>
                 
-                <div class="mobile-only-links">
-                    <?php if ($isLoggedIn): ?>
-                        <a href="../Pages/logout.php" class="nav-link">Log Out</a>
-                    <?php else: ?>
-                        <a href="../Login/login.php" class="nav-link">Log In</a>
-                        <a href="../Pages/turn-in-item.php" class="nav-link" style="color: var(--primary); font-weight: 700;">Turn In Item</a>
-                    <?php endif; ?>
-                </div>
+<div class="mobile-only-links">
+    <?php if ($isLoggedIn): ?>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <a href="../Pages/admindash.php" class="nav-link">Admin Dashboard</a>
+            <a href="../Pages/logout.php" class="nav-link">Log Out</a>
+        <?php else: ?>
+            <a href="../Pages/dashboard.php" class="nav-link">User Dashboard</a>
+            <a href="../Pages/logout.php" class="nav-link">Log Out</a>
+        <?php endif; ?>
+    <?php else: ?>
+        <a href="../Login/login.php" class="nav-link">Log In</a>
+        <a href="../Pages/turn-in-item.php" class="nav-link" style="color: var(--primary); font-weight: 700;">Turn In Item</a>
+    <?php endif; ?>
+</div>
             </div>
 
             <div class="nav-actions">

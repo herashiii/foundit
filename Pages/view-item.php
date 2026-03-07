@@ -117,7 +117,7 @@ include __DIR__ . '/../includes/header.php';
         <nav class="breadcrumb" aria-label="Secondary Navigation">
             <a href="index.php">Home</a>
             <span class="sep" aria-hidden="true">/</span>
-            <a href="find-my-item.php">Items Turned In</a>
+            <a href="find-my-item.php">Find My Item</a>
             <span class="sep" aria-hidden="true">/</span>
             <span class="active"><?= $notFound ? 'Not Found' : h($item['title']) ?></span>
         </nav>

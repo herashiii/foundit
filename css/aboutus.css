@@ -43,6 +43,7 @@
     border-radius: 14px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.05);
     transition: transform 0.2s ease;
+    text-align: center;
 }
 
 .about-card:hover {
@@ -70,4 +71,38 @@
     margin-bottom: 20px;
     line-height: 1.7;
     color: #4A5568;
+}
+
+@media (max-width: 768px) {
+    .about-hero {
+        padding: 56px 0 48px;
+        min-height: auto;
+    }
+
+    .about-hero h1 {
+        font-size: 2rem !important;
+        line-height: 1.15;
+        margin-bottom: 14px !important;
+    }
+
+    .about-hero p {
+        font-size: 1rem !important;
+        max-width: 100% !important;
+        line-height: 1.6;
+        padding: 0 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-hero {
+        padding: 44px 0 36px;
+    }
+
+    .about-hero h1 {
+        font-size: 1.75rem !important;
+    }
+
+    .about-hero p {
+        font-size: 0.95rem !important;
+    }
 }

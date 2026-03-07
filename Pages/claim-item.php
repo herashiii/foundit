@@ -160,7 +160,7 @@ include __DIR__ . '/../includes/header.php';
         <nav class="breadcrumb" aria-label="Secondary Navigation">
             <a href="index.php">Home</a>
             <span class="sep" aria-hidden="true">/</span>
-            <a href="find-my-item.php">Items Turned In</a>
+            <a href="find-my-item.php">Find My Item</a>
             <span class="sep" aria-hidden="true">/</span>
             <?php if ($item): ?>
                 <a href="view-item.php?id=<?= $item['id'] ?>"><?= h($item['title']) ?></a>
@@ -225,7 +225,7 @@ include __DIR__ . '/../includes/header.php';
                     <div class="context-details" style="width: 100%;">
                         <span class="context-category">Claiming as</span>
                         <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <div style="background: var(--mono-red-3); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            <div style="background: var(--mono-red-3); color: white; width: 40px; height: 40px; min-width: 40px; min-height: 40px; flex: 0 0 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; line-height: 1; aspect-ratio: 1 / 1;">
                                 <?= strtoupper(substr($_SESSION['first_name'] ?? 'U', 0, 1)) ?>
                             </div>
                             <div>
@@ -258,7 +258,7 @@ include __DIR__ . '/../includes/header.php';
                     <span class="icon" aria-hidden="true">ℹ️</span>
                     <div>
                         <strong>Tips for a successful claim:</strong>
-                        <ul style="margin-top: 8px; margin-left: 20px;">
+                        <ul style="margin-top: 8px;">
                             <li>Describe unique features not visible in the photo</li>
                             <li>Mention specific scratches, stickers, or contents</li>
                             <li>Include serial numbers if applicable</li>

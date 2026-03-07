@@ -124,14 +124,17 @@
 }
 .preview-tile {
   position: relative;
-  aspect-ratio: 1/1;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  overflow: hidden;
 }
-.preview-tile img{
-  width:100%;
+
+.preview-tile img {
+  width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius:10px;
-  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  display: block;
 }
 .preview-remove {
   position: absolute;
@@ -251,7 +254,7 @@ input:focus, select:focus, textarea:focus {
 .step-actions{
   display:flex;
   justify-content:space-between;
-  margin-top:20px;
+  margin-top:5px;
   padding-top: 20px;
   border-top: 1px solid #f3f4f6;
 }
@@ -318,27 +321,212 @@ input:focus, select:focus, textarea:focus {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .category-grid { grid-template-columns: repeat(2, 1fr); }
-  .preview-container { grid-template-columns: repeat(4, 1fr); }
-  
-  /* Sticky Action Bar for Mobile */
-  .step-actions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    padding: 16px 24px;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-    z-index: 100;
-    margin: 0;
-    border-top: 1px solid #e5e7eb;
+  .report-shell {
+    padding: 28px 0 48px;
+    min-height: auto;
   }
-  
-  /* Add padding to body so content isn't hidden behind sticky nav */
-  .report-container { padding-bottom: 90px; }
-  
-  .upload-zone { padding: 20px; }
+
+  .report-container {
+    padding: 0 16px 24px;
+  }
+
+  .report-header {
+    margin-bottom: 18px;
+    text-align: left;
+  }
+
+  .report-header h1 {
+    font-size: 1.65rem;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .report-header p {
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+
+  /* Stepper: scrollable instead of cramped */
+  .report-stepper {
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding: 0 2px 10px;
+    scrollbar-width: none;
+    margin-bottom: 18px;
+    justify-content: space-between
+  }
+
+  .report-stepper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .step {
+    flex: 0 0 auto;
+    padding: 6px 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* Card spacing */
+  .report-card {
+    border-radius: 14px;
+    padding: 20px 16px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.07);
+  }
+
+  .report-card h2 {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .helper {
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  /* Upload area */
+  .upload-zone {
+    padding: 22px 16px;
+    margin: 16px 0;
+    border-radius: 12px;
+  }
+
+  .zone-icon {
+    font-size: 1.7rem;
+  }
+
+  .zone-content p {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .upload-hint {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  /* Photo previews */
+  .preview-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  /* Categories */
+.category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    margin: 12px 0 18px;
+    -webkit-overflow-scrolling: touch;
+    align-content: start;
+  }
+
+  .category-grid::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .category-grid::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 999px;
+  }
+
+    .category-grid {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px;
+    background: #fcfcfd;
+  }
+
+  .cat {
+    padding: 10px 8px;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  /* Form controls */
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* prevents iPhone zoom */
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  textarea {
+    min-height: 110px;
+  }
+
+  /* ID section */
+  .id-extra {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .id-extra-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* Radio cards */
+  .radio {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .radio-content {
+    min-width: 0;
+  }
+
+  .radio-content span {
+    word-break: break-word;
+  }
+
+  /* Office dropdown area */
+  #officeDropdownWrap {
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+  }
+
+  /* Buttons: remove fixed bottom bar, use stacked flow layout */
+  .step-actions {
+    position: static;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+    box-shadow: none;
+    width: 100%;
+  }
+
+  .step-actions .report-btn-primary,
+  .step-actions .report-btn-secondary {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .form-alert {
+    border-radius: 12px;
+    padding: 13px 14px;
+    margin-bottom: 16px;
+  }
+
+  .form-alert ul {
+    margin-left: 18px;
+  }
 }
 
 /* Make active category clearly visible */

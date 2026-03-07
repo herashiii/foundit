@@ -287,11 +287,31 @@
         border-left: none;
         border-right: none;
     }
-    
+
+    .item-context-card {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .context-img {
+        margin-bottom: 12px;
+    }
+
+    .context-details {
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .context-meta {
+        justify-content: flex-start;
+    }
+
     .form-actions {
         flex-direction: column-reverse;
     }
-    
+
     .btn {
         width: 100%;
     }

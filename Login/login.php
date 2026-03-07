@@ -55,9 +55,42 @@ function h($s) {
                 <?php endif; ?>
 
                 <!-- Login Tabs -->
-                <div class="login-tabs">
-                    <button class="tab-btn active" id="tab-student-btn" onclick="switchTab('student')">🎓 Student Login</button>
-                    <button class="tab-btn" id="tab-admin-btn" onclick="switchTab('admin')">👤 Admin Login</button>
+                <div class="login-tabs" role="tablist" aria-label="Login type">
+                    <button
+                        class="tab-btn active"
+                        id="tab-student-btn"
+                        type="button"
+                        onclick="switchTab('student')"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="student-login"
+                    >
+                        <span class="tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" class="tab-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 10L12 5 2 10l10 5 10-5z"></path>
+                                <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"></path>
+                            </svg>
+                        </span>
+                        <span class="tab-label">Student Login</span>
+                    </button>
+
+                    <button
+                        class="tab-btn"
+                        id="tab-admin-btn"
+                        type="button"
+                        onclick="switchTab('admin')"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="admin-login"
+                    >
+                        <span class="tab-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" class="tab-icon-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z"></path>
+                                <path d="M4 20a8 8 0 0 1 16 0"></path>
+                            </svg>
+                        </span>
+                        <span class="tab-label">Admin Login</span>
+                    </button>
                 </div>
 
                 <!-- Student Login Form -->
@@ -151,18 +184,42 @@ function h($s) {
 <script>
 // Tab switching
 function switchTab(tab) {
-    // Hide all tabs
-    document.getElementById('student-login').classList.remove('active');
-    document.getElementById('admin-login').classList.remove('active');
-    
-    // Remove active class from buttons
-    document.getElementById('tab-student-btn').classList.remove('active');
-    document.getElementById('tab-admin-btn').classList.remove('active');
-    
-    // Show selected tab
+    const studentTab = document.getElementById('student-login');
+    const adminTab = document.getElementById('admin-login');
+    const studentBtn = document.getElementById('tab-student-btn');
+    const adminBtn = document.getElementById('tab-admin-btn');
+
+    studentTab.classList.remove('active');
+    adminTab.classList.remove('active');
+
+    studentBtn.classList.remove('active');
+    adminBtn.classList.remove('active');
+
+    studentBtn.setAttribute('aria-selected', 'false');
+    adminBtn.setAttribute('aria-selected', 'false');
+
     document.getElementById(tab + '-login').classList.add('active');
     document.getElementById('tab-' + tab + '-btn').classList.add('active');
+    document.getElementById('tab-' + tab + '-btn').setAttribute('aria-selected', 'true');
 }
+
+// For students: only allow numbers in password field
+document.getElementById('student_password')?.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length > 8) value = value.slice(0, 8);
+    e.target.value = value;
+});
+
+// Form loading states
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        if (this.checkValidity()) {
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+        }
+    });
+});
 
 // For students: only allow numbers in password field
 document.getElementById('student_password')?.addEventListener('input', function(e) {
@@ -188,46 +245,84 @@ document.querySelectorAll('form').forEach(form => {
 <style>
 /* Login Tabs */
 .login-tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 30px;
-    border-bottom: 2px solid var(--neut-gray-3, #E2E8F0);
-    padding-bottom: 10px;
+    margin-bottom: 26px;
+    padding: 6px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 12px 20px;
-    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 16px;
+    background: transparent;
     border: none;
-    border-radius: 8px 8px 0 0;
+    border-radius: 10px;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.98rem;
     color: var(--split-char-2, #4A5568);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     position: relative;
+    text-align: center;
 }
 
 .tab-btn:hover {
     color: var(--mono-red-3, #9B2C2C);
-    background: var(--mono-red-5, #FFF5F5);
+    background: #FFF5F5;
 }
 
 .tab-btn.active {
+    background: #FFFFFF;
     color: var(--mono-red-3, #9B2C2C);
     font-weight: 700;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -12px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: var(--mono-red-3, #9B2C2C);
-    border-radius: 3px 3px 0 0;
+    display: none;
+}
+
+.tab-btn:focus-visible {
+    outline: 3px solid rgba(155, 44, 44, 0.18);
+    outline-offset: 2px;
+}
+
+.tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.tab-icon-svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.tab-label {
+    line-height: 1.2;
+}
+
+@media (max-width: 480px) {
+    .login-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .tab-btn {
+        min-height: 48px;
+        font-size: 0.94rem;
+    }
 }
 
 .tab-content {
