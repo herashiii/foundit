@@ -313,11 +313,6 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                     <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small">
                                         <i class="fas fa-eye"></i> View Item
                                     </a>
-                                    <?php if ($claim['status'] === 'pending'): ?>
-                                        <a href="view-claim.php?id=<?= $claim['id'] ?>" class="btn btn-primary btn-small">
-                                            <i class="fas fa-check-circle"></i> Review Claim
-                                        </a>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -523,50 +518,69 @@ $pending_claims = array_filter($my_claims, function($claim) {
 /* Profile Card */
 .profile-card {
     grid-column: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .profile-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
 .profile-avatar {
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
     background: linear-gradient(135deg, #9B2C2C 0%, #601515 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-weight: 600;
-    font-size: 1.5rem;
+    font-weight: 700;
+    font-size: 2rem;
+    box-shadow: 0 4px 10px rgba(155,44,44,0.2);
 }
 
 .profile-title h2 {
-    margin: 0 0 4px;
+    margin: 0 0 8px 0;
     color: #1e293b;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
+    font-weight: 700;
 }
 
 .profile-role {
     color: #64748b;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .profile-details {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .detail-item {
     display: flex;
-    padding: 12px 0;
+    align-items: center;
+    padding: 16px 0;
     border-bottom: 1px solid #e2e8f0;
+    transition: background 0.2s;
+}
+
+.detail-item:hover {
+    background: rgba(255,255,255,0.5);
+    padding-left: 10px;
+    border-radius: 8px;
 }
 
 .detail-item:last-child {
@@ -574,15 +588,27 @@ $pending_claims = array_filter($my_claims, function($claim) {
 }
 
 .detail-label {
-    width: 110px;
-    color: #64748b;
-    font-size: 0.9rem;
+    width: 130px;
+    color: #475569;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-label i {
+    color: #9B2C2C;
+    font-size: 1.1rem;
+    width: 20px;
 }
 
 .detail-value {
     flex: 1;
-    color: #1e293b;
-    font-weight: 500;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 4px 0;
 }
 
 /* Activity Card */

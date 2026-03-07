@@ -359,7 +359,7 @@ include __DIR__ . '/../includes/header.php';
                                         <?= ucfirst($claim['item_status']) ?>
                                     </span>
                                 </small>
-                                <br><small>Owner: <?= h($claim['owner_first'] ?? 'Unknown') ?></small>
+                                <br><small>Reporter: <?= h($claim['owner_first'] ?? 'Unknown') ?></small>
                             </td>
                             <td>
                                 <?= h($claim['first_name'] ?? 'Unknown') ?> <?= h($claim['last_name'] ?? '') ?>
