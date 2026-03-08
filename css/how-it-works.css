@@ -2,201 +2,245 @@
    PAGE SECTION
 ================================ */
 
-.how-section-page{
-padding:15px 0 50px 0;
-background:#f5f6f8;
+.how-section-page {
+    padding: 15px 0 50px 0;
+    background: #f5f6f8;
+    min-height: calc(100vh - 100px);
 }
-
 
 /* ===============================
    BREADCRUMBS
 ================================ */
 
-.breadcrumb{
-font-size:14px;
-margin-top:0;
-margin-bottom:25px;
-color:#6b7280;
+.breadcrumb {
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #6b7280;
 }
 
-.breadcrumb a{
-color:#a62323;
-text-decoration:none;
-border-bottom:1px solid transparent;
-transition:0.2s;
+.breadcrumb a {
+    color: #9B2C2C; /* Matched to base primary */
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: 0.2s;
 }
 
-.breadcrumb a:hover{
-border-bottom:1px solid #a62323;
+.breadcrumb a:hover {
+    border-bottom: 1px solid #9B2C2C;
 }
 
-.breadcrumb span{
-margin:0 5px;
+.breadcrumb span {
+    margin: 0 5px;
 }
-
 
 /* ===============================
    HEADER
 ================================ */
 
-.how-header{
-text-align:center;
-margin-bottom:20px; /* was around 30–40 */
+.how-header {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.how-header h1{
-font-size:36px;
-font-weight:700;
-color:#1f2933;
-margin-bottom:8px;
+.how-header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1f2933;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
 }
 
-.how-header p{
-color:#6b7280;
-font-size:16px;
+.how-header p {
+    color: #6b7280;
+    font-size: 16px;
 }
-
 
 /* ===============================
-   VIDEO PLACEHOLDER
+   VIDEO PLACEHOLDER (UPGRADED)
 ================================ */
 
-.video-placeholder{
-display:flex;
-justify-content:center;
-margin-bottom:30px; /* smaller gap before steps */
+.video-placeholder {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 50px; /* Slightly increased gap before the steps */
 }
 
-.video-box{
-width:100%;
-max-width:720px;
-height:400px;
-
-background:#ffffff;
-border:2px dashed #d1d5db;
-border-radius:14px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-color:#6b7280;
-font-weight:600;
-font-size:16px;
-
-box-shadow:0 10px 25px rgba(0,0,0,0.05);
+.video-box {
+    width: 100%;
+    max-width: 100%; /* Changed from 800px so it perfectly aligns with the how-blocks */
+    height: 540px;   /* Increased height for a cinematic 16:9 feel on desktop */
+    
+    /* Uses Silliman Hall as a realistic video thumbnail */
+    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('../silliman-hall.jpg') center/cover no-repeat;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.video-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.play-btn {
+    font-size: 72px;
+    color: white;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+}
+
+.video-box:hover .play-btn {
+    transform: scale(1.15);
+    opacity: 1;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
 
 /* ===============================
    HOW BLOCK SECTIONS
 ================================ */
 
-.how-block{
-margin-bottom:70px;
+.how-block {
+    margin-bottom: 60px;
 }
 
-.how-block h2{
-color:#a62323;
-font-weight:700;
-margin-bottom:25px;
-font-size:24px;
+.how-block h2 {
+    color: #1f2933;
+    font-weight: 700;
+    margin-bottom: 25px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
+.how-block h2 i {
+    color: #9B2C2C; /* Primary red for icons */
+    font-size: 1.2em;
+}
 
 /* ===============================
    STEPS GRID
 ================================ */
 
-.steps-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:25px;
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
 }
-
 
 /* ===============================
    STEP CARD
 ================================ */
 
-.step-card{
-background:#ffffff;
-padding:28px;
-border-radius:14px;
-
-border:1px solid #e5e7eb;
-
-box-shadow:0 8px 25px rgba(0,0,0,0.06);
-
-border-left:5px solid #a62323;
-
-transition:all .25s ease;
+.step-card {
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+    border-top: 4px solid #9B2C2C; /* Switched to top border for a cleaner, modern look */
+    border-left: none;
+    transition: all .25s ease;
 }
 
-.step-card:hover{
-transform:translateY(-5px);
-box-shadow:0 15px 35px rgba(0,0,0,0.1);
+.step-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
 }
-
 
 /* ===============================
    STEP NUMBER
 ================================ */
 
-.step-number{
-width:42px;
-height:42px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-background:#a62323;
-color:white;
-
-font-weight:700;
-border-radius:50%;
-
-margin-bottom:12px;
+.step-number {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FFF5F5;
+    color: #9B2C2C;
+    font-weight: 800;
+    font-size: 1.1rem;
+    border-radius: 50%;
+    margin-bottom: 16px;
+    border: 2px solid #FED7D7;
 }
-
 
 /* ===============================
    TEXT
 ================================ */
 
-.step-card h4{
-margin:0;
-font-size:18px;
-font-weight:600;
-color:#1f2933;
+.step-card h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2933;
 }
 
-.step-card p{
-margin-top:8px;
-font-size:14px;
-line-height:1.6;
-color:#6b7280;
+.step-card p {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #4A5568;
 }
-
 
 /* ===============================
    RESPONSIVE
 ================================ */
 
-@media(max-width:900px){
+@media(max-width: 900px) {
+    .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 
-.steps-grid{
-grid-template-columns:1fr;
+    .video-box {
+        height: 280px;
+        border-radius: 12px;
+    }
+
+    .play-btn {
+        font-size: 56px;
+    }
+
+    .how-section-page {
+        padding: 20px 0 40px 0; 
+    }
+
+    .how-block h2 {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
 }
 
-.video-box{
-height:260px;
-}
-
-.how-section-page{
-padding:30px 0 50px 0; /* reduced top spacing */
-background:#f5f6f8;
-}
-
+@media(max-width: 480px) {
+    .how-header h1 {
+        font-size: 28px;
+    }
+    
+    .video-box {
+        height: 200px;
+    }
+    
+    .step-card {
+        padding: 20px;
+    }
 }
