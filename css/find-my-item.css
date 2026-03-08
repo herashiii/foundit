@@ -397,6 +397,10 @@
     #filterForm {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .card-media {
+        height: 320px;
+    }
 }
 
 @media (max-width: 600px) {
