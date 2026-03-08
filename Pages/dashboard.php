@@ -134,7 +134,8 @@ $pending_claims = array_filter($my_claims, function($claim) {
                         <span class="detail-value"><?= h($user['phone'] ?? 'Not provided') ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label"><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> Member Since</span>
+                        <span class="detail-label"><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> Member 
+                        <br>Since</br></span>
                         <span class="detail-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
                     </div>
                 </div>
@@ -275,7 +276,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                 <div class="card-header">
                     <h2>
                         <span class="card-icon"><i class="fas fa-file-signature"></i></span>
-                        Claims on My Items
+                        Claims on My Turned In Items
                         <span class="item-count">(<?= $total_claims ?>)</span>
                     </h2>
                 </div>

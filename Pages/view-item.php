@@ -228,36 +228,35 @@ include __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="cta-panel">
-    <?php if ($item['status'] === 'unclaimed'): ?>
-        <h3 class="cta-title">Is this yours?</h3>
-        <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
-        <div class="cta-actions">
-            <a href="claim-item.php?id=<?= (int)$item['id'] ?>" 
-               class="btn-primary" 
-               title="Proceed to the claim verification form" 
-               style="display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none;">
-                Proceed to Claim
-            </a>
-        </div>
-    <?php elseif ($item['status'] === 'pending'): ?>
-        <div class="alert alert-warning" style="margin-bottom: 0;">
-            <span class="icon" aria-hidden="true">⏳</span>
-            <div>
-                <strong>Claim Pending</strong><br>
-                Someone has submitted a claim for this item. It is currently awaiting staff verification.
-            </div>
-        </div>
-    <?php elseif ($item['status'] === 'claimed'): ?>
-        <div class="alert alert-success" style="margin-bottom: 0;">
-            <span class="icon" aria-hidden="true">✔</span>
-            <div>
-                <strong>Item Claimed</strong><br>
-                This item has been successfully returned to its owner.
-            </div>
-        </div>
-    <?php endif; ?>
-</div>
-
+                        <?php if ($item['status'] === 'unclaimed'): ?>
+                            <h3 class="cta-title">Is this yours?</h3>
+                            <p class="cta-desc">You will need to provide specific details not visible in the photos to prove ownership.</p>
+                            <div class="cta-actions">
+                                <a href="claim-item.php?id=<?= (int)$item['id'] ?>" 
+                                class="btn-primary" 
+                                title="Proceed to the claim verification form" 
+                                style="display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none;">
+                                    Proceed to Claim
+                                </a>
+                            </div>
+                        <?php elseif ($item['status'] === 'pending'): ?>
+                            <div class="alert alert-warning" style="margin-bottom: 0;">
+                                <span class="icon" aria-hidden="true">⏳</span>
+                                <div>
+                                    <strong>Claim Pending</strong><br>
+                                    Someone has submitted a claim for this item. It is currently awaiting staff verification.
+                                </div>
+                            </div>
+                        <?php elseif ($item['status'] === 'claimed'): ?>
+                            <div class="alert alert-success" style="margin-bottom: 0;">
+                                <span class="icon" aria-hidden="true">✔</span>
+                                <div>
+                                    <strong>Item Claimed</strong><br>
+                                    This item has been successfully returned to its owner.
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         <?php endif; ?>
