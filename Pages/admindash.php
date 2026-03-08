@@ -155,8 +155,11 @@ if (isset($_GET['toggle_user']) && isset($_GET['user_id'])) {
 }
 
 // Get statistics - Updated to match your DB schema
+// Get statistics - Updated to match your DB schema
 $stats = [];
 $stats['total_items'] = $pdo->query("SELECT COUNT(*) FROM items")->fetchColumn();
+// NEW: Count items created in the last 24 hours
+$stats['recent_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)")->fetchColumn();
 $stats['unclaimed_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'unclaimed'")->fetchColumn();
 $stats['pending_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'pending'")->fetchColumn();
 $stats['claimed_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'claimed'")->fetchColumn();
@@ -294,6 +297,7 @@ include __DIR__ . '/../includes/header.php';
                     <span class="stat-label">Total Items</span>
                 </div>
                 <div class="stat-breakdown">
+                    <span class="stat-mini">Recent: <?= $stats['recent_items'] ?></span>
                     <span class="stat-mini">Unclaimed: <?= $stats['unclaimed_items'] ?></span>
                     <span class="stat-mini">Pending: <?= $stats['pending_items'] ?></span>
                     <span class="stat-mini">Claimed: <?= $stats['claimed_items'] ?></span>
