@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -10,7 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../includes/db.php';
-include __DIR__ . '/../includes/header.php';
 
 function h($s): string {
   return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -20,7 +20,6 @@ function ensureDir(string $path): void {
   if (!is_dir($path)) mkdir($path, 0775, true);
 }
 
-// Existing login check remains...
 $pdo = db();
 $currentUserId = $_SESSION['user_id'];
 
@@ -32,14 +31,14 @@ $userFullName = $loggedInUser['first_name'] . ' ' . $loggedInUser['last_name'];
 $userEmail = $loggedInUser['email'];
 $userPhone = $loggedInUser['phone'] ?? null;
 
-// 2. RE-ADD THESE: Fetch data for Step 1 (Categories) and Step 2 (Locations)
+// 2. Fetch data for Categories and Locations
 $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 $locations  = $pdo->query("SELECT id, name FROM locations WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
 
-// 3. Fetch Active Offices for the Step 3 Custody dropdown
+// 3. Fetch Active Offices
 $offices = $pdo->query("SELECT id, name FROM offices WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
 
-// 4. Find IDs category id (Required for the dynamic "ID Details" section)
+// 4. Find IDs category id
 $idCategoryId = null;
 foreach ($categories as $c) {
   if (mb_strtolower($c['name']) === 'ids' || mb_strtolower($c['name']) === 'identification cards') {
@@ -55,6 +54,9 @@ $postedStep = (int)($_POST['current_step'] ?? 1);
 $old = $_POST ?? [];
 $oldCategoryId = (int)($old['category_id'] ?? 0);
 $oldCustody = $old['custody_state'] ?? 'with_finder';
+
+// REDIRECT FLAG - initialize to null
+$redirectUrl = null;
 
 // Handle submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -82,10 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Files
 $files = $_FILES['photos'] ?? null;
-
-// Debug logging (remove after testing)
-error_log("POST data: " . print_r($_POST, true));
-error_log("FILES data: " . print_r($_FILES, true));
 
 // Photos required: at least 1, up to 5
 $photoCount = 0;
@@ -128,7 +126,7 @@ error_log("Total valid files: $photoCount");
 if ($photoCount < 1) $errors[] = "Please upload at least 1 photo.";
 if ($photoCount > 5) $errors[] = "You can upload up to 5 photos only.";
 
-// --- NEW SERVER-SIDE VALIDATION CHECKS ---
+// Server-side validation checks
 if ($category_id === 0) $errors[] = "Please select a category.";
 if ($title === '') $errors[] = "Please provide an item title.";
 if ($found_location_id === 0) $errors[] = "Please select the location where the item was found.";
@@ -145,7 +143,7 @@ if ($idCategoryId !== null && $category_id === $idCategoryId) {
     try {
       $pdo->beginTransaction();
 
-      // Reporter user: find or create by email (until login)
+      // Reporter user: find or create by email
       $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
       $stmt->execute([':email' => $reporter_email]);
       $user = $stmt->fetch();
@@ -259,7 +257,7 @@ if ($idCategoryId !== null && $category_id === $idCategoryId) {
 
         if (!move_uploaded_file($tmp, $destFs)) throw new RuntimeException("Could not save uploaded photo.");
 
-$webPath = "uploads/items/{$item_id}/{$safeName}";
+        $webPath = "uploads/items/{$item_id}/{$safeName}";
 
         $insertPhoto->execute([
           ':item_id' => $item_id,
@@ -272,16 +270,25 @@ $webPath = "uploads/items/{$item_id}/{$safeName}";
       }
 
       $pdo->commit();
-      header("Location: view-item.php?id={$item_id}&submitted=1");
-      exit;
+      
+      // SET REDIRECT URL INSTEAD OF DIRECT HEADER
+      $redirectUrl = "view-item.php?id={$item_id}&submitted=1";
 
     } catch (Throwable $e) {
       if ($pdo->inTransaction()) $pdo->rollBack();
       $errors[] = "Save failed: " . $e->getMessage();
-      // Keep user on the step they were on
     }
   }
 }
+
+// CHECK IF WE NEED TO REDIRECT - BEFORE including header
+if ($redirectUrl) {
+    header("Location: " . $redirectUrl);
+    exit;
+}
+
+// NOW include header AFTER all processing
+include __DIR__ . '/../includes/header.php';
 ?>
 
 <main class="report-shell">
@@ -809,18 +816,17 @@ function clearErrors(stepErrorId) {
 
   // Form submit - attach files to input
   document.getElementById('reportForm').addEventListener('submit', function(e) {
-    // Create new DataTransfer and add all files
-    const dt = new DataTransfer();
-    selectedFiles.forEach(file => dt.items.add(file));
-    photoInput.files = dt.files;
-    
-    console.log('Submitting with', photoInput.files.length, 'files');
-    
-    if (selectedFiles.length === 0) {
-      e.preventDefault();
-      alert('Please upload at least 1 photo');
-      showStep(1);
-    }
+      // First, make sure files are attached
+      if (selectedFiles.length > 0) {
+          const dt = new DataTransfer();
+          selectedFiles.forEach(file => dt.items.add(file));
+          photoInput.files = dt.files;
+          console.log('Submitting with', photoInput.files.length, 'files');
+      } else {
+          e.preventDefault();
+          alert('Please upload at least 1 photo');
+          showStep(1);
+      }
   });
 
   // Clickable steps for going back
