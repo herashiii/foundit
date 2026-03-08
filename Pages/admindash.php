@@ -75,6 +75,12 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
                     $itemStmt = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE id = ?");
                     $itemStmt->execute([$claim['item_id']]);
                 }
+
+                // If rejected, update item status back to 'unclaimed'
+                else if ($action === 'reject') {
+                    $itemStmt = $pdo->prepare("UPDATE items SET status = 'unclaimed' WHERE id = ?");
+                    $itemStmt->execute([$claim['item_id']]);
+                }
                 
                 $pdo->commit();
                 $actionMessage = "Claim #$claimId has been " . ($action === 'approve' ? 'approved' : 'rejected') . " successfully.";
