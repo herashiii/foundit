@@ -54,12 +54,15 @@ if ($itemId > 0) {
     $item = $stmt->fetch();
 
     if (!$item) {
-        $errorMsg = 'Item not found.';
+    $errorMsg = 'Item not found.';
     } elseif ($item['status'] !== 'unclaimed') {
         $errorMsg = 'This item is no longer available for claims.';
     } elseif ($item['owner_id'] == $currentUserId) {
-        // HCI: Prevent users from claiming their own items
+        // Prevent users from claiming their own items
         $errorMsg = 'You cannot claim an item that you reported.';
+    } elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+        // Admins cannot claim items at all (they manage, not claim)
+        $errorMsg = 'Administrators cannot submit claim requests. Please log in with a student account to claim items.';
     } else {
         // Get item photo
         $photoStmt = $pdo->prepare("SELECT file_path FROM item_photos WHERE item_id = ? ORDER BY sort_order ASC LIMIT 1");
@@ -181,7 +184,9 @@ include __DIR__ . '/../includes/header.php';
 
             <?php if ($errorMsg): ?>
                 <div class="alert alert-error" role="alert">
-                    <span class="icon" aria-hidden="true">⚠️</span>
+                    <span class="icon" aria-hidden="true">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </span>
                     <div>
                         <strong>Unable to Process Request</strong><br>
                         <?= h($errorMsg) ?>
@@ -194,7 +199,9 @@ include __DIR__ . '/../includes/header.php';
                 
             <?php elseif ($successMsg): ?>
                 <div class="alert alert-success" role="status">
-                    <span class="icon" aria-hidden="true">✅</span>
+                    <span class="icon" aria-hidden="true">
+                        <i class="fas fa-check-circle"></i>
+                    </span>
                     <div>
                         <strong>Claim Submitted Successfully!</strong><br>
                         <?= h($successMsg) ?>
@@ -255,7 +262,9 @@ include __DIR__ . '/../includes/header.php';
 
                 <!-- Instructional Feedback - HCI Friendly -->
                 <div class="alert alert-info" role="note">
-                    <span class="icon" aria-hidden="true">ℹ️</span>
+                    <span class="icon" aria-hidden="true">
+                        <i class="fas fa-info-circle"></i>
+                    </span>
                     <div>
                         <strong>Tips for a successful claim:</strong>
                         <ul style="margin-top: 8px;">
@@ -331,54 +340,5 @@ document.getElementById('proof_description')?.addEventListener('input', function
     }
 });
 </script>
-
-<style>
-/* Additional HCI-friendly styles that complement your existing CSS */
-.field-hint {
-    transition: color 0.2s ease;
-}
-
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-}
-
-.btn-loading::after {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-left: 8px;
-    border: 2px solid white;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Ensure proper spacing */
-.form-actions {
-    margin-top: 24px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .item-context-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .context-img {
-        margin-bottom: 12px;
-    }
-}
-</style>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
