@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                required 
                                aria-required="true"
                                aria-describedby="<?= isset($errors['student_id']) ? 'student_id-error' : '' ?>"
-                               placeholder="e.g., 2020-12345"
+                               placeholder="e.g., 26-1-00001"
                                autocomplete="off">
                         <?php if (isset($errors['student_id'])): ?>
                             <div class="error-message" id="student_id-error" role="alert">
