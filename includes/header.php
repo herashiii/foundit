@@ -27,24 +27,24 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
     
     <link rel="stylesheet" href="../css/base.css">
 
-    <!-- Voice Command System CSS -->
     <link rel="stylesheet" href="../css/voice-commands.css">
+
+    <link rel="stylesheet" href="../css/color-blindness.css">
 
     <?php if(file_exists(__DIR__ . "/../css/" . $current_page . ".css")): ?>
         <link rel="stylesheet" href="../css/<?= htmlspecialchars($current_page) ?>.css">
     <?php endif; ?>
 
     <style>
-        /* 1. Desktop Consistency (Ensures nothing moves) */
         .nav-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: relative; /* Anchor for mobile positioning */
+            position: relative;
         }
 
         #menu-toggle, .menu-icon {
-            display: none; /* Completely hidden on desktop */
+            display: none; 
         }
 
         .nav-actions .btn {
@@ -85,16 +85,15 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             display: none;
         }
 
-        /* 2. Mobile Responsiveness (Triggers at 992px) */
+        /* Mobile Responsiveness */
         @media (max-width: 992px) {
             .menu-icon {
-                /* Changed to flex to properly center the hamburger bars against the logo */
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 order: 3; 
                 cursor: pointer;
-                padding: 5px 0 5px 10px; /* Adjusted padding to prevent misalignment */
+                padding: 5px 0 5px 10px; 
                 margin: 0;
             }
 
@@ -103,7 +102,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 width: 25px;
                 height: 3px;
                 background: var(--primary);
-                margin: 3px 0; /* Tightened the gap for a cleaner look */
+                margin: 3px 0; 
                 border-radius: 2px;
                 transition: 0.3s;
             }
@@ -131,7 +130,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
 
             .mobile-only-links {
-                /* Force mobile links to stack nicely */
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
@@ -140,9 +138,90 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 padding-top: 15px;
             }
         }
+
+        .accessibility-toolbar {
+            position: fixed;
+            top: 100px;
+            right: 10px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .a11y-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #9B2C2C;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+
+        .a11y-btn:hover {
+            transform: scale(1.1);
+            background: #742A2A;
+        }
+
+        .a11y-btn:focus-visible {
+            outline: 3px solid yellow;
+            outline-offset: 2px;
+        }
+
+        .font-size-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(155, 44, 44, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 9998;
+            display: none;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .font-size-indicator.show {
+            display: block;
+            animation: fadeInOut 2s ease;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .accessibility-toolbar {
+                top: auto;
+                bottom: 100px;
+                right: 10px;
+                flex-direction: column-reverse;
+            }
+            
+            .a11y-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Font Size Indicator -->
+    <div id="fontSizeIndicator" class="font-size-indicator" aria-live="polite"></div>
+
     <nav class="navbar" aria-label="Main Navigation">
         <div class="container nav-container">
             <a href="../Pages/index.php" class="logo" aria-label="FoundiT Home">
@@ -196,7 +275,186 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <span></span>
             </label>
         </div>
+
+        <!-- Accessibility Toolbar -->
+        <div class="accessibility-toolbar" aria-label="Accessibility options">
+            <!-- Font Size Controls -->
+            <button class="a11y-btn" onclick="increaseFontSize()" title="Increase Font Size (Ctrl++)" aria-label="Increase font size">
+                <i class="fas fa-plus-circle"></i>
+            </button>
+            <button class="a11y-btn" onclick="decreaseFontSize()" title="Decrease Font Size (Ctrl+-)" aria-label="Decrease font size">
+                <i class="fas fa-minus-circle"></i>
+            </button>
+            <button class="a11y-btn" onclick="resetFontSize()" title="Reset Font Size (Ctrl+0)" aria-label="Reset font size">
+                <i class="fas fa-undo-alt"></i>
+            </button>
+            
+            <!-- Color Blind Toggle -->
+            <button class="a11y-btn" onclick="cycleColorBlindMode()" title="Color Blindness Mode" aria-label="Cycle through color blindness modes" id="colorBlindToggle">
+                <i class="fas fa-eye"></i>
+                <span class="mode-badge" id="colorBlindIndicator">A</span>
+            </button>
+        </div>
+        </div>
     </nav>
+
+    <!-- Font Size Control Script -->
+    <script>
+        // Font size control
+        let fontSize = parseInt(localStorage.getItem('fontSize')) || 100;
+        
+        // Apply saved font size on page load
+        document.documentElement.style.fontSize = fontSize + '%';
+        
+        function showFontSizeIndicator(message) {
+            const indicator = document.getElementById('fontSizeIndicator');
+            indicator.textContent = message;
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+        
+        function increaseFontSize() {
+            if (fontSize < 150) {
+                fontSize += 10;
+                document.documentElement.style.fontSize = fontSize + '%';
+                localStorage.setItem('fontSize', fontSize);
+                showFontSizeIndicator(`Font size: ${fontSize}%`);
+                
+                // Announce for screen readers
+                const announcer = document.createElement('div');
+                announcer.setAttribute('aria-live', 'polite');
+                announcer.classList.add('sr-only');
+                announcer.textContent = `Font size increased to ${fontSize} percent`;
+                document.body.appendChild(announcer);
+                setTimeout(() => announcer.remove(), 1000);
+            }
+        }
+        
+        function decreaseFontSize() {
+            if (fontSize > 70) {
+                fontSize -= 10;
+                document.documentElement.style.fontSize = fontSize + '%';
+                localStorage.setItem('fontSize', fontSize);
+                showFontSizeIndicator(`Font size: ${fontSize}%`);
+                
+                // Announce for screen readers
+                const announcer = document.createElement('div');
+                announcer.setAttribute('aria-live', 'polite');
+                announcer.classList.add('sr-only');
+                announcer.textContent = `Font size decreased to ${fontSize} percent`;
+                document.body.appendChild(announcer);
+                setTimeout(() => announcer.remove(), 1000);
+            }
+        }
+        
+        function resetFontSize() {
+            fontSize = 100;
+            document.documentElement.style.fontSize = fontSize + '%';
+            localStorage.setItem('fontSize', fontSize);
+            showFontSizeIndicator('Font size reset to 100%');
+            
+            // Announce for screen readers
+            const announcer = document.createElement('div');
+            announcer.setAttribute('aria-live', 'polite');
+            announcer.classList.add('sr-only');
+            announcer.textContent = 'Font size reset to default';
+            document.body.appendChild(announcer);
+            setTimeout(() => announcer.remove(), 1000);
+        }
+        
+        // Keyboard shortcuts for font size
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + Plus (increase)
+            if (e.ctrlKey && (e.key === '+' || e.key === '=')) {
+                e.preventDefault();
+                increaseFontSize();
+            }
+            
+            // Ctrl + Minus (decrease)
+            if (e.ctrlKey && e.key === '-') {
+                e.preventDefault();
+                decreaseFontSize();
+            }
+            
+            // Ctrl + 0 (reset)
+            if (e.ctrlKey && e.key === '0') {
+                e.preventDefault();
+                resetFontSize();
+            }
+        });
+    </script>
+
+    <!-- Color Blind Mode Script -->
+    <script>
+    // Color blindness modes
+        const colorBlindModes = [
+            { id: 'none', name: 'Default', icon: 'A' },
+            { id: 'deuteranopia', name: 'Green Blind', icon: 'G' },
+            { id: 'protanopia', name: 'Red Blind', icon: 'R' },
+            { id: 'tritanopia', name: 'Blue-Yellow Blind', icon: 'B' },
+            { id: 'achromatopsia', name: 'Grayscale', icon: 'S' }
+        ];
+        
+        let currentModeIndex = 0;
+        
+        const savedMode = localStorage.getItem('colorBlindMode');
+        if (savedMode) {
+            const index = colorBlindModes.findIndex(m => m.id === savedMode);
+            if (index !== -1) currentModeIndex = index;
+        }
+        
+        applyColorBlindMode(colorBlindModes[currentModeIndex].id);
+        updateColorBlindIndicator();
+        
+        function cycleColorBlindMode() {
+            currentModeIndex = (currentModeIndex + 1) % colorBlindModes.length;
+            const mode = colorBlindModes[currentModeIndex];
+            
+            applyColorBlindMode(mode.id);
+            localStorage.setItem('colorBlindMode', mode.id);
+            updateColorBlindIndicator();
+            
+            // Announce for screen readers
+            const announcer = document.createElement('div');
+            announcer.setAttribute('aria-live', 'polite');
+            announcer.classList.add('sr-only');
+            announcer.textContent = mode.name + ' mode activated';
+            document.body.appendChild(announcer);
+            setTimeout(() => announcer.remove(), 1000);
+            
+            // Show visual feedback
+            showFontSizeIndicator(mode.name + ' mode activated');
+        }
+        
+        function applyColorBlindMode(modeId) {
+            // Remove all color blind classes from HTML element (affects entire page)
+            document.documentElement.classList.remove(
+                'color-blind-deuteranopia',
+                'color-blind-protanopia',
+                'color-blind-tritanopia',
+                'color-blind-achromatopsia'
+            );
+            
+            if (modeId !== 'none') {
+                document.documentElement.classList.add(`color-blind-${modeId}`);
+            }
+        }
+        
+        function updateColorBlindIndicator() {
+            const indicator = document.getElementById('colorBlindIndicator');
+            if (indicator) {
+                indicator.textContent = colorBlindModes[currentModeIndex].icon;
+                
+                const button = document.getElementById('colorBlindToggle');
+                if (button) {
+                    button.setAttribute('title', `Color Blind Mode: ${colorBlindModes[currentModeIndex].name} (Click to cycle)`);
+                }
+            }
+        }
+    </script>
 
     <!-- Logout Confirmation Script -->
     <script>
@@ -215,7 +473,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         }
 
-        // Add keyboard support for logout buttons
+        // keyboard support for logout buttons
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtns = document.querySelectorAll('.nav-actions button[onclick="confirmLogout()"]');
             logoutBtns.forEach(btn => {
@@ -226,7 +484,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                     }
                 });
                 
-                // Add proper ARIA attributes for accessibility
                 btn.setAttribute('aria-label', 'Log out of your account');
                 btn.setAttribute('role', 'button');
                 btn.setAttribute('tabindex', '0');
@@ -251,14 +508,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                         window.voiceCommands.startListening();
                         this.classList.add('listening');
                         
-                        // Remove listening class after 5 seconds if no speech
                         setTimeout(() => {
                             this.classList.remove('listening');
                         }, 5000);
                     }
                 });
                 
-                // Keyboard shortcut: Ctrl+Shift+V
                 document.addEventListener('keydown', function(e) {
                     if (e.ctrlKey && e.shiftKey && e.key === 'V') {
                         e.preventDefault();
@@ -267,7 +522,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 });
             }
             
-            // Check for microphone permission
             if (navigator.permissions) {
                 navigator.permissions.query({ name: 'microphone' }).then(function(permissionStatus) {
                     if (permissionStatus.state === 'denied') {
@@ -285,6 +539,109 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         });
     </script>
+
+    <style>
+        .color-blind-dropdown {
+            position: relative;
+        }
+
+        .color-blind-menu {
+            position: absolute;
+            right: 0;
+            bottom: 100%;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            padding: 8px 0;
+            min-width: 220px;
+            z-index: 10000;
+        }
+
+        .color-blind-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .color-blind-option:hover {
+            background: #f0f0f0;
+        }
+
+        .color-blind-option:focus-visible {
+            outline: 2px solid #9B2C2C;
+            outline-offset: -2px;
+        }
+
+        .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .color-preview.normal {
+            background: linear-gradient(45deg, #9B2C2C 0%, #D69E2E 100%);
+        }
+
+        .color-preview.deuteranopia {
+            background: linear-gradient(45deg, #8B4513 0%, #2C5F2D 100%);
+        }
+
+        .color-preview.protanopia {
+            background: linear-gradient(45deg, #1E3F5A 0%, #8B5A2B 100%);
+        }
+
+        .color-preview.tritanopia {
+            background: linear-gradient(45deg, #C44536 0%, #4A6D8C 100%);
+        }
+
+        .color-preview.achromatopsia {
+            background: linear-gradient(45deg, #4A4A4A 0%, #8A8A8A 100%);
+        }
+
+        @media (max-width: 768px) {
+            .color-blind-menu {
+                right: auto;
+                left: 0;
+                bottom: auto;
+                top: 100%;
+                margin-top: 5px;
+                margin-bottom: 0;
+            }
+        }
+
+    .mode-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: white;
+        color: #9B2C2C;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid #9B2C2C;
+    }
+    
+    #colorBlindToggle {
+        position: relative;
+    }
+
+        </style>
     
 </body>
 </html>

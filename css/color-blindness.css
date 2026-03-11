@@ -1,0 +1,143 @@
+/* ===== DEUTERANOPIA (Green Blindness) ===== */
+
+html.color-blind-deuteranopia {
+    --primary: #8B4513 !important;
+    --primary-dark: #654321 !important;
+    --primary-light: #CD853F !important;
+    --accent: #2C5F2D !important;
+    --accent-hover: #1E3F1E !important;
+    --bg-body: #F5F5DC !important;
+    --text-main: #2C2C2C !important;
+    --text-body: #3A3A3A !important;
+    --text-muted: #5A5A5A !important;
+    --border: #8B7355 !important;
+}
+
+/* ===== PROTANOPIA (Red Blindness) ===== */
+
+html.color-blind-protanopia {
+    --primary: #1E3F5A !important;
+    --primary-dark: #0A2A3A !important;
+    --primary-light: #3A6D8C !important;
+    --accent: #8B5A2B !important;
+    --accent-hover: #5E3A1C !important;
+    --bg-body: #E8F0F8 !important;
+    --text-main: #1A2A3A !important;
+    --text-body: #2A3A4A !important;
+    --text-muted: #4A5A6A !important;
+    --border: #4A6A8C !important;
+}
+
+/* ===== TRITANOPIA (Blue-Yellow Blindness) ===== */
+
+html.color-blind-tritanopia {
+    --primary: #C44536 !important;
+    --primary-dark: #9B2C2C !important;
+    --primary-light: #E67A5A !important;
+    --accent: #4A6D8C !important;
+    --accent-hover: #2A4A6A !important;
+    --bg-body: #FFF0E8 !important;
+    --text-main: #3A2A2A !important;
+    --text-body: #4A3A3A !important;
+    --text-muted: #6A5A5A !important;
+    --border: #C45A4A !important;
+}
+
+/* ===== ACHROMATOPSIA (Grayscale/Total Color Blindness) ===== */
+html.color-blind-achromatopsia {
+    --primary: #4A4A4A !important; 
+    --primary-dark: #2D2D2D !important; 
+    --primary-light: #6B6B6B !important;
+    --accent: #8A8A8A !important; 
+    --accent-hover: #6B6B6B !important;
+    --bg-body: #F0F0F0 !important;
+    --text-main: #1A1A1A !important;
+    --text-body: #2A2A2A !important;
+    --text-muted: #5A5A5A !important;
+    --border: #8A8A8A !important;
+    
+    filter: grayscale(100%);
+}
+
+/* ===== GENERAL ACCESSIBILITY ===== */
+
+html.color-blind-mode .status-badge,
+html.color-blind-mode .badge {
+    position: relative;
+    overflow: hidden;
+    border-width: 2px !important;
+    border-style: solid !important;
+}
+
+html.color-blind-mode .status-recent,
+html.color-blind-mode .badge-recent {
+    background-color: var(--badge-recent-bg, #FFD700) !important;
+    color: var(--badge-recent-text, #000000) !important;
+    border-color: currentColor !important;
+}
+
+html.color-blind-mode .status-recent::after {
+    content: ' 🆕';
+    font-size: 0.8em;
+}
+
+html.color-blind-mode .status-pending,
+html.color-blind-mode .badge-pending {
+    background-color: var(--badge-pending-bg, #FFA500) !important;
+    color: var(--badge-pending-text, #000000) !important;
+    border-color: currentColor !important;
+}
+
+html.color-blind-mode .status-pending::after {
+    content: ' ⏳';
+    font-size: 0.8em;
+}
+
+html.color-blind-mode .status-claimed,
+html.color-blind-mode .badge-claimed {
+    background-color: var(--badge-claimed-bg, #228B22) !important;
+    color: var(--badge-claimed-text, #FFFFFF) !important;
+    border-color: currentColor !important;
+}
+
+html.color-blind-mode .status-claimed::after {
+    content: ' ✅';
+    font-size: 0.8em;
+}
+
+/* High contrast borders for all elements */
+html.color-blind-mode button,
+html.color-blind-mode .btn,
+html.color-blind-mode input,
+html.color-blind-mode select,
+html.color-blind-mode textarea,
+html.color-blind-mode .card,
+html.color-blind-mode .panel {
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: var(--border) !important;
+}
+
+html.color-blind-mode .alert-error {
+    border-left: 6px solid #FF0000 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+html.color-blind-mode .alert-success {
+    border-left: 6px solid #00AA00 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+html.color-blind-mode .alert-info {
+    border-left: 6px solid #0000FF !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+html.color-blind-mode .alert-warning {
+    border-left: 6px solid #FFAA00 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
