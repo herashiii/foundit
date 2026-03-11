@@ -1,0 +1,264 @@
+/* Voice Command System Styles */
+
+/* Voice Button */
+.voice-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #9B2C2C;
+    color: white;
+    border: 3px solid white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+
+.voice-btn:hover {
+    transform: scale(1.1);
+    background: #742A2A;
+    box-shadow: 0 6px 20px rgba(155, 44, 44, 0.4);
+}
+
+.voice-btn.listening {
+    background: #e74c3c;
+    animation: pulse 1.5s infinite;
+}
+
+.voice-btn i {
+    pointer-events: none;
+}
+
+/* Voice Feedback Toast */
+.voice-feedback {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    max-width: 300px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    border-left: 4px solid #9B2C2C;
+    z-index: 9998;
+    display: none;
+    animation: slideIn 0.3s ease;
+    font-size: 14px;
+}
+
+.voice-feedback.voice-listening {
+    border-left-color: #f39c12;
+    background: #fff9e6;
+}
+
+.voice-feedback.voice-processing {
+    border-left-color: #3498db;
+    background: #ebf5ff;
+}
+
+.voice-feedback.voice-success {
+    border-left-color: #27ae60;
+    background: #e8f8f0;
+}
+
+.voice-feedback.voice-error {
+    border-left-color: #e74c3c;
+    background: #fdedeb;
+}
+
+/* Help Modal */
+.voice-help-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.voice-help-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+}
+
+.voice-help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #9B2C2C;
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.voice-help-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-help-header h2 i {
+    font-size: 1.8rem;
+}
+
+.voice-help-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.voice-help-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.voice-help-body {
+    padding: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.command-group {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.command-group h3 {
+    color: #9B2C2C;
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.command-group ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.command-group li {
+    margin: 5px 0;
+    color: #4a5568;
+    font-size: 0.95rem;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+/* Slide In Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Scale In Animation */
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Accessibility - Focus Visible */
+.voice-btn:focus-visible {
+    outline: 3px solid #9B2C2C;
+    outline-offset: 3px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .voice-btn,
+    .voice-feedback,
+    .voice-help-modal {
+        animation: none;
+        transition: none;
+    }
+    
+    .voice-btn.listening {
+        animation: none;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .voice-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .voice-feedback {
+        bottom: 80px;
+        right: 20px;
+        left: 20px;
+        max-width: none;
+    }
+    
+    .voice-help-body {
+        grid-template-columns: 1fr;
+    }
+}

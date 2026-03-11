@@ -495,6 +495,8 @@ include __DIR__ . '/../includes/header.php';
 
     </form>
   </div>
+  <div class="voice-step-indicator" aria-live="polite" style="display: none;"></div>
+
 </main>
 
 <script>
@@ -895,6 +897,34 @@ function clearErrors(stepErrorId) {
       });
     });
   });
+
+   // Voice step navigation enhancement
+    document.addEventListener('DOMContentLoaded', function() {
+        // Announce current step when page loads
+        const currentStep = document.querySelector('.step.active');
+        if (currentStep && window.voiceCommands) {
+            setTimeout(() => {
+                window.voiceCommands.speak(`You are on step ${currentStep.dataset.step}: ${currentStep.textContent}`);
+            }, 1000);
+        }
+        
+        // Announce step changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.target.classList.contains('active')) {
+                    const stepText = mutation.target.textContent;
+                    const stepNum = mutation.target.dataset.step;
+                    if (window.voiceCommands) {
+                        window.voiceCommands.speak(`Step ${stepNum}: ${stepText}`);
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('.step').forEach(step => {
+            observer.observe(step, { attributes: true, attributeFilter: ['class'] });
+        });
+    });
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>   

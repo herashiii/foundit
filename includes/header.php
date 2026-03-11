@@ -27,6 +27,9 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
     
     <link rel="stylesheet" href="../css/base.css">
 
+    <!-- Voice Command System CSS -->
+    <link rel="stylesheet" href="../css/voice-commands.css">
+
     <?php if(file_exists(__DIR__ . "/../css/" . $current_page . ".css")): ?>
         <link rel="stylesheet" href="../css/<?= htmlspecialchars($current_page) ?>.css">
     <?php endif; ?>
@@ -230,3 +233,58 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             });
         });
     </script>
+
+    <!-- Voice Command System -->
+    <button id="voiceBtn" class="voice-btn" aria-label="Voice commands" title="Voice commands (Ctrl+Shift+V)">
+        <i class="fas fa-microphone"></i>
+    </button>
+
+    <script src="../js/voice-commands.js"></script>
+    <script>
+        // Voice button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            
+            if (voiceBtn) {
+                voiceBtn.addEventListener('click', function() {
+                    if (window.voiceCommands) {
+                        window.voiceCommands.startListening();
+                        this.classList.add('listening');
+                        
+                        // Remove listening class after 5 seconds if no speech
+                        setTimeout(() => {
+                            this.classList.remove('listening');
+                        }, 5000);
+                    }
+                });
+                
+                // Keyboard shortcut: Ctrl+Shift+V
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+                        e.preventDefault();
+                        voiceBtn.click();
+                    }
+                });
+            }
+            
+            // Check for microphone permission
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'microphone' }).then(function(permissionStatus) {
+                    if (permissionStatus.state === 'denied') {
+                        const feedback = document.createElement('div');
+                        feedback.className = 'voice-feedback voice-error';
+                        feedback.textContent = 'Microphone access is blocked. Please enable microphone for voice commands.';
+                        feedback.style.display = 'block';
+                        document.body.appendChild(feedback);
+                        
+                        setTimeout(() => {
+                            feedback.remove();
+                        }, 5000);
+                    }
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html>
