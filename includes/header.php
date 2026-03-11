@@ -43,8 +43,24 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             position: relative;
         }
 
-        #menu-toggle, .menu-icon {
-            display: none; 
+        #menu-toggle {
+            display: none;
+        }
+
+        .menu-icon {
+            display: none;
+            cursor: pointer;
+            padding: 5px 0 5px 10px;
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: var(--primary);
+            margin: 3px 0;
+            border-radius: 2px;
+            transition: 0.3s;
         }
 
         .nav-actions .btn {
@@ -91,27 +107,13 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                order: 3; 
-                cursor: pointer;
-                padding: 5px 0 5px 10px; 
-                margin: 0;
-            }
-
-            .menu-icon span {
-                display: block;
-                width: 25px;
-                height: 3px;
-                background: var(--primary);
-                margin: 3px 0; 
-                border-radius: 2px;
-                transition: 0.3s;
             }
 
             .nav-links {
                 display: none; 
                 flex-direction: column;
                 position: absolute;
-                top: var(--header-height);
+                top: 100%;
                 left: 0;
                 width: 100%;
                 background: #fff;
@@ -163,6 +165,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             font-size: 18px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             transition: all 0.2s;
+            position: relative;
         }
 
         .a11y-btn:hover {
@@ -173,6 +176,23 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
         .a11y-btn:focus-visible {
             outline: 3px solid yellow;
             outline-offset: 2px;
+        }
+
+        .mode-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: white;
+            color: #9B2C2C;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid #9B2C2C;
         }
 
         .font-size-indicator {
@@ -202,6 +222,126 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             100% { opacity: 0; }
         }
 
+        /* Text-to-Speech Controls */
+        .tts-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #9B2C2C;
+            color: white;
+            border-radius: 50px;
+            padding: 15px 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            min-width: 320px;
+            border: 2px solid white;
+        }
+
+        .tts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .tts-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .tts-close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tts-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .tts-progress-bar {
+            height: 100%;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .tts-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tts-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .tts-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .tts-btn:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+
+        .tts-speed {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-left: auto;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .tts-speed option {
+            background: #9B2C2C;
+            color: white;
+        }
+
+        .tts-status {
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .tts-highlight {
+            background-color: rgba(255, 255, 0, 0.2);
+            transition: background-color 0.3s;
+            border-radius: 4px;
+            padding: 2px 0;
+        }
+
         @media (max-width: 768px) {
             .accessibility-toolbar {
                 top: auto;
@@ -215,12 +355,47 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 height: 40px;
                 font-size: 16px;
             }
+
+            .tts-controls {
+                width: 90%;
+                min-width: auto;
+                padding: 12px 15px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Font Size Indicator -->
     <div id="fontSizeIndicator" class="font-size-indicator" aria-live="polite"></div>
+
+    <!-- Text-to-Speech Control Panel (initially hidden) -->
+    <div id="ttsControls" class="tts-controls" style="display: none;" role="region" aria-label="Text to speech controls">
+        <div class="tts-header">
+            <span><i class="fas fa-volume-up"></i> Reading Aloud</span>
+            <button class="tts-close-btn" aria-label="Stop and close">×</button>
+        </div>
+        <div class="tts-progress">
+            <div id="ttsProgressBar" class="tts-progress-bar" style="width: 0%;"></div>
+        </div>
+        <div class="tts-buttons">
+            <button id="ttsPauseBtn" class="tts-btn" aria-label="Pause reading" title="Pause">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button id="ttsResumeBtn" class="tts-btn" style="display: none;" aria-label="Resume reading" title="Resume">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="tts-btn" onclick="stopTTS()" aria-label="Stop reading" title="Stop">
+                <i class="fas fa-stop"></i>
+            </button>
+            <select class="tts-speed" aria-label="Reading speed">
+                <option value="0.8">Slow</option>
+                <option value="1" selected>Normal</option>
+                <option value="1.2">Fast</option>
+                <option value="1.5">Very Fast</option>
+            </select>
+        </div>
+        <div class="tts-status" id="ttsStatus">Ready to read</div>
+    </div>
 
     <nav class="navbar" aria-label="Main Navigation">
         <div class="container nav-container">
@@ -229,7 +404,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <div>Found<span>iT</span></div>
             </a>
 
-            <input type="checkbox" id="menu-toggle" style="display: none;">
+            <input type="checkbox" id="menu-toggle">
             
             <div class="nav-links">
                 <a href="../Pages/index.php" class="nav-link <?= $current_page == 'index' ? 'active' : '' ?>">Home</a>
@@ -294,7 +469,11 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 <i class="fas fa-eye"></i>
                 <span class="mode-badge" id="colorBlindIndicator">A</span>
             </button>
-        </div>
+
+            <!-- Text-to-Speech Button -->
+            <button class="a11y-btn" onclick="toggleTextToSpeech()" title="Text to Speech - Read page aloud" aria-label="Text to Speech - Read page aloud" id="ttsButton">
+                <i class="fas fa-volume-up"></i>
+            </button>
         </div>
     </nav>
 
@@ -389,7 +568,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     <!-- Color Blind Mode Script -->
     <script>
-    // Color blindness modes
+        // Color blindness modes
         const colorBlindModes = [
             { id: 'none', name: 'Default', icon: 'A' },
             { id: 'deuteranopia', name: 'Green Blind', icon: 'G' },
@@ -455,6 +634,391 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         }
     </script>
+
+    <!-- Text-to-Speech Script -->
+<script>
+    // Text-to-Speech variables
+    let ttsUtterance = null;
+    let ttsIsPlaying = false;
+    let ttsIsPaused = false;
+    let ttsCurrentElement = null;
+    let ttsElements = [];
+    let ttsCurrentIndex = 0;
+    let ttsSpeed = 1; // Default speed
+    
+    // Toggle Text-to-Speech
+    function toggleTextToSpeech() {
+        const ttsControls = document.getElementById('ttsControls');
+        
+        if (ttsControls.style.display === 'none' || ttsControls.style.display === '') {
+            ttsControls.style.display = 'flex';
+            // Small delay to ensure DOM is ready
+            setTimeout(() => prepareTTS(), 100);
+        } else {
+            forceStopTTS();
+            ttsControls.style.display = 'none';
+        }
+    }
+    
+    // Force stop TTS completely
+    function forceStopTTS() {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        ttsIsPlaying = false;
+        ttsIsPaused = false;
+        
+        if (ttsCurrentElement) {
+            ttsCurrentElement.classList.remove('tts-highlight');
+            ttsCurrentElement = null;
+        }
+        
+        // Reset UI
+        const pauseBtn = document.getElementById('ttsPauseBtn');
+        const resumeBtn = document.getElementById('ttsResumeBtn');
+        const progressBar = document.getElementById('ttsProgressBar');
+        
+        if (pauseBtn) pauseBtn.style.display = 'inline-flex';
+        if (resumeBtn) resumeBtn.style.display = 'none';
+        if (progressBar) progressBar.style.width = '0%';
+        
+        updateTTSStatus('Stopped');
+    }
+    
+    // Stop and close
+    function stopTTS() {
+        forceStopTTS();
+        document.getElementById('ttsControls').style.display = 'none';
+    }
+    
+    // Prepare content for TTS
+    function prepareTTS() {
+        // Stop any ongoing speech
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        
+        // Get all readable content
+        const mainContent = document.querySelector('main') || document.body;
+        
+        // Clear previous elements
+        ttsElements = [];
+        
+        // Get all text elements
+        const textElements = mainContent.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, .alert, .card, .panel, label, .btn, a, .description, .doc-text');
+        
+        textElements.forEach(el => {
+            // Skip hidden elements and very short text
+            const text = el.innerText.trim();
+            if (el.offsetParent !== null && text.length > 15 && !el.classList.contains('sr-only')) {
+                ttsElements.push(el);
+            }
+        });
+        
+        // Also get the page title
+        const pageTitle = document.querySelector('h1');
+        if (pageTitle && pageTitle.innerText.trim()) {
+            ttsElements.unshift(pageTitle);
+        }
+        
+        if (ttsElements.length > 0) {
+            ttsCurrentIndex = 0;
+            updateTTSStatus(`Ready to read ${ttsElements.length} sections. Click Play to start.`);
+            
+            // Reset UI
+            document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
+            document.getElementById('ttsResumeBtn').style.display = 'none';
+            document.getElementById('ttsProgressBar').style.width = '0%';
+        } else {
+            updateTTSStatus('No readable content found');
+        }
+    }
+    
+    // Start reading from beginning
+    function startReading() {
+        if (ttsElements.length === 0) {
+            prepareTTS();
+            return;
+        }
+        
+        ttsCurrentIndex = 0;
+        ttsIsPaused = false;
+        readCurrentSection();
+    }
+    
+    // Read the current section
+    function readCurrentSection() {
+        if (ttsCurrentIndex >= ttsElements.length) {
+            finishTTS();
+            return;
+        }
+        
+        const element = ttsElements[ttsCurrentIndex];
+        const text = element.innerText.trim();
+        
+        if (!text) {
+            // Skip empty elements
+            ttsCurrentIndex++;
+            setTimeout(() => readCurrentSection(), 100);
+            return;
+        }
+        
+        // Scroll to element and highlight it
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('tts-highlight');
+        
+        // Remove highlight from previous element
+        if (ttsCurrentElement && ttsCurrentElement !== element) {
+            ttsCurrentElement.classList.remove('tts-highlight');
+        }
+        
+        ttsCurrentElement = element;
+        
+        // Create utterance
+        ttsUtterance = new SpeechSynthesisUtterance(text);
+        ttsUtterance.rate = ttsSpeed;
+        ttsUtterance.pitch = 1;
+        ttsUtterance.volume = 1;
+        
+        // Get available voices
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Try to find a good voice
+        const preferredVoice = voices.find(v => 
+            v.lang.includes('en') && (v.name.includes('Google UK') || 
+            v.name.includes('Samantha') || 
+            v.name.includes('Microsoft') ||
+            v.name.includes('Daniel'))
+        );
+        
+        if (preferredVoice) {
+            ttsUtterance.voice = preferredVoice;
+        }
+        
+        // Event handlers
+        ttsUtterance.onstart = function() {
+            ttsIsPlaying = true;
+            ttsIsPaused = false;
+            updateTTSStatus(`Reading section ${ttsCurrentIndex + 1} of ${ttsElements.length}`);
+            updateProgressBar();
+            document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
+            document.getElementById('ttsResumeBtn').style.display = 'none';
+        };
+        
+        ttsUtterance.onend = function() {
+            // Remove highlight
+            if (element) {
+                element.classList.remove('tts-highlight');
+            }
+            
+            // Move to next section
+            ttsCurrentIndex++;
+            
+            // Small delay before next section
+            setTimeout(() => {
+                if (ttsCurrentIndex < ttsElements.length) {
+                    readCurrentSection();
+                } else {
+                    finishTTS();
+                }
+            }, 300);
+        };
+        
+        ttsUtterance.onerror = function(event) {
+            console.error('TTS error:', event);
+            if (event.error === 'interrupted' || event.error === 'canceled') {
+                // Normal interruption, don't show error
+                return;
+            }
+            updateTTSStatus('Error reading section');
+            
+            // Try next section
+            ttsCurrentIndex++;
+            setTimeout(() => readCurrentSection(), 500);
+        };
+        
+        // Cancel any ongoing speech and start new
+        try {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(ttsUtterance);
+        } catch (e) {
+            console.error('Speech synthesis error:', e);
+            updateTTSStatus('Speech not supported');
+        }
+    }
+    
+    // Pause reading
+    function pauseTTS() {
+        if (window.speechSynthesis && ttsIsPlaying && !ttsIsPaused) {
+            window.speechSynthesis.pause();
+            ttsIsPaused = true;
+            updateTTSStatus('Paused');
+            document.getElementById('ttsPauseBtn').style.display = 'none';
+            document.getElementById('ttsResumeBtn').style.display = 'inline-flex';
+        }
+    }
+    
+    // Resume reading
+    function resumeTTS() {
+        if (window.speechSynthesis && ttsIsPaused) {
+            window.speechSynthesis.resume();
+            ttsIsPaused = false;
+            updateTTSStatus(`Reading section ${ttsCurrentIndex + 1} of ${ttsElements.length}`);
+            document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
+            document.getElementById('ttsResumeBtn').style.display = 'none';
+        } else if (!ttsIsPlaying && ttsElements.length > 0) {
+            // Start from beginning if not playing
+            startReading();
+        }
+    }
+    
+    // Stop reading
+    function stopTTS() {
+        forceStopTTS();
+    }
+    
+    // Finish TTS
+    function finishTTS() {
+        updateTTSStatus('Finished reading');
+        if (ttsCurrentElement) {
+            ttsCurrentElement.classList.remove('tts-highlight');
+        }
+        forceStopTTS();
+    }
+    
+    // Change reading speed
+    function changeTTSRate(rate) {
+        ttsSpeed = parseFloat(rate);
+        
+        if (ttsIsPlaying && !ttsIsPaused && ttsUtterance) {
+            // Restart current section with new speed
+            const wasPlaying = true;
+            const currentIdx = ttsCurrentIndex;
+            
+            // Cancel current speech
+            window.speechSynthesis.cancel();
+            ttsIsPlaying = false;
+            
+            // Restart from same section
+            setTimeout(() => {
+                ttsCurrentIndex = currentIdx;
+                readCurrentSection();
+            }, 100);
+        } else if (ttsIsPaused) {
+            // If paused, just update the speed for when it resumes
+            // We'll restart from current section when resumed
+            const currentIdx = ttsCurrentIndex;
+            window.speechSynthesis.cancel();
+            ttsIsPlaying = false;
+            ttsIsPaused = false;
+            
+            setTimeout(() => {
+                ttsCurrentIndex = currentIdx;
+                readCurrentSection();
+            }, 100);
+        }
+    }
+    
+    // Update progress bar
+    function updateProgressBar() {
+        if (ttsElements.length > 0) {
+            const progress = ((ttsCurrentIndex) / ttsElements.length) * 100;
+            document.getElementById('ttsProgressBar').style.width = progress + '%';
+        }
+    }
+    
+    // Update status message
+    function updateTTSStatus(message) {
+        const statusEl = document.getElementById('ttsStatus');
+        if (statusEl) {
+            statusEl.textContent = message;
+        }
+    }
+    
+    // Load voices when available
+    if (window.speechSynthesis) {
+        // Load voices immediately if available
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            console.log('Voices loaded:', voices.length);
+        }
+        
+        // Listen for voices to load
+        window.speechSynthesis.onvoiceschanged = function() {
+            console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
+        };
+    }
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    });
+    
+    // Add click handlers for play/pause/stop buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override the toggle function to properly handle play/stop
+        const originalToggle = toggleTextToSpeech;
+        window.toggleTextToSpeech = function() {
+            const ttsControls = document.getElementById('ttsControls');
+            
+            if (ttsControls.style.display === 'none' || ttsControls.style.display === '') {
+                ttsControls.style.display = 'flex';
+                setTimeout(() => {
+                    prepareTTS();
+                    // Auto-start after preparation
+                    setTimeout(() => {
+                        if (ttsElements.length > 0) {
+                            startReading();
+                        }
+                    }, 500);
+                }, 100);
+            } else {
+                stopTTS();
+                ttsControls.style.display = 'none';
+            }
+        };
+        
+        // Add direct handlers for play/pause/stop
+        const pauseBtn = document.getElementById('ttsPauseBtn');
+        const resumeBtn = document.getElementById('ttsResumeBtn');
+        const stopBtn = document.querySelector('.tts-close-btn');
+        
+        if (pauseBtn) {
+            pauseBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                pauseTTS();
+            };
+        }
+        
+        if (resumeBtn) {
+            resumeBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                resumeTTS();
+            };
+        }
+        
+        if (stopBtn) {
+            stopBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                stopTTS();
+            };
+        }
+        
+        // Fix speed selector
+        const speedSelect = document.querySelector('.tts-speed');
+        if (speedSelect) {
+            speedSelect.onchange = function(e) {
+                e.preventDefault();
+                changeTTSRate(this.value);
+            };
+        }
+    });
+</script>
 
     <!-- Logout Confirmation Script -->
     <script>
@@ -539,109 +1103,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         });
     </script>
-
-    <style>
-        .color-blind-dropdown {
-            position: relative;
-        }
-
-        .color-blind-menu {
-            position: absolute;
-            right: 0;
-            bottom: 100%;
-            margin-bottom: 5px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            padding: 8px 0;
-            min-width: 220px;
-            z-index: 10000;
-        }
-
-        .color-blind-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 10px 15px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            text-align: left;
-            font-size: 14px;
-            color: #333;
-            transition: background 0.2s;
-        }
-
-        .color-blind-option:hover {
-            background: #f0f0f0;
-        }
-
-        .color-blind-option:focus-visible {
-            outline: 2px solid #9B2C2C;
-            outline-offset: -2px;
-        }
-
-        .color-preview {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-        .color-preview.normal {
-            background: linear-gradient(45deg, #9B2C2C 0%, #D69E2E 100%);
-        }
-
-        .color-preview.deuteranopia {
-            background: linear-gradient(45deg, #8B4513 0%, #2C5F2D 100%);
-        }
-
-        .color-preview.protanopia {
-            background: linear-gradient(45deg, #1E3F5A 0%, #8B5A2B 100%);
-        }
-
-        .color-preview.tritanopia {
-            background: linear-gradient(45deg, #C44536 0%, #4A6D8C 100%);
-        }
-
-        .color-preview.achromatopsia {
-            background: linear-gradient(45deg, #4A4A4A 0%, #8A8A8A 100%);
-        }
-
-        @media (max-width: 768px) {
-            .color-blind-menu {
-                right: auto;
-                left: 0;
-                bottom: auto;
-                top: 100%;
-                margin-top: 5px;
-                margin-bottom: 0;
-            }
-        }
-
-    .mode-badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        background: white;
-        color: #9B2C2C;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        border: 2px solid #9B2C2C;
-    }
-    
-    #colorBlindToggle {
-        position: relative;
-    }
-
-        </style>
     
 </body>
 </html>
