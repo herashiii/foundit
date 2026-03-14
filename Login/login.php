@@ -177,7 +177,6 @@ function h($s) {
 </main>
 
 <script>
-// Tab switching
 function switchTab(tab) {
     const studentTab = document.getElementById('student-login');
     const adminTab = document.getElementById('admin-login');
@@ -198,14 +197,12 @@ function switchTab(tab) {
     document.getElementById('tab-' + tab + '-btn').setAttribute('aria-selected', 'true');
 }
 
-// For students: only allow numbers in password field
 document.getElementById('student_password')?.addEventListener('input', function(e) {
     let value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length > 8) value = value.slice(0, 8);
     e.target.value = value;
 });
 
-// Form loading states
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function(e) {
         const btn = this.querySelector('button[type="submit"]');
@@ -216,14 +213,12 @@ document.querySelectorAll('form').forEach(form => {
     });
 });
 
-// For students: only allow numbers in password field
 document.getElementById('student_password')?.addEventListener('input', function(e) {
     let value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length > 8) value = value.slice(0, 8);
     e.target.value = value;
 });
 
-// Form loading states
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function(e) {
         const btn = this.querySelector('button[type="submit"]');
@@ -238,7 +233,6 @@ document.querySelectorAll('form').forEach(form => {
 </script>
 
 <style>
-/* Login Tabs */
 .login-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -411,7 +405,6 @@ document.querySelectorAll('form').forEach(form => {
     line-height: 1.5;
 }
 
-/* Input error state */
 input.error {
     border-color: #DC2626 !important;
     background-color: #FEF2F2 !important;
@@ -421,7 +414,6 @@ input.error:focus {
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25) !important;
 }
 
-/* Input hints and formats */
 .input-hint {
     font-size: 13px;
     color: #666;
@@ -443,7 +435,6 @@ input.error:focus {
     font-weight: 600;
 }
 
-/* Required field indicator */
 .required-indicator {
     color: #DC2626;
     font-weight: 700;
@@ -462,7 +453,6 @@ input.error:focus {
     border-width: 0;
 }
 
-/* Form actions */
 .form-actions {
     margin-top: 24px;
 }

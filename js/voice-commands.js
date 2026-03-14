@@ -1,6 +1,3 @@
-// Voice Command System for FoundiT
-// Enables voice navigation and control for accessibility
-
 class VoiceCommandSystem {
     constructor() {
         this.recognition = null;
@@ -16,7 +13,6 @@ class VoiceCommandSystem {
     }
     
     init() {
-        // Check if browser supports speech recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             this.recognition = new SpeechRecognition();
@@ -38,14 +34,12 @@ class VoiceCommandSystem {
             console.warn('Speech recognition not supported in this browser');
         }
         
-        // Load available voices for speech
         if (this.synthesis) {
             this.synthesis.onvoiceschanged = () => {
                 this.voices = this.synthesis.getVoices();
             };
         }
         
-        // Define commands based on current page
         this.loadPageCommands();
     }
     
@@ -56,7 +50,6 @@ class VoiceCommandSystem {
     }
     
     loadPageCommands() {
-        // Base commands available on all pages
         this.commands = [
             { command: 'go home', action: () => this.navigateTo('index.php') },
             { command: 'go to find my item', action: () => this.navigateTo('find-my-item.php') },
@@ -601,7 +594,6 @@ class VoiceCommandSystem {
     }
 }
 
-// Initialize voice command system when page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.voiceCommands = new VoiceCommandSystem();
 });
