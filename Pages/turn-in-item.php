@@ -139,38 +139,42 @@ if ($idCategoryId !== null && $category_id === $idCategoryId) {
     if ($name_on_id === '') $errors[] = "Please enter the name visible on the ID.";
   }
 
-  if (empty($errors)) {
+ if (empty($errors)) {
     try {
       $pdo->beginTransaction();
 
-      // Reporter user: find or create by email
-      $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
-      $stmt->execute([':email' => $reporter_email]);
-      $user = $stmt->fetch();
+      if ($visibility !== 'anonymous_to_owner') {
+          // Only create/update user account if they're not anonymous
+          $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email LIMIT 1");
+          $stmt->execute([':email' => $reporter_email]);
+          $user = $stmt->fetch();
 
-      if ($user) {
-        $reporter_user_id = (int)$user['id'];
-        $pdo->prepare("UPDATE users SET phone = COALESCE(phone, :phone) WHERE id = :id")
-            ->execute([':phone' => $reporter_phone, ':id' => $reporter_user_id]);
+          if ($user) {
+              $reporter_user_id = (int)$user['id'];
+              $pdo->prepare("UPDATE users SET phone = COALESCE(phone, :phone) WHERE id = :id")
+                  ->execute([':phone' => $reporter_phone, ':id' => $reporter_user_id]);
+          } else {
+              // Extract name from email (part before @)
+              $emailName = strstr($reporter_email, '@', true) ?: 'Reporter';
+              
+              // Split into first and last name
+              $nameParts = explode(' ', $emailName, 2);
+              $first_name = $nameParts[0];
+              $last_name = isset($nameParts[1]) ? $nameParts[1] : '';
+              
+              $pdo->prepare("
+                  INSERT INTO users (role, first_name, last_name, email, phone, is_active)
+                  VALUES ('student', :first_name, :last_name, :email, :phone, 1)
+              ")->execute([
+                  ':first_name' => $first_name,
+                  ':last_name' => $last_name,
+                  ':email' => $reporter_email,
+                  ':phone' => $reporter_phone
+              ]);
+              $reporter_user_id = (int)$pdo->lastInsertId();
+          }
       } else {
-        // Extract name from email (part before @)
-        $emailName = strstr($reporter_email, '@', true) ?: 'Reporter';
-        
-        // Split into first and last name (simple approach)
-        $nameParts = explode(' ', $emailName, 2);
-        $first_name = $nameParts[0];
-        $last_name = isset($nameParts[1]) ? $nameParts[1] : '';
-        
-        $pdo->prepare("
-          INSERT INTO users (role, first_name, last_name, email, phone, is_active)
-          VALUES ('student', :first_name, :last_name, :email, :phone, 1)
-        ")->execute([
-          ':first_name' => $first_name,
-          ':last_name' => $last_name,
-          ':email' => $reporter_email,
-          ':phone' => $reporter_phone
-        ]);
-        $reporter_user_id = (int)$pdo->lastInsertId();
+          $reporter_user_id = $currentUserId;
       }
 
       // Insert item
