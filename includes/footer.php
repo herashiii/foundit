@@ -1,5 +1,4 @@
 <?php
-// If current page is inside /Login/, prefix links to go to /Pages/
 $currentFolder = basename(dirname($_SERVER['SCRIPT_NAME']));
 $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
 ?>

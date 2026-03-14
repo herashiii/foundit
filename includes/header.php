@@ -58,6 +58,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     </style>
 </head>
+
 <body>
     <div id="fontSizeIndicator" class="font-size-indicator" aria-live="polite"></div>
 
@@ -144,6 +145,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
         </div>
 
         <div class="accessibility-toolbar" aria-label="Accessibility options">
+
         <!-- Font Size Controls -->
         <button class="a11y-btn" onclick="increaseFontSize()" title="Increase Font Size (Ctrl++)" aria-label="Increase font size">
             <i class="fas fa-plus-circle" aria-hidden="true"></i>
@@ -184,10 +186,8 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     <!-- Font Size Control Script -->
     <script>
-        // Font size control
         let fontSize = parseInt(localStorage.getItem('fontSize')) || 100;
         
-        // Apply saved font size on page load
         document.documentElement.style.fontSize = fontSize + '%';
         
         function showFontSizeIndicator(message) {
@@ -207,7 +207,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 localStorage.setItem('fontSize', fontSize);
                 showFontSizeIndicator(`Font size: ${fontSize}%`);
                 
-                // Announce for screen readers
                 const announcer = document.createElement('div');
                 announcer.setAttribute('aria-live', 'polite');
                 announcer.classList.add('sr-only');
@@ -224,7 +223,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 localStorage.setItem('fontSize', fontSize);
                 showFontSizeIndicator(`Font size: ${fontSize}%`);
                 
-                // Announce for screen readers
                 const announcer = document.createElement('div');
                 announcer.setAttribute('aria-live', 'polite');
                 announcer.classList.add('sr-only');
@@ -240,7 +238,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             localStorage.setItem('fontSize', fontSize);
             showFontSizeIndicator('Font size reset to 100%');
             
-            // Announce for screen readers
             const announcer = document.createElement('div');
             announcer.setAttribute('aria-live', 'polite');
             announcer.classList.add('sr-only');
@@ -273,7 +270,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     <!-- Color Blind Mode Script -->
     <script>
-        // Color blindness modes
         const colorBlindModes = [
             { id: 'none', name: 'Default', icon: 'A' },
             { id: 'deuteranopia', name: 'Green Blind', icon: 'G' },
@@ -301,7 +297,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             localStorage.setItem('colorBlindMode', mode.id);
             updateColorBlindIndicator();
             
-            // Announce for screen readers
             const announcer = document.createElement('div');
             announcer.setAttribute('aria-live', 'polite');
             announcer.classList.add('sr-only');
@@ -309,12 +304,10 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             document.body.appendChild(announcer);
             setTimeout(() => announcer.remove(), 1000);
             
-            // Show visual feedback
             showFontSizeIndicator(mode.name + ' mode activated');
         }
         
         function applyColorBlindMode(modeId) {
-            // Remove all color blind classes from HTML element (affects entire page)
             document.documentElement.classList.remove(
                 'color-blind-deuteranopia',
                 'color-blind-protanopia',
@@ -342,10 +335,8 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     <!-- High Contrast Mode Script -->
     <script>
-        // High contrast mode
         let highContrastEnabled = localStorage.getItem('highContrast') === 'true';
         
-        // Apply saved high contrast mode on page load
         if (highContrastEnabled) {
             document.documentElement.classList.toggle("high-contrast");
             document.getElementById('highContrastIndicator').style.display = 'flex';
@@ -364,7 +355,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 localStorage.setItem('highContrast', 'false');
             }
             
-            // Announce for screen readers
             const announcer = document.createElement('div');
             announcer.setAttribute('aria-live', 'polite');
             announcer.classList.add('sr-only');
@@ -372,21 +362,19 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             document.body.appendChild(announcer);
             setTimeout(() => announcer.remove(), 1000);
             
-            // Show visual feedback
             showFontSizeIndicator(highContrastEnabled ? 'High contrast ON' : 'High contrast OFF');
         }
     </script>
 
     <!-- Text-to-Speech Script -->
     <script>
-        // Text-to-Speech variables
         let ttsUtterance = null;
         let ttsIsPlaying = false;
         let ttsIsPaused = false;
         let ttsCurrentElement = null;
         let ttsElements = [];
         let ttsCurrentIndex = 0;
-        let ttsSpeed = 1; // Default speed
+        let ttsSpeed = 1;
         
         // Toggle Text-to-Speech
         function toggleTextToSpeech() {
@@ -394,14 +382,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             
             if (ttsControls.style.display === 'none' || ttsControls.style.display === '') {
                 ttsControls.style.display = 'flex';
-                // Small delay to ensure DOM is ready
                 setTimeout(() => prepareTTS(), 100);
             } else {
                 forceStopAndHide();
             }
         }
         
-        // Force stop TTS completely
         function forceStopTTS() {
             if (window.speechSynthesis) {
                 window.speechSynthesis.cancel();
@@ -415,7 +401,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         }
         
-        // Stop TTS and hide panel (for close button)
         function forceStopAndHide() {
             forceStopTTS();
             
@@ -430,14 +415,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             
             updateTTSStatus('Stopped');
             
-            // Hide the panel
             const ttsControls = document.getElementById('ttsControls');
             if (ttsControls) {
                 ttsControls.style.display = 'none';
             }
         }
         
-        // Stop only (keep panel visible)
         function stopTTS() {
             forceStopTTS();
             
@@ -453,31 +436,24 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             updateTTSStatus('Stopped');
         }
         
-        // Prepare content for TTS
         function prepareTTS() {
-            // Stop any ongoing speech
             if (window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }
             
-            // Get all readable content
             const mainContent = document.querySelector('main') || document.body;
             
-            // Clear previous elements
             ttsElements = [];
             
-            // Get all text elements
             const textElements = mainContent.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, .alert, .card, .panel, label, .btn, a, .description, .doc-text');
             
             textElements.forEach(el => {
-                // Skip hidden elements and very short text
                 const text = el.innerText.trim();
                 if (el.offsetParent !== null && text.length > 15 && !el.classList.contains('sr-only')) {
                     ttsElements.push(el);
                 }
             });
             
-            // Also get the page title
             const pageTitle = document.querySelector('h1');
             if (pageTitle && pageTitle.innerText.trim()) {
                 ttsElements.unshift(pageTitle);
@@ -487,7 +463,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 ttsCurrentIndex = 0;
                 updateTTSStatus(`Ready to read ${ttsElements.length} sections. Click Play to start.`);
                 
-                // Reset UI
                 document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
                 document.getElementById('ttsResumeBtn').style.display = 'none';
                 document.getElementById('ttsProgressBar').style.width = '0%';
@@ -519,7 +494,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             const text = element.innerText.trim();
             
             if (!text) {
-                // Skip empty elements
                 ttsCurrentIndex++;
                 setTimeout(() => readCurrentSection(), 100);
                 return;
@@ -568,15 +542,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             };
             
             ttsUtterance.onend = function() {
-                // Remove highlight
                 if (element) {
                     element.classList.remove('tts-highlight');
                 }
                 
-                // Move to next section
                 ttsCurrentIndex++;
                 
-                // Small delay before next section
                 setTimeout(() => {
                     if (ttsCurrentIndex < ttsElements.length) {
                         readCurrentSection();
@@ -589,17 +560,14 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             ttsUtterance.onerror = function(event) {
                 console.error('TTS error:', event);
                 if (event.error === 'interrupted' || event.error === 'canceled') {
-                    // Normal interruption, don't show error
                     return;
                 }
                 updateTTSStatus('Error reading section');
                 
-                // Try next section
                 ttsCurrentIndex++;
                 setTimeout(() => readCurrentSection(), 500);
             };
             
-            // Cancel any ongoing speech and start new
             try {
                 window.speechSynthesis.cancel();
                 window.speechSynthesis.speak(ttsUtterance);
@@ -629,12 +597,10 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
                 document.getElementById('ttsResumeBtn').style.display = 'none';
             } else if (!ttsIsPlaying && ttsElements.length > 0) {
-                // Start from beginning if not playing
                 startReading();
             }
         }
         
-        // Finish TTS
         function finishTTS() {
             updateTTSStatus('Finished reading');
             if (ttsCurrentElement) {
@@ -642,7 +608,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
             forceStopTTS();
             
-            // Reset UI
             document.getElementById('ttsPauseBtn').style.display = 'inline-flex';
             document.getElementById('ttsResumeBtn').style.display = 'none';
             document.getElementById('ttsProgressBar').style.width = '0%';
@@ -653,22 +618,17 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             ttsSpeed = parseFloat(rate);
             
             if (ttsIsPlaying && !ttsIsPaused && ttsUtterance) {
-                // Restart current section with new speed
                 const wasPlaying = true;
                 const currentIdx = ttsCurrentIndex;
                 
-                // Cancel current speech
                 window.speechSynthesis.cancel();
                 ttsIsPlaying = false;
                 
-                // Restart from same section
                 setTimeout(() => {
                     ttsCurrentIndex = currentIdx;
                     readCurrentSection();
                 }, 100);
             } else if (ttsIsPaused) {
-                // If paused, just update the speed for when it resumes
-                // We'll restart from current section when resumed
                 const currentIdx = ttsCurrentIndex;
                 window.speechSynthesis.cancel();
                 ttsIsPlaying = false;
@@ -699,28 +659,23 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
         
         // Load voices when available
         if (window.speechSynthesis) {
-            // Load voices immediately if available
             const voices = window.speechSynthesis.getVoices();
             if (voices.length > 0) {
                 console.log('Voices loaded:', voices.length);
             }
             
-            // Listen for voices to load
             window.speechSynthesis.onvoiceschanged = function() {
                 console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
             };
         }
         
-        // Clean up on page unload
         window.addEventListener('beforeunload', function() {
             if (window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }
         });
         
-        // Add click handlers for play/pause/stop buttons
         document.addEventListener('DOMContentLoaded', function() {
-            // Override the toggle function to properly handle play/stop
             const originalToggle = toggleTextToSpeech;
             window.toggleTextToSpeech = function() {
                 const ttsControls = document.getElementById('ttsControls');
@@ -729,7 +684,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                     ttsControls.style.display = 'flex';
                     setTimeout(() => {
                         prepareTTS();
-                        // Auto-start after preparation
                         setTimeout(() => {
                             if (ttsElements.length > 0) {
                                 startReading();
@@ -763,7 +717,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 };
             }
             
-            // Fix close button
             if (closeBtn) {
                 closeBtn.onclick = function(e) {
                     e.preventDefault();
@@ -772,7 +725,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 };
             }
             
-            // Fix stop button
             if (stopBtn) {
                 stopBtn.onclick = function(e) {
                     e.preventDefault();
@@ -781,7 +733,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
                 };
             }
             
-            // Fix speed selector
             const speedSelect = document.querySelector('.tts-speed');
             if (speedSelect) {
                 speedSelect.onchange = function(e) {
@@ -794,14 +745,12 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
     <!-- Logout Confirmation Script -->
     <script>
-        // Accessible logout confirmation for desktop
         function confirmLogout() {
             if (confirm('Are you sure you want to sign out? This will end your current session.')) {
                 window.location.href = '../Pages/logout.php';
             }
         }
 
-        // Accessible logout confirmation for mobile
         function confirmLogoutMobile(event) {
             event.preventDefault();
             if (confirm('Are you sure you want to sign out? This will end your current session.')) {
@@ -809,7 +758,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         }
 
-        // keyboard support for logout buttons
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtns = document.querySelectorAll('.nav-actions button[onclick="confirmLogout()"]');
             logoutBtns.forEach(btn => {
