@@ -27,6 +27,9 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/voice-commands.css">
     <link rel="stylesheet" href="../css/color-blindness.css">
+    <link rel="stylesheet" href="../css/high-contrast.css">
+    <link rel="stylesheet" href="../css/accessibility.css">
+
 
     <?php if(file_exists(__DIR__ . "/../css/" . $current_page . ".css")): ?>
         <link rel="stylesheet" href="../css/<?= htmlspecialchars($current_page) ?>.css">
@@ -53,38 +56,6 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             .mobile-only-links { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border); margin-top: 10px; padding-top: 15px; }
         }
 
-        /* Accessibility Toolbar & TTS Styles (Kept identical to prevent UI shifts) */
-        .accessibility-toolbar { position: fixed; top: 100px; right: 10px; z-index: 9999; display: flex; flex-direction: column; gap: 5px; }
-        .a11y-btn { width: 45px; height: 45px; border-radius: 50%; background: #9B2C2C; color: white; border: 2px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.2s; position: relative; }
-        .a11y-btn:hover { transform: scale(1.1); background: #742A2A; }
-        .a11y-btn:focus-visible { outline: 3px solid yellow; outline-offset: 2px; }
-        .mode-badge { position: absolute; top: -2px; right: -2px; background: white; color: #9B2C2C; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #9B2C2C; }
-        .font-size-indicator { position: fixed; bottom: 20px; left: 20px; background: rgba(155, 44, 44, 0.9); color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; z-index: 9998; display: none; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .font-size-indicator.show { display: block; animation: fadeInOut 2s ease; }
-        @keyframes fadeInOut { 0% { opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-        .tts-controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #9B2C2C; color: white; border-radius: 50px; padding: 15px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 10000; display: flex; flex-direction: column; min-width: 320px; border: 2px solid white; }
-        .tts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; }
-        .tts-close-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .tts-close-btn:hover { background: rgba(255,255,255,0.2); }
-        .tts-progress { width: 100%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; margin-bottom: 15px; overflow: hidden; }
-        .tts-progress-bar { height: 100%; background: white; transition: width 0.3s ease; }
-        .tts-buttons { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .tts-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
-        .tts-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-        .tts-btn:focus-visible { outline: 2px solid white; outline-offset: 2px; }
-        .tts-speed { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 20px; margin-left: auto; font-size: 12px; cursor: pointer; }
-        .tts-speed option { background: #9B2C2C; color: white; }
-        .tts-status { font-size: 12px; text-align: center; opacity: 0.9; }
-        .tts-highlight { background-color: rgba(255, 255, 0, 0.2); transition: background-color 0.3s; border-radius: 4px; padding: 2px 0; }
-        
-        /* Screen reader only utility class */
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
-
-        @media (max-width: 768px) {
-            .accessibility-toolbar { top: auto; bottom: 100px; right: 10px; flex-direction: column-reverse; }
-            .a11y-btn { width: 40px; height: 40px; font-size: 16px; }
-            .tts-controls { width: 90%; min-width: auto; padding: 12px 15px; }
-        }
     </style>
 </head>
 <body>
@@ -173,25 +144,42 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
         </div>
 
         <div class="accessibility-toolbar" aria-label="Accessibility options">
-            <button class="a11y-btn" onclick="increaseFontSize()" title="Increase Font Size (Ctrl++)" aria-label="Increase font size">
-                <i class="fas fa-plus-circle" aria-hidden="true"></i>
-            </button>
-            <button class="a11y-btn" onclick="decreaseFontSize()" title="Decrease Font Size (Ctrl+-)" aria-label="Decrease font size">
-                <i class="fas fa-minus-circle" aria-hidden="true"></i>
-            </button>
-            <button class="a11y-btn" onclick="resetFontSize()" title="Reset Font Size (Ctrl+0)" aria-label="Reset font size">
-                <i class="fas fa-undo-alt" aria-hidden="true"></i>
-            </button>
-            
-            <button class="a11y-btn" onclick="cycleColorBlindMode()" title="Color Blindness Mode" aria-label="Cycle through color blindness modes" id="colorBlindToggle">
-                <i class="fas fa-eye" aria-hidden="true"></i>
-                <span class="mode-badge" id="colorBlindIndicator" aria-hidden="true">A</span>
-            </button>
+        <!-- Font Size Controls -->
+        <button class="a11y-btn" onclick="increaseFontSize()" title="Increase Font Size (Ctrl++)" aria-label="Increase font size">
+            <i class="fas fa-plus-circle" aria-hidden="true"></i>
+            <span class="btn-label">Bigger Text</span>
+        </button>
+        
+        <button class="a11y-btn" onclick="decreaseFontSize()" title="Decrease Font Size (Ctrl+-)" aria-label="Decrease font size">
+            <i class="fas fa-minus-circle" aria-hidden="true"></i>
+            <span class="btn-label">Smaller Text</span>
+        </button>
+        
+        <button class="a11y-btn" onclick="resetFontSize()" title="Reset Font Size (Ctrl+0)" aria-label="Reset font size">
+            <i class="fas fa-undo-alt" aria-hidden="true"></i>
+            <span class="btn-label">Reset Text</span>
+        </button>
+        
+        <!-- Color Blind Toggle -->
+        <button class="a11y-btn" onclick="cycleColorBlindMode()" title="Color Blindness Mode" aria-label="Cycle through color blindness modes" id="colorBlindToggle">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+            <span class="btn-label">Color Mode</span>
+            <span class="mode-badge" id="colorBlindIndicator" aria-hidden="true">A</span>
+        </button>
 
-            <button class="a11y-btn" onclick="toggleTextToSpeech()" title="Text to Speech - Read page aloud" aria-label="Toggle Text to Speech" id="ttsButton">
-                <i class="fas fa-volume-up" aria-hidden="true"></i>
-            </button>
-        </div>
+        <!-- High Contrast Toggle -->
+        <button class="a11y-btn" onclick="toggleHighContrast()" title="High Contrast Mode - Maximum visibility" aria-label="Toggle high contrast mode" id="highContrastToggle">
+            <i class="fas fa-adjust" aria-hidden="true"></i>
+            <span class="btn-label">High Contrast</span>
+            <span class="mode-badge" id="highContrastIndicator" style="display: none;">HC</span>
+        </button>
+
+        <!-- Text-to-Speech Button -->
+        <button class="a11y-btn" onclick="toggleTextToSpeech()" title="Text to Speech - Read page aloud" aria-label="Toggle Text to Speech" id="ttsButton">
+            <i class="fas fa-volume-up" aria-hidden="true"></i>
+            <span class="btn-label">Read Aloud</span>
+        </button>
+    </div>
     </nav>
 
     <!-- Font Size Control Script -->
@@ -359,7 +347,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
         
         // Apply saved high contrast mode on page load
         if (highContrastEnabled) {
-            document.body.classList.add('high-contrast');
+            document.documentElement.classList.toggle("high-contrast");
             document.getElementById('highContrastIndicator').style.display = 'flex';
         }
         
@@ -367,11 +355,11 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             highContrastEnabled = !highContrastEnabled;
             
             if (highContrastEnabled) {
-                document.body.classList.add('high-contrast');
+                document.documentElement.classList.add('high-contrast');
                 document.getElementById('highContrastIndicator').style.display = 'flex';
                 localStorage.setItem('highContrast', 'true');
             } else {
-                document.body.classList.remove('high-contrast');
+                document.documentElement.classList.remove('high-contrast');
                 document.getElementById('highContrastIndicator').style.display = 'none';
                 localStorage.setItem('highContrast', 'false');
             }
@@ -388,7 +376,7 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             showFontSizeIndicator(highContrastEnabled ? 'High contrast ON' : 'High contrast OFF');
         }
     </script>
-    
+
     <!-- Text-to-Speech Script -->
     <script>
         // Text-to-Speech variables
@@ -887,6 +875,5 @@ $current_page = basename($_SERVER['PHP_SELF'], ".php");
             }
         });
     </script>
-    
 </body>
 </html>

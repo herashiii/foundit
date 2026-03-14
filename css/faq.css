@@ -1,7 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/* FAQ.CSS - FAQ Page aligned with find-my-item header text styles            */
-/* -------------------------------------------------------------------------- */
-
 .faq-page {
     background-color: var(--neut-gray-1, #F7FAFC);
     min-height: calc(100vh - 200px);
@@ -9,9 +5,9 @@
     font-family: 'Inter', sans-serif;
 }
 
-/* --- PORTAL HEADER STRIP (Matches Find My Item EXACTLY - Solid Color) --- */
+/* --- PORTAL HEADER STRIP  --- */
 .portal-header-strip {
-    background-color: var(--mono-red-2, #742A2A); /* Solid color as requested */
+    background-color: var(--mono-red-2, #742A2A);
     padding: 32px 0;
     color: var(--neut-gray-2, #FFFFFF);
     margin-bottom: 32px;
@@ -33,7 +29,7 @@
     margin: 0;
 }
 
-/* Breadcrumbs matching find-my-item */
+/* Breadcrumbs */
 .portal-header-strip .breadcrumb {
     font-size: 0.85rem;
     display: flex;
@@ -123,7 +119,7 @@
     border-top: 1px solid transparent;
 }
 
-/* Active State toggled by Javascript */
+/* Active State */
 .faq-item.active .faq-icon {
     transform: rotate(180deg);
 }

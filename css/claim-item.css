@@ -1,30 +1,30 @@
 /* claim-item.css - Dedicated styling for the claim submission flow */
 
 :root {
-    /* 1. Monochromatic Scheme (Silliman Red) */
+    /*Monochromatic Scheme (Silliman Red) */
     --mono-red-1: #5C1A1A; 
     --mono-red-2: #742A2A; 
     --mono-red-3: #9B2C2C; /* Base Primary */
     --mono-red-4: #E53E3E; 
     --mono-red-5: #FFF5F5; /* Error Wash */
 
-    /* 2. Complementary Scheme (Red & Green) */
+    /* Complementary Scheme (Red & Green) */
     --comp-green-1: #F0FFF4; /* Success Wash */
     --comp-green-2: #38A169; 
     --comp-green-3: #276749; /* Base Success */
 
-    /* 3. Split Complementary Scheme (Gold, Red, & Charcoal) */
+    /* Split Complementary Scheme (Gold, Red, & Charcoal) */
     --split-gold-1: #D69E2E; /* Base Primary Accent */
     --split-gold-2: #B7791F; 
     --split-char-1: #1A202C; /* Deep Charcoal - Main Headings */
     --split-char-2: #4A5568; /* Slate Gray - Body Text */
 
-    /* 4. Analogous Scheme (Gold to Orange) */
+    /* Analogous Scheme (Gold to Orange) */
     --ana-orange-1: #FFFAF0; /* Warning Wash */
     --ana-orange-2: #DD6B20; 
     --ana-orange-3: #9C4221; /* Base Warning */
 
-    /* 5. Neutral/Achromatic Scheme (The Interface Canvas) */
+    /* Neutral/Achromatic Scheme */
     --neut-gray-1: #F7FAFC; /* Body Background */
     --neut-gray-2: #FFFFFF; /* Surface Color */
     --neut-gray-3: #E2E8F0; /* Border Color */
@@ -104,7 +104,7 @@
     font-size: 1rem;
 }
 
-/* Context Card (What the user is claiming) */
+/* Context Card */
 .item-context-card {
     display: flex;
     align-items: center;
@@ -152,7 +152,7 @@
     gap: 6px;
 }
 
-/* Alerts (System Feedback mapped to Functional Palette) */
+/* Alerts */
 .alert {
     display: flex;
     align-items: flex-start;
@@ -169,21 +169,21 @@
     line-height: 1;
 }
 
-/* Info Alert (Blue Wash) */
+/* Info Alert */
 .alert-info {
     background-color: #EBF8FF;
     border: 1px solid #BEE3F8;
     color: #2C5282;
 }
 
-/* Error Alert (Monochromatic Red Wash) */
+/* Error Alert */
 .alert-error {
     background-color: var(--mono-red-5);
     border: 1px solid #FED7D7;
     color: var(--mono-red-3);
 }
 
-/* Success Alert (Complementary Green Wash) */
+/* Success Alert */
 .alert-success {
     background-color: var(--comp-green-1);
     border: 1px solid var(--comp-green-2);
@@ -226,7 +226,6 @@
     color: var(--neut-gray-5);
 }
 
-/* Focus uses Split Complementary Gold */
 .form-group textarea:focus {
     outline: none;
     border-color: var(--split-gold-1);
@@ -254,7 +253,6 @@
     transition: var(--transition);
 }
 
-/* Primary uses Monochromatic Base */
 .btn-primary {
     background-color: var(--mono-red-3);
     color: var(--neut-gray-2);
@@ -267,7 +265,6 @@
     transform: translateY(-1px);
 }
 
-/* Secondary uses White bg with Red border per Code Rules */
 .btn-secondary {
     background-color: var(--neut-gray-2);
     color: var(--mono-red-3);

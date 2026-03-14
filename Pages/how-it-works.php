@@ -1,6 +1,6 @@
 <?php include __DIR__ . '/../includes/header.php'; ?>
 
-<link rel="stylesheet" href="../css/how-it-works.css">
+<link rel="stylesheet" href="../css/how-it-works.css?v=<?php echo time(); ?>">
 
 <section class="how-section-page">
     <div class="container">
@@ -18,10 +18,13 @@
             <p>Learn how FoundiT helps reconnect lost items with their rightful owners.</p>
         </div>
 
+        <!-- Video Player Section -->
         <div class="video-placeholder">
-            <div class="video-box" aria-label="Play video demonstration">
-                <i class="fas fa-play-circle play-btn"></i>
-                <span class="sr-only">Play Video</span>
+            <div class="video-container">
+                <video class="video-player" controls>
+                    <source src="../video/FoundiT.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </div>
         </div>
 

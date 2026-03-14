@@ -2,45 +2,44 @@
 
 :root {
     /* 1. Monochromatic Scheme (Silliman Red) */
-    --mono-red-1: #5C1A1A; /* Deep Maroon - Darkest Shade */
-    --mono-red-2: #742A2A; /* Dark Red - Shadow */
-    --mono-red-3: #9B2C2C; /* Silliman Red - Base Primary */
-    --mono-red-4: #E53E3E; /* Bright Red - UI Interaction */
-    --mono-red-5: #FFF5F5; /* Soft Rose - Background Wash */
+    --mono-red-1: #5C1A1A; 
+    --mono-red-2: #742A2A;
+    --mono-red-3: #9B2C2C;
+    --mono-red-4: #E53E3E;
+    --mono-red-5: #FFF5F5;
 
     /* 2. Complementary Scheme (Red & Green) */
-    --comp-red-1: #9B2C2C; /* The "Lost" State */
-    --comp-red-2: #742A2A; /* Border for Red Badges */
-    --comp-green-1: #F0FFF4; /* Pale Mint - Background */
-    --comp-green-2: #38A169; /* Mid Green - Secondary Action */
-    --comp-green-3: #276749; /* Forest Green - The "Claimed" State */
+    --comp-red-1: #9B2C2C;
+    --comp-red-2: #742A2A;
+    --comp-green-1: #F0FFF4;
+    --comp-green-2: #38A169;
+    --comp-green-3: #276749;
 
     /* 3. Split Complementary Scheme (Gold, Red, & Charcoal) */
-    --split-gold-1: #D69E2E; /* Base Primary Accent */
-    --split-gold-2: #B7791F; /* Harvest Gold - Active State */
-    --split-red-1: #9B2C2C;  /* Anchor Accent */
-    --split-char-1: #1A202C; /* Deep Charcoal - Structural Base */
-    --split-char-2: #4A5568; /* Slate Gray - Subtle Border/Text */
+    --split-gold-1: #D69E2E; 
+    --split-gold-2: #B7791F;
+    --split-red-1: #9B2C2C; 
+    --split-char-1: #1A202C;
+    --split-char-2: #4A5568;
 
     /* 4. Analogous Scheme (Gold to Orange) */
-    --ana-gold-1: #F6E05E; /* Lemon Yellow - Lightest Highlight */
-    --ana-gold-2: #D69E2E; /* Silliman Gold - Base Anchor */
-    --ana-gold-3: #B7791F; /* Dark Gold - Hover State */
-    --ana-orange-1: #DD6B20; /* Burnt Orange - Warning */
-    --ana-orange-2: #9C4221; /* Rust Orange - Urgent Label */
-    --ana-orange-3: #FFFAF0; /* Warning Wash */
+    --ana-gold-1: #F6E05E;
+    --ana-gold-2: #D69E2E;
+    --ana-gold-3: #B7791F; 
+    --ana-orange-1: #DD6B20; 
+    --ana-orange-2: #9C4221; 
+    --ana-orange-3: #FFFAF0; 
     /* 5. Neutral/Achromatic Scheme (The Interface Canvas) */
-    --neut-gray-1: #F7FAFC; /* Cool Gray - Body Background */
-    --neut-gray-2: #FFFFFF; /* White - Surface/Card Color */
-    --neut-gray-3: #E2E8F0; /* Light Border - Card Outline */
-    --neut-gray-4: #CBD5E0; /* Mid Gray - Placeholder Text */
-    --neut-gray-5: #A0AEC0; /* Cool Slate - Muted Secondary Text */
-    
-    /* Interactive Standard */
+    --neut-gray-1: #F7FAFC; 
+    --neut-gray-2: #FFFFFF; 
+    --neut-gray-3: #E2E8F0; 
+    --neut-gray-4: #CBD5E0;
+    --neut-gray-5: #A0AEC0;
+
     --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 1. Header Strip - Uses Monochromatic & Split Complementary */
+/* Header Strip */
 .portal-header-strip {
     background-color: var(--mono-red-2);
     padding: 32px 0;
@@ -89,7 +88,7 @@
     margin: 0;
 }
 
-/* 2. Grid Layout */
+/* Grid Layout */
 .portal-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -98,7 +97,7 @@
     padding-bottom: 64px;
 }
 
-/* 3. Sidebar - Uses Neutral Canvas Schema */
+/* Sidebar */
 .portal-sidebar {
     position: sticky;
     top: 100px;
@@ -196,7 +195,7 @@
     color: var(--neut-gray-5);
 }
 
-/* 4. Mini-Card Design */
+/* Mini-Card Design */
 .items-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -211,8 +210,8 @@
     transition: var(--transition);
     display: flex;
     flex-direction: column;
-    text-decoration: none; /* Reset link styles */
-    color: inherit; /* Reset link colors */
+    text-decoration: none; 
+    color: inherit;
 }
 
 .mini-card:hover {
@@ -239,7 +238,7 @@
     transform: scale(1.05);
 }
 
-/* Base Badge using Complementary (Lost) Scheme */
+/* Base Badge */
 .status-badge {
     position: absolute;
     top: 12px;
@@ -255,20 +254,17 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Monochromatic Red (Default/Unclaimed) */
 .status-badge.unclaimed {
     background: var(--mono-red-3);
     color: white;
 }
 
-/* Analogous Gold (Recent) */
 .status-badge.recent {
     background: var(--ana-gold-1);
     color: var(--ana-orange-2);
     border: 1px solid var(--ana-gold-2);
 }
 
-/* Functional Orange (Pending Claim) */
 .status-badge.pending {
     background: var(--ana-orange-3); 
     color: var(--ana-orange-2); 
@@ -338,7 +334,7 @@
     min-width: 0; 
 }
 
-/* 5. System Messaging */
+/* System Messaging */
 .system-msg {
     display: flex;
     gap: 12px;
@@ -359,14 +355,9 @@
     margin: 0;
 }
 
-/* ============================== */
-/* MOBILE ADJUSTMENTS (UPGRADED)  */
-/* ============================== */
-
 @media (max-width: 992px) {
     .portal-layout { grid-template-columns: 1fr; }
     
-    /* Make sidebar static and convert its internal structure to a flex row */
     .portal-sidebar { position: static; margin-bottom: 12px; }
     
     #filterForm {
@@ -380,7 +371,6 @@
         height: 100%;
     }
 
-    /* Keep categories list from taking up too much vertical space */
     .category-list {
         max-height: 160px;
         overflow-y: auto;
@@ -393,7 +383,6 @@
     .portal-header-strip { padding: 20px 0; }
     .header-content h1 { font-size: 1.8rem; }
     
-    /* Drop filters into 2 columns on small tablets */
     #filterForm {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -406,12 +395,10 @@
 @media (max-width: 600px) {
     .items-grid { grid-template-columns: 1fr; }
     
-    /* Stack filters into 1 column on phones */
     #filterForm {
         grid-template-columns: 1fr;
     }
 
-    /* Force the inline flex controls from PHP to stack properly on mobile */
     .grid-controls {
         flex-direction: column;
         align-items: stretch !important;

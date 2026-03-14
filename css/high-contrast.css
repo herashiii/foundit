@@ -1,0 +1,224 @@
+/* ======================================= */
+/* HIGH CONTRAST MODE - WCAG AAA           */
+/* ======================================= */
+
+/* MAIN HIGH CONTRAST WRAPPER */
+html.high-contrast,
+html.high-contrast body {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Make ALL elements inherit contrast colors */
+html.high-contrast * {
+    background-color: inherit;
+    color: inherit;
+    border-color: #ffffff;
+}
+
+/* --------------------------------------- */
+/* TEXT                                    */
+/* --------------------------------------- */
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6 {
+    color: #ffff00 !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast label,
+html.high-contrast li {
+    color: #ffffff !important;
+}
+
+/* --------------------------------------- */
+/* LINKS                                   */
+/* --------------------------------------- */
+
+html.high-contrast a {
+    color: #00ffff !important;
+    text-decoration: underline !important;
+}
+
+html.high-contrast a:hover,
+html.high-contrast a:focus {
+    background: #333333 !important;
+    outline: 3px solid #ffff00 !important;
+}
+
+/* --------------------------------------- */
+/* NAVBAR                                  */
+/* --------------------------------------- */
+
+html.high-contrast nav,
+html.high-contrast .navbar {
+    background: #000000 !important;
+    border-bottom: 3px solid #ffff00 !important;
+}
+
+/* --------------------------------------- */
+/* BUTTONS                                 */
+/* --------------------------------------- */
+
+html.high-contrast button,
+html.high-contrast .btn {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 3px solid #ffff00 !important;
+    font-weight: bold;
+}
+
+html.high-contrast button:hover,
+html.high-contrast .btn:hover {
+    background: #333333 !important;
+}
+
+/* --------------------------------------- */
+/* FORMS                                   */
+/* --------------------------------------- */
+
+html.high-contrast input,
+html.high-contrast textarea,
+html.high-contrast select {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+html.high-contrast input::placeholder,
+html.high-contrast textarea::placeholder {
+    color: #cccccc !important;
+}
+
+/* --------------------------------------- */
+/* CARDS / CONTAINERS                      */
+/* --------------------------------------- */
+
+html.high-contrast .card,
+html.high-contrast .panel,
+html.high-contrast .container,
+html.high-contrast .form-container,
+html.high-contrast .auth-card,
+html.high-contrast .dashboard-card {
+    background: #000000 !important;
+    border: 3px solid #ffff00 !important;
+}
+
+/* --------------------------------------- */
+/* TABLES                                  */
+/* --------------------------------------- */
+
+html.high-contrast table {
+    border: 2px solid #ffff00 !important;
+}
+
+html.high-contrast th {
+    background: #ffff00 !important;
+    color: #000000 !important;
+}
+
+html.high-contrast td {
+    border: 1px solid #ffffff !important;
+}
+
+/* --------------------------------------- */
+/* BADGES                                  */
+/* --------------------------------------- */
+
+html.high-contrast .badge,
+html.high-contrast .status-badge {
+    background: #000000 !important;
+    border: 2px solid currentColor !important;
+    font-weight: bold;
+}
+
+html.high-contrast .status-pending { color: #ffa500 !important; }
+html.high-contrast .status-approved { color: #00ff00 !important; }
+html.high-contrast .status-rejected { color: #ff0000 !important; }
+
+/* --------------------------------------- */
+/* ALERTS                                  */
+/* --------------------------------------- */
+
+html.high-contrast .alert {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 3px solid #ffffff !important;
+}
+
+html.high-contrast .alert-success { border-color: #00ff00 !important; }
+html.high-contrast .alert-error { border-color: #ff0000 !important; }
+html.high-contrast .alert-warning { border-color: #ffff00 !important; }
+
+/* --------------------------------------- */
+/* FOOTER                                  */
+/* --------------------------------------- */
+
+html.high-contrast footer {
+    background: #000000 !important;
+    border-top: 3px solid #ffff00 !important;
+}
+
+/* --------------------------------------- */
+/* ACCESSIBILITY BUTTONS                   */
+/* --------------------------------------- */
+
+html.high-contrast .a11y-btn {
+    background: #000000 !important;
+    color: #ffff00 !important;
+    border: 2px solid #ffff00 !important;
+}
+
+html.high-contrast .a11y-btn:hover {
+    background: #333333 !important;
+}
+
+/* --------------------------------------- */
+/* TTS HIGHLIGHT                           */
+/* --------------------------------------- */
+
+html.high-contrast .tts-highlight {
+    background: yellow !important;
+    color: black !important;
+}
+
+/* --------------------------------------- */
+/* UPLOAD ZONE                             */
+/* --------------------------------------- */
+
+html.high-contrast .upload-zone {
+    border: 3px dashed #ffff00 !important;
+}
+
+/* --------------------------------------- */
+/* FOCUS ACCESSIBILITY                     */
+/* --------------------------------------- */
+
+html.high-contrast *:focus-visible {
+    outline: 4px solid #ffff00 !important;
+    outline-offset: 3px !important;
+}
+
+/* --------------------------------------- */
+/* DISABLED ELEMENTS                       */
+/* --------------------------------------- */
+
+html.high-contrast *:disabled {
+    opacity: 0.5 !important;
+}
+
+/* --------------------------------------- */
+/* REDUCED MOTION                          */
+/* --------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    html.high-contrast * {
+        animation: none !important;
+        transition: none !important;
+    }
+}

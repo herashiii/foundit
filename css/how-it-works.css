@@ -20,7 +20,7 @@
 }
 
 .breadcrumb a {
-    color: #9B2C2C; /* Matched to base primary */
+    color: #9B2C2C;
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: 0.2s;
@@ -57,59 +57,40 @@
 }
 
 /* ===============================
-   VIDEO PLACEHOLDER (UPGRADED)
+   VIDEO PLAYER
 ================================ */
 
 .video-placeholder {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 50px; /* Slightly increased gap before the steps */
+    margin-bottom: 40px;
 }
 
-.video-box {
+.video-container {
     width: 100%;
-    max-width: 100%; /* Changed from 800px so it perfectly aligns with the how-blocks */
-    height: 540px;   /* Increased height for a cinematic 16:9 feel on desktop */
-    
-    /* Uses Silliman Hall as a realistic video thumbnail */
-    background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('../silliman-hall.jpg') center/cover no-repeat;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    position: relative;
-    cursor: pointer;
+    max-width: 100%;   /* controls how wide the video can be */
+    margin: 0 auto;     /* centers the video */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #000;
 }
 
-.video-box:hover {
+.video-container:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
-.play-btn {
-    font-size: 72px;
-    color: white;
-    opacity: 0.9;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+.video-player {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 16 / 9;
+    background: #000;
 }
 
-.video-box:hover .play-btn {
-    transform: scale(1.15);
-    opacity: 1;
-}
-
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+/* Hide the old video-box styles */
+.video-box {
+    display: none;
 }
 
 /* ===============================
@@ -131,7 +112,7 @@
 }
 
 .how-block h2 i {
-    color: #9B2C2C; /* Primary red for icons */
+    color: #9B2C2C;
     font-size: 1.2em;
 }
 
@@ -155,7 +136,7 @@
     border-radius: 14px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-    border-top: 4px solid #9B2C2C; /* Switched to top border for a cleaner, modern look */
+    border-top: 4px solid #9B2C2C;
     border-left: none;
     transition: all .25s ease;
 }
@@ -212,13 +193,8 @@
         gap: 16px;
     }
 
-    .video-box {
-        height: 280px;
+    .video-container {
         border-radius: 12px;
-    }
-
-    .play-btn {
-        font-size: 56px;
     }
 
     .how-section-page {
@@ -234,10 +210,6 @@
 @media(max-width: 480px) {
     .how-header h1 {
         font-size: 28px;
-    }
-    
-    .video-box {
-        height: 200px;
     }
     
     .step-card {
