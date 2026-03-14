@@ -1,12 +1,10 @@
 <?php
-// claim-item.php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// CHECK IF USER IS LOGGED IN FIRST - HCI Friendly
+// CHECK IF USER IS LOGGED IN FIRST
 if (!isset($_SESSION['user_id'])) {
-    // Store the item ID to redirect back after login
     $_SESSION['redirect_after_login'] = 'claim-item.php?id=' . ($_GET['id'] ?? '');
     header('Location: ../Login/login.php?error=' . urlencode('Please log in to submit a claim request'));
     exit;
@@ -14,14 +12,12 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../includes/db.php';
 
-// Get logged-in user ID from session
 $currentUserId = $_SESSION['user_id'];
 
 function h($s): string {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
-// Helper function for placeholder image
 function placeholderDataUri(string $label = 'Item'): string {
     $label = preg_replace('/[^a-zA-Z0-9 \-]/', '', $label);
     $svg = <<<SVG
@@ -58,10 +54,8 @@ if ($itemId > 0) {
     } elseif ($item['status'] !== 'unclaimed') {
         $errorMsg = 'This item is no longer available for claims.';
     } elseif ($item['owner_id'] == $currentUserId) {
-        // Prevent users from claiming their own items
         $errorMsg = 'You cannot claim an item that you reported.';
     } elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-        // Admins cannot claim items at all (they manage, not claim)
         $errorMsg = 'Administrators cannot submit claim requests. Please log in with a student account to claim items.';
     } else {
         // Get item photo
@@ -88,7 +82,6 @@ if ($itemId > 0) {
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
-    // Verify user is still logged in
     if (!isset($_SESSION['user_id'])) {
         header('Location: ../Login/login.php?error=' . urlencode('Your session has expired. Please log in again.'));
         exit;
@@ -102,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
         try {
             $pdo->beginTransaction();
             
-            // 1. Fetch current user info
+            // Fetch current user info
             $userStmt = $pdo->prepare("SELECT first_name, last_name, email, phone FROM users WHERE id = ?");
             $userStmt->execute([$currentUserId]);
             $userData = $userStmt->fetch();
@@ -113,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
             
             $fullName = $userData['first_name'] . ' ' . $userData['last_name'];
 
-            // 2. Check if user already has a pending claim for this item
+            // Check if user already has a pending claim for this item
             $checkStmt = $pdo->prepare("
                 SELECT id FROM claim_requests 
                 WHERE item_id = ? AND claimer_email = ? AND status = 'pending'
@@ -124,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
                 throw new Exception('You already have a pending claim for this item.');
             }
 
-            // 3. Insert claim request
+            // Insert claim request
             $insertClaim = $pdo->prepare("
                 INSERT INTO claim_requests 
                 (item_id, user_id, claimer_name, claimer_email, claimer_phone, proof_description, status) 
@@ -139,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
                 $proof
             ]);
             
-            // 4. Update item status to 'pending'
+            // Update item status to 'pending'
             $updateItem = $pdo->prepare("UPDATE items SET status = 'pending' WHERE id = ?");
             $updateItem->execute([$itemId]);
             
@@ -306,7 +299,6 @@ include __DIR__ . '/../includes/header.php';
 </main>
 
 <script>
-// Form loading state - HCI friendly feedback
 document.getElementById('claimForm')?.addEventListener('submit', function(e) {
     const btn = document.getElementById('submitBtn');
     const btnText = btn.querySelector('.btn-text');

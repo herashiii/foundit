@@ -2,12 +2,10 @@
 require_once __DIR__ . '/../includes/db.php';
 include __DIR__ . '/../includes/header.php';
 
-// Helper for safe HTML output
 function h($s) {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
-// Helper for placeholder image
 function placeholderDataUri(string $label = 'Item'): string {
   $label = preg_replace('/[^a-zA-Z0-9 \-]/', '', $label);
   $svg = <<<SVG

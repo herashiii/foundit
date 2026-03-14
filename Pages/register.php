@@ -10,7 +10,7 @@ function h($s) {
 $pdo = db();
 $errors = [];
 $success = false;
-$formData = $_POST; // Store form data for repopulation
+$formData = $_POST;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = trim($_POST['student_id'] ?? '');
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $birthdate = trim($_POST['birthdate'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
 
-    // Enhanced Validation with specific error messages
+    // Validation with specific error messages
     if ($student_id === '') {
         $errors['student_id'] = "Student ID is required";
     } elseif (!preg_match('/^[0-9-]+$/', $student_id)) {
@@ -72,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check = $pdo->prepare("SELECT id FROM users WHERE student_id = ? OR email = ?");
         $check->execute([$student_id, $email]);
         if ($existing = $check->fetch()) {
-            // Determine which field is duplicate
             $check_student = $pdo->prepare("SELECT id FROM users WHERE student_id = ?");
             $check_student->execute([$student_id]);
             if ($check_student->fetch()) {
@@ -104,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$student_id, $first_name, $last_name, $email, $birthdate, $phone, $hashed_password]);
                 
                 $success = true;
-                $formData = []; // Clear form on success
+                $formData = [];
             }
         } catch (PDOException $e) {
             $errors['general'] = "Registration failed. Please try again later.";
@@ -291,7 +290,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <script>
-// Enhanced password preview with real-time updates
 function updatePasswordPreview() {
     const birthdate = document.getElementById('birthdate').value;
     const previewText = document.getElementById('previewText');
@@ -347,7 +345,6 @@ document.querySelectorAll('.form-group input').forEach(input => {
     });
 });
 
-// Initialize preview on page load
 document.addEventListener('DOMContentLoaded', function() {
     updatePasswordPreview();
 });

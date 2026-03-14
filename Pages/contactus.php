@@ -29,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Message is required";
     }
     
-    // If no errors, save to database
     if (empty($errors)) {
         try {
             $stmt = $pdo->prepare("
@@ -39,12 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$name, $email, $message]);
             $messageSent = true;
             
-            // Clear form data on success
             $_POST = [];
             
         } catch (PDOException $e) {
             $messageError = "Failed to send message. Please try again later.";
-            // Log error for debugging
             error_log("Contact form error: " . $e->getMessage());
         }
     } else {
@@ -72,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section class="contact-section">
         <div class="container contact-grid">
 
-            <!-- CONTACT INFO - Expanded -->
+            <!-- CONTACT INFO -->
             <div class="contact-card info-card">
                 <h2>Get in Touch</h2>
                 <p class="info-intro">If you need support regarding a lost or found item, you may reach us through the following:</p>

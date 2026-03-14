@@ -18,7 +18,6 @@ if ($email === '' || $password === '') {
 try {
     $pdo = db();
 
-    // Find admin user by email - NO PASSWORD VERIFICATION NEEDED IN QUERY
     $stmt = $pdo->prepare("
         SELECT id, student_id, first_name, last_name, email, password, role, is_active 
         FROM users 
@@ -32,8 +31,7 @@ try {
         exit;
     }
 
-    // SIMPLE PLAIN TEXT COMPARISON
-    if ($password === $user['password']) {  // Direct string comparison
+    if ($password === $user['password']) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['student_id'] = $user['student_id'];
         $_SESSION['first_name'] = $user['first_name'];

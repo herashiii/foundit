@@ -1,5 +1,4 @@
 <?php
-// view-item.php
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/db.php';
@@ -53,8 +52,6 @@ $itemId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $item = null;
 
 if ($itemId > 0) {
-    // 1. Updated Query: Uses 'building' instead of 'location' for offices
-    // 2. Removed reference to 'reported_by_user_id' in favor of 'user_id'
     $stmt = $pdo->prepare("
         SELECT
             i.*,
@@ -77,24 +74,19 @@ if ($itemId > 0) {
         $stmtPhotos->execute([$itemId]);
         $fetchedPhotos = $stmtPhotos->fetchAll(PDO::FETCH_COLUMN);
         
-        // Normalize image paths for display (Pages/view-item.php + Pages/uploads/...)
         foreach ($fetchedPhotos as $path) {
             $path = trim((string)$path);
             if ($path === '') continue;
 
-            // DB stores: uploads/items/15/xxx.jpg
             $clean = ltrim($path, '/');
 
-            // Check file exists on disk inside Pages/
             $disk = __DIR__ . '/' . $clean;
 
             if (file_exists($disk)) {
-                // Use web path relative to Pages/
-                $photos[] = $clean; // ✅ "uploads/items/15/xxx.jpg"
+                $photos[] = $clean;
             }
         }
 
-        // If still no photos, fall back to placeholder
         if (empty($photos) && $item) {
             $photos[] = placeholderDataUri($item['title'] ?? 'Item');
         }
@@ -102,7 +94,7 @@ if ($itemId > 0) {
 }
 }
 
-// 24-Hour Freshness Logic (Applied if status is unclaimed)
+// 24-Hour Freshness Logic
 $isRecentItem = false;
 if ($item && $item['status'] === 'unclaimed') {
     $createdTime = strtotime($item['created_at']);

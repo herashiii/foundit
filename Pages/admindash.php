@@ -13,7 +13,6 @@ function h($s): string {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
-// Helper function for ITEM status badges - matches your DB schema
 function getItemStatusBadge($status) {
     $badges = [
         'unclaimed' => 'badge-recent',
@@ -23,7 +22,6 @@ function getItemStatusBadge($status) {
     return $badges[$status] ?? 'badge-default';
 }
 
-// Helper function for CLAIM status badges
 function getClaimStatusBadge($status) {
     $badges = [
         'pending' => 'badge-pending',
@@ -46,7 +44,6 @@ if (!$admin) {
     exit;
 }
 
-// Handle actions
 $actionMessage = '';
 $actionError = '';
 
@@ -70,13 +67,11 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
                 $updateStmt = $pdo->prepare("UPDATE claim_requests SET status = ? WHERE id = ?");
                 $updateStmt->execute([$newStatus, $claimId]);
                 
-                // If approved, update item status to 'claimed'
                 if ($action === 'approve') {
                     $itemStmt = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE id = ?");
                     $itemStmt->execute([$claim['item_id']]);
                 }
 
-                // If rejected, update item status back to 'unclaimed'
                 else if ($action === 'reject') {
                     $itemStmt = $pdo->prepare("UPDATE items SET status = 'unclaimed' WHERE id = ?");
                     $itemStmt->execute([$claim['item_id']]);
@@ -85,7 +80,6 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
                 $pdo->commit();
                 $actionMessage = "Claim #$claimId has been " . ($action === 'approve' ? 'approved' : 'rejected') . " successfully.";
                 
-                // Redirect to remove query parameters
                 header('Location: admindash.php?message=' . urlencode($actionMessage));
                 exit;
             }
@@ -96,7 +90,6 @@ if (isset($_GET['action']) && isset($_GET['claim_id'])) {
     }
 }
 
-// Handle marking message as read via AJAX
 if (isset($_POST['mark_message_read'])) {
     $messageId = (int)$_POST['mark_message_read'];
     if ($messageId > 0) {
@@ -107,10 +100,9 @@ if (isset($_POST['mark_message_read'])) {
             // Silently fail
         }
     }
-    exit; // Stop further execution for AJAX requests
+    exit;
 }
 
-// Handle message from redirect
 if (isset($_GET['message'])) {
     $actionMessage = $_GET['message'];
 }
@@ -120,7 +112,6 @@ if (isset($_POST['update_item_status']) && isset($_POST['item_id']) && isset($_P
     $itemId = (int)$_POST['item_id'];
     $newStatus = $_POST['new_status'];
     
-    // Updated to match your DB schema - only unclaimed, pending, claimed
     $allowedStatuses = ['unclaimed', 'pending', 'claimed'];
     if (in_array($newStatus, $allowedStatuses)) {
         try {
@@ -128,7 +119,6 @@ if (isset($_POST['update_item_status']) && isset($_POST['item_id']) && isset($_P
             $stmt->execute([$newStatus, $itemId]);
             $actionMessage = "Item #$itemId status updated to '$newStatus'.";
             
-            // Redirect to remove POST data
             header('Location: admindash.php?message=' . urlencode($actionMessage));
             exit;
         } catch (Exception $e) {
@@ -152,7 +142,6 @@ if (isset($_GET['toggle_user']) && isset($_GET['user_id'])) {
         
         $actionMessage = "User #$userId has been " . ($newStatus ? 'activated' : 'deactivated') . ".";
         
-        // Redirect to remove query parameters
         header('Location: admindash.php?message=' . urlencode($actionMessage));
         exit;
     } catch (Exception $e) {
@@ -160,11 +149,8 @@ if (isset($_GET['toggle_user']) && isset($_GET['user_id'])) {
     }
 }
 
-// Get statistics - Updated to match your DB schema
-// Get statistics - Updated to match your DB schema
 $stats = [];
 $stats['total_items'] = $pdo->query("SELECT COUNT(*) FROM items")->fetchColumn();
-// NEW: Count items created in the last 24 hours
 $stats['recent_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)")->fetchColumn();
 $stats['unclaimed_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'unclaimed'")->fetchColumn();
 $stats['pending_items'] = $pdo->query("SELECT COUNT(*) FROM items WHERE status = 'pending'")->fetchColumn();
@@ -240,7 +226,6 @@ $contactMessages = $pdo->query("
         created_at DESC
 ")->fetchAll();
 
-// Handle message deletion
 if (isset($_GET['delete_message'])) {
     $messageId = (int)$_GET['delete_message'];
     
@@ -256,7 +241,6 @@ if (isset($_GET['delete_message'])) {
     }
 }
 
-// Count unread messages for the badge
 $unreadMessages = array_filter($contactMessages, function($m) { 
     return $m['status'] === 'unread'; 
 });
@@ -268,7 +252,6 @@ include __DIR__ . '/../includes/header.php';
 
 <main class="admin-dashboard">
     <div class="container">
-        <!-- Admin Header -->
         <div class="admin-header">
             <div>
                 <h1>Admin Dashboard</h1>
@@ -294,7 +277,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         <?php endif; ?>
 
-        <!-- Quick Stats Grid - Updated to match your schema -->
+        <!-- Quick Stats Grid  -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-box"></i></div>
@@ -337,7 +320,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Pending Claims Section (Priority) -->
+        <!-- Pending Claims Section -->
         <?php if (count($pendingClaims) > 0): ?>
         <div class="dashboard-section">
             <div class="section-header">
@@ -428,7 +411,7 @@ include __DIR__ . '/../includes/header.php';
             </button>
         </div>
 
-        <!-- Items Tab - Updated status options to match your schema -->
+        <!-- Items Tab  -->
         <div id="tab-items" class="tab-content">
             <div class="dashboard-section">
                 <div class="section-header">
@@ -493,7 +476,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Claims Tab - History Only (No Actions) -->
+        <!-- Claims Tab -->
         <div id="tab-claims" class="tab-content">
             <div class="dashboard-section">
                 <div class="section-header">
@@ -617,7 +600,6 @@ include __DIR__ . '/../includes/header.php';
         <!-- Messages Tab -->
         <div id="tab-messages" class="tab-content">
             <div class="dashboard-section">
-                <!-- Header with Unread Counter -->
                 <div class="messages-header">
                     <div class="header-title">
                         <h2>
@@ -663,12 +645,11 @@ include __DIR__ . '/../includes/header.php';
                                 data-status="<?= $msg['status'] ?>"
                                 data-message-id="<?= $msg['id'] ?>">
                                 
-                                <!-- Unread Indicator - Pulsing dot for unread messages -->
                                 <?php if ($isUnread): ?>
                                     <div class="unread-indicator" title="Unread message"></div>
                                 <?php endif; ?>
 
-                                <!-- Message Header (click to expand) -->
+                                <!-- Message Header -->
                                 <div class="message-header-compact" onclick="toggleMessageExpand(<?= $msg['id'] ?>)">
                                     <div class="message-sender-info">
                                         <div class="sender-avatar <?= $isUnread ? 'avatar-unread' : '' ?>">
@@ -696,7 +677,7 @@ include __DIR__ . '/../includes/header.php';
                                     </div>
                                 </div>
                                 
-                                <!-- Message Preview (visible when collapsed) -->
+                                <!-- Message Preview -->
                                 <div class="message-preview" onclick="toggleMessageExpand(<?= $msg['id'] ?>)">
                                     <p><?= h(substr($msg['message'], 0, 120)) ?><?= strlen($msg['message']) > 120 ? '...' : '' ?></p>
                                 </div>
@@ -742,7 +723,6 @@ include __DIR__ . '/../includes/header.php';
                                     </div>
                                     
                                     <div class="action-right">
-                                        <!-- Always show Reply button, regardless of status -->
                                         <button onclick="openReplyModal(<?= $msg['id'] ?>, '<?= h(addslashes($msg['name'])) ?>', '<?= h($msg['email']) ?>')" 
                                                 class="action-icon-btn reply-btn">
                                             <i class="fas fa-reply"></i>
@@ -802,7 +782,7 @@ include __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
 
-                    <!-- Subject Line (Read-only) -->
+                    <!-- Subject Line -->
                     <div class="form-group">
                         <label for="reply_subject">
                             <i class="fas fa-tag"></i> Subject
@@ -842,64 +822,48 @@ include __DIR__ . '/../includes/header.php';
 
 <!-- JavaScript for Tabs and Proof View -->
 <script>
-// Store current tab in sessionStorage when changing tabs
 function showTab(tabName) {
-    // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Remove active class from all buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Show selected tab
     document.getElementById('tab-' + tabName).classList.add('active');
     
-    // Add active class to clicked button
     event.target.classList.add('active');
     
-    // Save current tab to sessionStorage
     sessionStorage.setItem('activeTab', tabName);
 }
 
-// On page load, restore the last active tab
 document.addEventListener('DOMContentLoaded', function() {
-    // Check URL for tab parameter first
     const urlParams = new URLSearchParams(window.location.search);
     const urlTab = urlParams.get('tab');
     
-    // Restore active tab from URL or sessionStorage
     let activeTab = urlTab || sessionStorage.getItem('activeTab') || 'items';
     
-    // Find the corresponding tab button
     const tabBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
         btn.getAttribute('onclick')?.includes(activeTab)
     );
     
     if (tabBtn) {
-        // Manually trigger the tab change without waiting
         const tabName = activeTab;
         
-        // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
         
-        // Remove active class from all buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         
-        // Show selected tab
         document.getElementById('tab-' + tabName).classList.add('active');
         
-        // Add active class to clicked button
         tabBtn.classList.add('active');
     }
     
-    // Auto-hide alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -915,7 +879,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
     
-    // Add click handler to remove alerts manually
     alerts.forEach(alert => {
         alert.addEventListener('click', function() {
             this.style.transition = 'opacity 0.3s ease';
@@ -989,7 +952,6 @@ function openReplyModal(messageId, name, email) {
         }).then(() => {
             updateUnreadCount();
             
-            // If currently on 'unread' filter, hide this message
             const activeFilter = document.querySelector('.filter-btn.active');
             if (activeFilter && activeFilter.textContent.includes('Unread')) {
                 messageItem.style.display = 'none';
@@ -1004,7 +966,6 @@ function closeReplyModal() {
     document.getElementById('reply_message').value = '';
 }
 
-// Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('replyModal');
     if (event.target === modal) {
@@ -1045,22 +1006,19 @@ function toggleMessageExpand(messageId) {
         
         // If message is unread, mark it as read when expanded
         if (messageItem && messageItem.classList.contains('message-unread')) {
-            // Update UI immediately - remove unread styling but keep visible
             messageItem.classList.remove('message-unread');
-            messageItem.dataset.status = 'read'; // Update data-status for filtering
+            messageItem.dataset.status = 'read';
             const unreadIndicator = messageItem.querySelector('.unread-indicator');
             if (unreadIndicator) unreadIndicator.remove();
             const newBadge = messageItem.querySelector('.new-badge');
             if (newBadge) newBadge.remove();
             
-            // Update status indicator text
             const statusIndicator = messageItem.querySelector('.message-status-indicator');
             if (statusIndicator) {
                 statusIndicator.className = 'message-status-indicator status-read';
                 statusIndicator.innerHTML = '<i class="fas fa-envelope-open"></i> Read';
             }
             
-            // Update status in database via AJAX
             fetch('admindash.php', {
                 method: 'POST',
                 headers: {
@@ -1068,9 +1026,7 @@ function toggleMessageExpand(messageId) {
                 },
                 body: 'mark_message_read=' + messageId
             }).then(() => {
-                // Update unread count in UI
                 updateUnreadCount();
-                // DON'T hide the message - let it stay visible until filter changes
             });
         }
     } else {
@@ -1078,12 +1034,9 @@ function toggleMessageExpand(messageId) {
     }
 }
 
-// Update unread count in UI
 function updateUnreadCount() {
-    // Count current unread messages in DOM
     const unreadMessages = document.querySelectorAll('.message-item.message-unread').length;
     
-    // Update tab badge
     const tabBadge = document.querySelector('#messages-tab-btn .tab-unread-badge');
     if (tabBadge) {
         if (unreadMessages > 0) {
@@ -1094,7 +1047,6 @@ function updateUnreadCount() {
         }
     }
     
-    // Update header unread badge
     const headerBadge = document.querySelector('.unread-count-badge .unread-count');
     if (headerBadge) {
         if (unreadMessages > 0) {
@@ -1105,7 +1057,6 @@ function updateUnreadCount() {
         }
     }
     
-    // Update filter unread count
     const filterUnread = document.querySelector('.filter-btn[onclick*="unread"] .filter-count.unread');
     if (filterUnread) {
         if (unreadMessages > 0) {
@@ -1117,13 +1068,11 @@ function updateUnreadCount() {
     }
 }
 
-// Refresh while staying in current tab
 function refreshWithTab() {
     const currentTab = sessionStorage.getItem('activeTab') || 'items';
     window.location.href = 'admindash.php?tab=' + currentTab;
 }
 
-// Delete message with confirmation
 function deleteMessage(messageId) {
     if (confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
         window.location.href = 'admindash.php?delete_message=' + messageId + '&tab=messages';

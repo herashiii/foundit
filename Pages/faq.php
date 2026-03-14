@@ -4,7 +4,7 @@ include __DIR__ . '/../includes/header.php';
 <link rel="stylesheet" href="../css/faq.css">
 
 <main class="faq-page">
-    <!-- 1. Breadcrumbs & Header (Replicated exactly from find-my-item) -->
+    <!-- Breadcrumbs & Header -->
     <section class="portal-header-strip">
         <div class="container">
             <nav class="breadcrumb" aria-label="Secondary Navigation">
@@ -85,7 +85,6 @@ include __DIR__ . '/../includes/header.php';
     const faqItems = document.querySelectorAll(".faq-item");
     faqItems.forEach(item => {
         item.querySelector(".faq-question").addEventListener("click", () => {
-            // Close other open items
             faqItems.forEach(otherItem => {
                 if (otherItem !== item) {
                     otherItem.classList.remove("active");

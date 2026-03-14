@@ -32,13 +32,12 @@ try {
         exit;
     }
 
-    // Verify password - try birthdate formats
+    // Verify password
     $passwordVerified = false;
 
     if (password_verify($password, $user['password'])) {
         $passwordVerified = true;
     } else {
-        // Try without leading zeros (e.g., 04172003 -> 4172003)
         $cleanPassword = preg_replace('/[^0-9]/', '', $password);
         if (strlen($cleanPassword) === 8) {
             $alternative = ltrim(substr($cleanPassword, 0, 2), '0') . 
