@@ -100,13 +100,13 @@ $itemsStmt->execute($params);
 $items = $itemsStmt->fetchAll();
 ?>
 
-<main class="portal-main-wrapper">
+<main class="portal-main-wrapper" role="main">
     <section class="portal-header-strip">
         <div class="container">
-            <nav class="breadcrumb" aria-label="Secondary Navigation">
+            <nav class="breadcrumb" aria-label="Breadcrumb Navigation">
                 <a href="index.php">Home</a>
                 <span class="sep" aria-hidden="true">/</span>
-                <span class="active">Find My Item</span>
+                <span class="active" aria-current="page">Find My Item</span>
             </nav>
             <div class="header-content">
                 <h1>Find My Item</h1>
@@ -116,13 +116,13 @@ $items = $itemsStmt->fetchAll();
     </section>
 
     <section class="portal-layout container">
-        <aside class="portal-sidebar">
+        <aside class="portal-sidebar" role="search" aria-label="Filter and search items">
             <form id="filterForm" method="GET" action="find-my-item.php">
                 <div class="sidebar-section">
                     <h2 class="sidebar-title">Search</h2>
                     <div class="search-box">
                         <img src="../magnifying-glass-search.png" class="search-signifier" alt="" aria-hidden="true">
-                        <input type="text" name="q" value="<?= h($searchQuery) ?>" placeholder="Type here..." title="Search by item name or description">
+                        <input type="text" name="q" value="<?= h($searchQuery) ?>" placeholder="Type here..." title="Search by item name or description" aria-label="Search by item name or description">
                     </div>
                 </div>
 
@@ -149,11 +149,11 @@ $items = $itemsStmt->fetchAll();
                             }
                         ?>
                         <li class="<?= $catFilter === 0 ? 'active' : '' ?>">
-                            <a href="?cat=0<?= $qParam ?><?= $fParam ?>">All Categories</a>
+                            <a href="?cat=0<?= $qParam ?><?= $fParam ?>" <?= $catFilter === 0 ? 'aria-current="true"' : '' ?>>All Categories</a>
                         </li>
                         <?php foreach ($categories as $cat): ?>
                             <li class="<?= $catFilter === (int)$cat['id'] ? 'active' : '' ?>">
-                                <a href="?cat=<?= (int)$cat['id'] ?><?= $qParam ?><?= $fParam ?>">
+                                <a href="?cat=<?= (int)$cat['id'] ?><?= $qParam ?><?= $fParam ?>" <?= $catFilter === (int)$cat['id'] ? 'aria-current="true"' : '' ?>>
                                     <?= h($cat['name']) ?>
                                     <span class="count"><?= (int)$cat['count'] ?></span>
                                 </a>
@@ -168,7 +168,7 @@ $items = $itemsStmt->fetchAll();
 
         <div class="portal-main">
             <div class="system-msg msg-info">
-                <span class="icon">ℹ</span>
+                <span class="icon" aria-hidden="true">ℹ</span>
                 <p>Showing all items currently held at university offices. Click an item to view verification requirements.</p>
             </div>
 
@@ -180,7 +180,7 @@ $items = $itemsStmt->fetchAll();
                 <div class="grid-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <span style="font-size: 0.9rem; color: var(--split-char-2);">Showing <strong><?= count($items) ?></strong> items</span>
 
-                    <select onchange="document.querySelector('input[name=\'sort\']').value=this.value; document.getElementById('filterForm').submit();" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neut-gray-3); font-family: 'Inter', sans-serif;">
+                    <select aria-label="Sort items by date" onchange="document.querySelector('input[name=\'sort\']').value=this.value; document.getElementById('filterForm').submit();" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--neut-gray-3); font-family: 'Inter', sans-serif;">
                         <option value="newest" <?= $sortParam === 'newest' ? 'selected' : '' ?>>Newest First</option>
                         <option value="oldest" <?= $sortParam === 'oldest' ? 'selected' : '' ?>>Oldest First</option>
                     </select>
@@ -223,11 +223,11 @@ $items = $itemsStmt->fetchAll();
                             ? date('M d, Y', strtotime($item['found_date']))
                             : 'Unknown';
                     ?>
-                        <a href="view-item.php?id=<?= (int)$item['id'] ?>" class="mini-card" style="text-decoration: none;">
+                        <a href="view-item.php?id=<?= (int)$item['id'] ?>" class="mini-card" style="text-decoration: none;" aria-label="View details for <?= h($item['title']) ?>">
                             <div class="card-media">
                                 <img src="<?= $imgSrc ?>"
-                                     alt="Photo of <?= h($item['title']) ?>"
-                                     title="Click to view details for <?= h($item['title']) ?>"
+                                     alt=""
+                                     aria-hidden="true"
                                      loading="lazy"
                                      onerror="this.onerror=null; this.src='<?= placeholderDataUri($item['title']) ?>';">
 
@@ -241,13 +241,13 @@ $items = $itemsStmt->fetchAll();
                                 <div class="card-meta">
                                     <div class="meta-row" title="Specific location where found">
                                         <span class="meta-icon" aria-hidden="true">📍</span>
-                                        <span class="meta-label">FOUND AT:</span>
+                                        <span class="meta-label sr-only">FOUND AT:</span>
                                         <span class="meta-value"><?= h($location) ?></span>
                                     </div>
 
                                     <div class="meta-row" title="The date this item was turned in">
                                         <span class="meta-icon" aria-hidden="true">📅</span>
-                                        <span class="meta-label">DATE FOUND:</span>
+                                        <span class="meta-label sr-only">DATE FOUND:</span>
                                         <span class="meta-value"><?= h($dateFormatted) ?></span>
                                     </div>
                                 </div>

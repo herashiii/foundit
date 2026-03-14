@@ -35,7 +35,7 @@ function h($s) {
                     $errorIcon = '⚠️';
                     ?>
                     
-                    <div class="error-message" role="alert">
+                    <div class="error-message" role="alert" aria-live="assertive">
                         <div class="error-icon" aria-hidden="true"><?= $errorIcon ?></div>
                         <div class="error-content">
                             <h3 class="error-title"><?= $errorTitle ?></h3>
@@ -45,7 +45,7 @@ function h($s) {
                 <?php endif; ?>
 
                 <?php if (isset($_GET['registered'])): ?>
-                    <div class="success-message" role="status">
+                    <div class="success-message" role="status" aria-live="polite">
                         <div class="success-icon" aria-hidden="true">✅</div>
                         <div class="success-content">
                             <h3 class="success-title">Registration Successful!</h3>
@@ -54,7 +54,6 @@ function h($s) {
                     </div>
                 <?php endif; ?>
 
-                <!-- Login Tabs -->
                 <div class="login-tabs" role="tablist" aria-label="Login type">
                     <button
                         class="tab-btn active"
@@ -93,7 +92,6 @@ function h($s) {
                     </button>
                 </div>
 
-                <!-- Student Login Form -->
                 <div id="student-login" class="tab-content active">
                     <form action="../Pages/process-student-login.php" method="POST" class="auth-form">
                         <div class="form-group">
@@ -133,7 +131,6 @@ function h($s) {
                     </form>
                 </div>
 
-                <!-- Admin Login Form -->
                 <div id="admin-login" class="tab-content">
                     <form action="../Pages/process-admin-login.php" method="POST" class="auth-form">
                         <div class="form-group">

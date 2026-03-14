@@ -42,20 +42,21 @@ $stmt->execute();
 $recentItems = $stmt->fetchAll();
 ?>
 
-<header class="hero">
+<header class="hero" role="banner">
     <div class="container">
         <div class="hero-content">
 
             <h1>Lost something on campus?</h1>
             <p>Don't panic. Search the turned-in items registry to look for your lost item.</p>
             
-            <form action="find-my-item.php" method="GET" class="search-bar">
-                <input type="text" name="q" class="search-input" placeholder="Search for items (e.g. 'Silver MacBook')...">
+            <form action="find-my-item.php" method="GET" class="search-bar" role="search">
+                <label for="searchQuery" class="sr-only">Search for items by keyword</label>
+                <input type="text" id="searchQuery" name="q" class="search-input" placeholder="Search for items (e.g. 'Silver MacBook')...">
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
 
-            <div class="hero-pills">
-                <span class="pills-label">Quick Filters:</span>
+            <div class="hero-pills" aria-label="Quick search filters">
+                <span class="pills-label" aria-hidden="true">Quick Filters:</span>
                 <a href="find-my-item.php?category=Identification%20Cards" class="hero-pill">IDs & Cards</a>
                 <a href="find-my-item.php?category=Keys" class="hero-pill">Keys</a>
                 <a href="find-my-item.php?category=Electronics" class="hero-pill">Electronics</a>
@@ -65,17 +66,16 @@ $recentItems = $stmt->fetchAll();
     </div>
 </header>
 
-<main class="main-content">
+<main class="main-content" role="main">
     
-    <section class="section-cta container">
+    <section class="section-cta container" aria-label="Main actions">
     <div class="cta-grid">
 
         <div class="action-card action-card--lost">
             <div class="action-card-top">
-
                 <div class="action-card-head">
                     <div class="action-title-row">
-                        <h3>I Lost Something</h3>
+                        <h2>I Lost Something</h2>
                     </div>
                     <p class="action-card-desc">
                         Check the real-time list of items currently held. You can filter by location and category to spot your belonging.
@@ -83,7 +83,7 @@ $recentItems = $stmt->fetchAll();
                 </div>
             </div>
 
-            <ul class="card-bullets" aria-label="What you can expect">
+            <ul class="card-bullets" aria-label="What you can expect if you lost an item">
                 <li>Items are posted immediately on turn-in</li>
                 <li>Filter results by date, location, or type</li>
                 <li>Easy verification to claim</li>
@@ -97,12 +97,10 @@ $recentItems = $stmt->fetchAll();
                             <path d="M21 21l-4.3-4.3"></path>
                         </svg>
                     </span>
-
                     <span class="action-btn-text">
                         <strong>Browse Turned In Items</strong>
                         <small>Search the registry for matches</small>
                     </span>
-
                     <span class="action-btn-arrow" aria-hidden="true">
                         <svg viewBox="0 0 24 24" class="action-btn-arrow-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 12h14"></path>
@@ -115,10 +113,9 @@ $recentItems = $stmt->fetchAll();
 
         <div class="action-card action-card--found">
             <div class="action-card-top">
-
                 <div class="action-card-head">
                     <div class="action-title-row">
-                        <h3>I Found Something</h3>
+                        <h2>I Found Something</h2>
                     </div>
                     <p class="action-card-desc">
                         Turn in or report a found item so the owner can claim it through the proper process.
@@ -126,7 +123,7 @@ $recentItems = $stmt->fetchAll();
                 </div>
             </div>
 
-            <ul class="card-bullets" aria-label="How claiming works">
+            <ul class="card-bullets" aria-label="How turning in works">
                 <li>Quick posting with clear item details</li>
                 <li>Claiming is reviewed before release</li>
                 <li>Helps prevent fraudulent pickups</li>
@@ -141,12 +138,10 @@ $recentItems = $stmt->fetchAll();
                             <path d="M12 13v10"></path>
                         </svg>
                     </span>
-
                     <span class="action-btn-text">
                         <strong>Turn In a Found Item</strong>
                         <small>Help return an item to its owner</small>
                     </span>
-
                     <span class="action-btn-arrow" aria-hidden="true">
                         <svg viewBox="0 0 24 24" class="action-btn-arrow-svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 12h14"></path>
@@ -160,13 +155,13 @@ $recentItems = $stmt->fetchAll();
     </div>
     </section>
 
-    <section class="section-recent container">
+    <section class="section-recent container" aria-labelledby="recent-items-heading">
         <div class="section-header">
             <div>
-            <h2>Recently Found Items</h2>
+            <h2 id="recent-items-heading">Recently Found Items</h2>
             <p class="section-subtitle">The most recent turned-in items to the registry.</p>
             </div>
-            <a href="find-my-item.php" class="section-link">View All →</a>
+            <a href="find-my-item.php" class="section-link" aria-label="View all recently found items">View All →</a>
         </div>
 
         <div class="recent-grid">
@@ -178,8 +173,8 @@ $recentItems = $stmt->fetchAll();
                         $locDisplay = h($item['location_name']);
                     ?>
                     
-                    <a href="view-item.php?id=<?= (int)$item['id'] ?>" class="mini-card" aria-label="View item: <?= h($item['title']) ?>">
-                        <img src="<?= $img ?>" alt="<?= h($item['title']) ?>" class="mini-card-img" title="<?= h($item['title']) ?>">
+                    <a href="view-item.php?id=<?= (int)$item['id'] ?>" class="mini-card" aria-label="View details for <?= h($item['title']) ?>">
+                        <img src="<?= $img ?>" alt="" class="mini-card-img" aria-hidden="true">
                         <div class="mini-card-body">
                             <div class="mini-card-top">
                                 <span class="status-badge found">Found</span>
@@ -188,7 +183,7 @@ $recentItems = $stmt->fetchAll();
 
                             <h3 class="mini-card-title"><?= h($item['title']) ?></h3>
 
-                            <div class="mini-card-meta-grid" role="list">
+                            <div class="mini-card-meta-grid" role="list" aria-label="Item Details">
                                 <div class="meta-item" role="listitem">
                                     <span class="meta-label">Found at</span>
                                     <span class="meta-value"><?= $locDisplay ?></span>
@@ -208,7 +203,6 @@ $recentItems = $stmt->fetchAll();
             <?php endif; ?>
         </div>
         </section>
-
 </main>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

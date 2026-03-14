@@ -124,13 +124,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <?php if (!empty($errors['general'])): ?>
-                    <div class="auth-alert error" role="alert">
+                    <div class="auth-alert error" role="alert" aria-live="assertive">
                         <strong>⚠️ Error:</strong> <?= h($errors['general']) ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($success): ?>
-                    <div class="auth-alert success" role="alert">
+                    <div class="auth-alert success" role="status" aria-live="polite">
                         <strong>✅ Registration successful!</strong> 
                         <p style="margin-top: 8px;">Your password has been created based on your birthdate. Please save it securely.</p>
                         <a href="../Login/login.php" class="btn-success" style="display: inline-block; margin-top: 10px;">Proceed to Login →</a>
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                placeholder="e.g., 26-1-00001"
                                autocomplete="off">
                         <?php if (isset($errors['student_id'])): ?>
-                            <div class="error-message" id="student_id-error" role="alert">
+                            <div class="error-message" id="student_id-error" role="alert" aria-live="assertive">
                                 ❌ <?= h($errors['student_id']) ?>
                             </div>
                         <?php endif; ?>
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    placeholder="John"
                                    autocomplete="given-name">
                             <?php if (isset($errors['first_name'])): ?>
-                                <div class="error-message" id="first_name-error" role="alert">
+                                <div class="error-message" id="first_name-error" role="alert" aria-live="assertive">
                                     ❌ <?= h($errors['first_name']) ?>
                                 </div>
                             <?php endif; ?>
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    placeholder="Doe"
                                    autocomplete="family-name">
                             <?php if (isset($errors['last_name'])): ?>
-                                <div class="error-message" id="last_name-error" role="alert">
+                                <div class="error-message" id="last_name-error" role="alert" aria-live="assertive">
                                     ❌ <?= h($errors['last_name']) ?>
                                 </div>
                             <?php endif; ?>
@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                autocomplete="email">
                         <small id="email-format" class="hint">We'll never share your email with anyone else.</small>
                         <?php if (isset($errors['email'])): ?>
-                            <div class="error-message" id="email-error" role="alert">
+                            <div class="error-message" id="email-error" role="alert" aria-live="assertive">
                                 ❌ <?= h($errors['email']) ?>
                             </div>
                         <?php endif; ?>
@@ -239,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="password-info" id="password-info">
                             <div class="info-box">
                                 <strong>🔐 Your password will be:</strong>
-                                <div id="passwordPreview" class="password-preview">
+                                <div id="passwordPreview" class="password-preview" aria-live="polite" aria-atomic="true">
                                     <span id="previewText">Select your birthdate</span>
                                 </div>
                                 <small class="hint">Format: MMDDYYYY (e.g., April 17, 2003 = 4172003)</small>
@@ -247,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         
                         <?php if (isset($errors['birthdate'])): ?>
-                            <div class="error-message" id="birthdate-error" role="alert">
+                            <div class="error-message" id="birthdate-error" role="alert" aria-live="assertive">
                                 ❌ <?= h($errors['birthdate']) ?>
                             </div>
                         <?php endif; ?>
@@ -266,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                autocomplete="tel">
                         <small id="phone-format" class="hint">Include country code for international numbers</small>
                         <?php if (isset($errors['phone'])): ?>
-                            <div class="error-message" id="phone-error" role="alert">
+                            <div class="error-message" id="phone-error" role="alert" aria-live="assertive">
                                 ❌ <?= h($errors['phone']) ?>
                             </div>
                         <?php endif; ?>

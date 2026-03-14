@@ -300,7 +300,7 @@ include __DIR__ . '/../includes/header.php';
     </header>
 
     <?php if (!empty($errors)): ?>
-      <div class="form-alert" role="alert">
+      <div class="form-alert" role="alert" aria-live="assertive">
         <strong>Please fix the following:</strong>
         <ul>
           <?php foreach ($errors as $e): ?>
@@ -337,7 +337,7 @@ include __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
-        <div class="step-error" id="step1Error" aria-live="polite"></div>
+        <div class="step-error" id="step1Error" aria-live="assertive"></div>
         <div id="previewContainer" class="preview-container"></div>
 
         <div class="step-actions">
@@ -387,7 +387,7 @@ include __DIR__ . '/../includes/header.php';
         <label for="description">Additional Description (optional)</label>
         <textarea name="description" id="description" rows="3" placeholder="Any distinct features? Brand? Color?"><?= h($old['description'] ?? '') ?></textarea>
 
-        <div class="step-error" id="step2Error" aria-live="polite"></div>
+        <div class="step-error" id="step2Error" aria-live="assertive"></div>
 
         <div class="step-actions">
           <button type="button" class="report-btn-secondary prevBtn">Back</button>
@@ -416,7 +416,7 @@ include __DIR__ . '/../includes/header.php';
         <label>Time Found (optional)</label>
         <input type="time" name="found_time">
 
-        <div class="step-error" id="step3Error" aria-live="polite"></div>
+        <div class="step-error" id="step3Error" aria-live="assertive"></div>
 
         <div class="step-actions">
           <button type="button" class="report-btn-secondary prevBtn">Back</button>
@@ -456,7 +456,7 @@ include __DIR__ . '/../includes/header.php';
           </select>
         </div>
 
-        <div class="step-error" id="step4Error" aria-live="polite"></div>
+        <div class="step-error" id="step4Error" aria-live="assertive"></div>
 
         <div class="step-actions">
           <button type="button" class="report-btn-secondary prevBtn">Back</button>
@@ -485,7 +485,7 @@ include __DIR__ . '/../includes/header.php';
           <option value="share_with_owner">Share my contact info with the owner</option>
         </select>
 
-        <div class="step-error" id="step5Error" aria-live="polite"></div>
+        <div class="step-error" id="step5Error" aria-live="assertive"></div>
 
         <div class="step-actions">
           <button type="button" class="report-btn-secondary prevBtn">Back</button>
@@ -863,6 +863,15 @@ function clearErrors(stepErrorId) {
           }
         });
       });
+
+    // Handle Back Buttons
+    document.querySelectorAll('.prevBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (currentStep > 1) {
+          showStep(currentStep - 1);
+        }
+      });
+    });
       
       // Restore selected category
       const savedId = categoryId.value;
