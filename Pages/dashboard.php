@@ -112,7 +112,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             <div class="stat-card">
                 <div class="stat-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-content">
-                    <span class="stat-value"><?= count(array_filter($my_items, function($item) { return $item['status'] === 'returned'; })) ?></span>
+                    <span class="stat-value"><?= count(array_filter($my_items, function($item) { return $item['status'] === 'claimed'; })) ?></span>
                     <span class="stat-label">Resolved Items</span>
                 </div>
             </div>
