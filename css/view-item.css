@@ -1,40 +1,37 @@
-/* view-item.css - Single Item Inspection & CTA */
-
 :root {
-    /* 1. Monochromatic Scheme (Silliman Red) */
+    /* Monochromatic Scheme */
     --mono-red-1: #5C1A1A; 
     --mono-red-2: #742A2A; 
-    --mono-red-3: #9B2C2C; /* Base Primary */
+    --mono-red-3: #9B2C2C;
     --mono-red-4: #E53E3E; 
-    --mono-red-5: #FFF5F5; /* Error Wash */
+    --mono-red-5: #FFF5F5;
 
-    /* 2. Complementary Scheme (Red & Green) */
-    --comp-green-1: #F0FFF4; /* Success Wash */
+    /* Complementary Scheme (Red & Green) */
+    --comp-green-1: #F0FFF4;
     --comp-green-2: #38A169; 
-    --comp-green-3: #276749; /* Base Success */
+    --comp-green-3: #276749; 
 
-    /* 3. Split Complementary Scheme (Gold, Red, & Charcoal) */
-    --split-gold-1: #D69E2E; /* Base Primary Accent */
+    /* Split Complementary Scheme (Gold, Red, & Charcoal) */
+    --split-gold-1: #D69E2E;
     --split-gold-2: #B7791F; 
-    --split-char-1: #1A202C; /* Deep Charcoal - Main Headings */
-    --split-char-2: #4A5568; /* Slate Gray - Body Text */
+    --split-char-1: #1A202C; 
+    --split-char-2: #4A5568;
 
-    /* 4. Analogous Scheme (Gold to Orange) */
-    --ana-orange-1: #FFFAF0; /* Warning Wash */
+    /* Analogous Scheme (Gold to Orange) */
+    --ana-orange-1: #FFFAF0;
     --ana-orange-2: #DD6B20; 
-    --ana-orange-3: #9C4221; /* Base Warning */
+    --ana-orange-3: #9C4221;
     
     --ana-gold-1: #F6E05E; 
     --ana-gold-2: #D69E2E; 
 
-    /* 5. Neutral/Achromatic Scheme (The Interface Canvas) */
-    --neut-gray-1: #F7FAFC; /* Body Background */
-    --neut-gray-2: #FFFFFF; /* Surface Color */
-    --neut-gray-3: #E2E8F0; /* Border Color */
+    /* Neutral/Achromatic Scheme */
+    --neut-gray-1: #F7FAFC;
+    --neut-gray-2: #FFFFFF;
+    --neut-gray-3: #E2E8F0;
     --neut-gray-4: #CBD5E0; 
-    --neut-gray-5: #A0AEC0; /* Muted Text */
+    --neut-gray-5: #A0AEC0;
 
-    /* Technical */
     --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -71,9 +68,6 @@
     align-items: start;
 }
 
-/* ========================================================================== */
-/* LEFT COLUMN: GALLERY */
-/* ========================================================================== */
 .gallery-column {
     display: flex;
     flex-direction: column;
@@ -96,7 +90,6 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Adding object-position center ensures the main focus is kept even if cropped */
     object-position: center;
     transition: var(--transition);
 }
@@ -155,20 +148,17 @@
 }
 
 .badge-recent { background: var(--ana-gold-1); color: var(--ana-orange-3); border: 1px solid var(--ana-gold-2); }
-.badge-unclaimed { background: var(--mono-red-3); color: var(--neut-gray-2); border: 1px solid var(--mono-red-2); } /* NEW */
+.badge-unclaimed { background: var(--mono-red-3); color: var(--neut-gray-2); border: 1px solid var(--mono-red-2); }
 .badge-pending { background: var(--ana-orange-1); color: var(--ana-orange-3); border: 1px solid var(--ana-orange-2); }
 .badge-claimed { background: var(--comp-green-1); color: var(--comp-green-3); border: 1px solid var(--comp-green-2); }
 
-/* ========================================================================== */
-/* RIGHT COLUMN: DETAILS */
-/* ========================================================================== */
 .details-column {
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
-/* Alerts (System Feedback) */
+/* Alerts */
 .alert {
     display: flex;
     align-items: flex-start;
@@ -258,7 +248,6 @@
     color: var(--split-char-2);
 }
 
-/* Documentation Content - Strictly Calibri 12pt */
 .documentation-content {
     padding-top: 8px;
 }
@@ -273,7 +262,6 @@
 }
 
 .doc-text, .doc-list {
-    /* 1rem = approx 16px depending on html font-size, suitable for Calibri reading */
     font-family: 'Calibri', 'Inter', sans-serif; 
     font-size: 1rem;
     color: var(--split-char-2);
@@ -316,7 +304,6 @@
     line-height: 1.5;
 }
 
-/* CTA Specific Buttons - Scoped to avoid breaking navbar */
 .cta-actions .btn-primary,
 .cta-actions .btn-secondary {
     display: inline-flex;
@@ -330,7 +317,7 @@
     text-decoration: none;
     cursor: pointer;
     transition: var(--transition);
-    width: 100%; /* Only 100% width inside the CTA panel */
+    width: 100%;
     border: 2px solid transparent;
 }
 
@@ -361,9 +348,7 @@
     outline: none;
 }
 
-/* ========================================================================== */
-/* LIGHTBOX (Differently-Abled Accessibility applied)                         */
-/* ========================================================================== */
+/* LIGHTBOX */
 .lightbox {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -433,7 +418,6 @@
 }
 .lightbox-nav:hover { transform: translateY(-50%) scale(1.1); }
 
-/* Focus Accessibility */
 .lightbox-close:focus-visible, .lightbox-nav:focus-visible {
     outline: 3px solid var(--split-gold-1);
     outline-offset: 4px;
