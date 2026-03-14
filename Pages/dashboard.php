@@ -35,7 +35,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$user_id]);
 $my_items = $stmt->fetchAll();
 
-// Get claim requests for user's items
+// Get claim requests for user's items (Claims OTHER people made on items YOU found)
 $stmt = $pdo->prepare("
     SELECT cr.*, i.title as item_title
     FROM claim_requests cr
@@ -46,34 +46,44 @@ $stmt = $pdo->prepare("
 $stmt->execute([$user_id]);
 $my_claims = $stmt->fetchAll();
 
+// NEW: Get claim requests the logged-in user has submitted (Items YOU are trying to get back)
+$stmt = $pdo->prepare("
+    SELECT cr.*, i.title as item_title
+    FROM claim_requests cr
+    JOIN items i ON cr.item_id = i.id
+    WHERE cr.user_id = ?
+    ORDER BY cr.created_at DESC
+");
+$stmt->execute([$user_id]);
+$my_requests = $stmt->fetchAll();
+
 // Calculate stats
 $total_items = count($my_items);
 $total_claims = count($my_claims);
+$total_requests = count($my_requests);
 $pending_claims = array_filter($my_claims, function($claim) {
     return $claim['status'] === 'pending';
 });
 ?>
 
-<main class="dashboard-page">
+<main class="dashboard-page" role="main">
     <div class="container">
-        <!-- Welcome Header -->
         <div class="welcome-header">
             <div class="welcome-text">
-                <h1>Welcome back, <?= h($user['first_name']) ?>! <i class="fas fa-hand-wave" style="color: #9B2C2C;"></i></h1>
+                <h1>Welcome back, <?= h($user['first_name']) ?>! <i class="fas fa-hand-wave" style="color: #9B2C2C;" aria-hidden="true"></i></h1>
                 <p>Here's what's happening with your lost & found items</p>
             </div>
             <div class="header-actions">
                 <a href="turn-in-item.php" class="btn btn-primary btn-large">
-                    <i class="fas fa-plus-circle btn-icon"></i>
+                    <i class="fas fa-plus-circle btn-icon" aria-hidden="true"></i>
                     Report Found Item
                 </a>
             </div>
         </div>
 
-        <!-- Quick Stats Row -->
-        <div class="stats-row">
+        <div class="stats-row" aria-label="Dashboard Statistics">
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-box"></i></div>
+                <div class="stat-icon" aria-hidden="true"><i class="fas fa-box"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $total_items ?></span>
                     <span class="stat-label">Items Reported</span>
@@ -81,7 +91,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                <div class="stat-icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= $total_claims ?></span>
                     <span class="stat-label">Claims Received</span>
@@ -89,7 +99,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="stat-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= count($pending_claims) ?></span>
                     <span class="stat-label">Pending Claims</span>
@@ -97,7 +107,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-content">
                     <span class="stat-value"><?= count(array_filter($my_items, function($item) { return $item['status'] === 'returned'; })) ?></span>
                     <span class="stat-label">Resolved Items</span>
@@ -105,52 +115,49 @@ $pending_claims = array_filter($my_claims, function($claim) {
             </div>
         </div>
 
-        <!-- Main Dashboard Grid -->
         <div class="dashboard-grid">
             
-            <!-- Profile Card -->
             <div class="dashboard-card profile-card">
                 <div class="profile-header">
-                    <div class="profile-avatar">
+                    <div class="profile-avatar" aria-hidden="true">
                         <?= strtoupper(substr($user['first_name'], 0, 1) . substr($user['last_name'], 0, 1)) ?>
                     </div>
                     <div class="profile-title">
                         <h2><?= h($user['first_name'] . ' ' . $user['last_name']) ?></h2>
-                        <span class="profile-role"><i class="fas fa-graduation-cap" style="margin-right: 4px;"></i> Student</span>
+                        <span class="profile-role"><i class="fas fa-graduation-cap" style="margin-right: 4px;" aria-hidden="true"></i> Student</span>
                     </div>
                 </div>
                 
                 <div class="profile-details">
                     <div class="detail-item">
-                        <span class="detail-label"><i class="fas fa-id-card" style="margin-right: 6px;"></i> Student ID</span>
+                        <span class="detail-label"><i class="fas fa-id-card" style="margin-right: 6px;" aria-hidden="true"></i> Student ID</span>
                         <span class="detail-value"><?= h($user['student_id'] ?? 'Not set') ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label"><i class="fas fa-envelope" style="margin-right: 6px;"></i> Email</span>
+                        <span class="detail-label"><i class="fas fa-envelope" style="margin-right: 6px;" aria-hidden="true"></i> Email</span>
                         <span class="detail-value"><?= h($user['email']) ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label"><i class="fas fa-phone" style="margin-right: 6px;"></i> Phone</span>
+                        <span class="detail-label"><i class="fas fa-phone" style="margin-right: 6px;" aria-hidden="true"></i> Phone</span>
                         <span class="detail-value"><?= h($user['phone'] ?? 'Not provided') ?></span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label"><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> Member 
+                        <span class="detail-label"><i class="fas fa-calendar-alt" style="margin-right: 6px;" aria-hidden="true"></i> Member 
                         <br>Since</br></span>
                         <span class="detail-value"><?= date('M d, Y', strtotime($user['created_at'])) ?></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Activity Card -->
             <div class="dashboard-card activity-card">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon"><i class="fas fa-clock"></i></span>
+                        <span class="card-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
                         Recent Activity
                     </h2>
                 </div>
                 
-                <div class="activity-list">
+                <div class="activity-list" aria-label="Recent activity log">
                     <?php 
                     $recent_activities = array_merge(
                         array_map(function($item) { 
@@ -169,13 +176,13 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     
                     if (empty($recent_activities)): ?>
                         <div class="empty-activity">
-                            <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                            <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 10px;" aria-hidden="true"></i>
                             <p>No recent activity</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_activities as $activity): ?>
                             <div class="activity-item">
-                                <div class="activity-icon">
+                                <div class="activity-icon" aria-hidden="true">
                                     <?= $activity['type'] === 'item' ? '<i class="fas fa-box"></i>' : '<i class="fas fa-file-signature"></i>' ?>
                                 </div>
                                 <div class="activity-details">
@@ -187,7 +194,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                         <?php endif; ?>
                                     </div>
                                     <div class="activity-meta">
-                                        <i class="far fa-calendar-alt" style="margin-right: 4px;"></i>
+                                        <i class="far fa-calendar-alt" style="margin-right: 4px;" aria-hidden="true"></i>
                                         <?= date('M d, Y g:i A', strtotime($activity['date'])) ?>
                                     </div>
                                 </div>
@@ -200,16 +207,15 @@ $pending_claims = array_filter($my_claims, function($claim) {
                 </div>
             </div>
 
-            <!-- My Items Section -->
             <div class="dashboard-card items-card full-width">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon"><i class="fas fa-boxes"></i></span>
+                        <span class="card-icon" aria-hidden="true"><i class="fas fa-boxes"></i></span>
                         Items I've Reported
                         <span class="item-count">(<?= $total_items ?>)</span>
                     </h2>
                     <div class="card-filters">
-                        <select class="filter-select" onchange="filterItems(this.value)">
+                        <select class="filter-select" onchange="filterItems(this.value)" aria-label="Filter reported items by status">
                             <option value="all">All Items</option>
                             <option value="recent">Recent</option>
                             <option value="pending">Pending</option>
@@ -240,19 +246,19 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                         </td>
                                         <td><?= h($item['category_name']) ?></td>
                                         <td><?= h($item['location_name']) ?></td>
-                                        <td><i class="far fa-calendar-alt" style="margin-right: 4px; color: #64748b;"></i><?= date('M d, Y', strtotime($item['found_date'])) ?></td>
+                                        <td><i class="far fa-calendar-alt" style="margin-right: 4px; color: #64748b;" aria-hidden="true"></i><?= date('M d, Y', strtotime($item['found_date'])) ?></td>
                                         <td>
                                             <span class="status-badge status-<?= h($item['status']) ?>">
                                                 <?= ucfirst(h($item['status'])) ?>
                                             </span>
                                         </td>
                                         <td class="actions-cell">
-                                            <a href="view-item.php?id=<?= $item['id'] ?>" class="btn-action view-btn" title="View item details">
-                                                <i class="fas fa-eye"></i> <span class="action-text">View</span>
+                                            <a href="view-item.php?id=<?= $item['id'] ?>" class="btn-action view-btn" aria-label="View details for <?= h($item['title']) ?>">
+                                                <i class="fas fa-eye" aria-hidden="true"></i> <span class="action-text">View</span>
                                             </a>
                                             <?php if ($item['status'] === 'recent'): ?>
-                                                <a href="edit-item.php?id=<?= $item['id'] ?>" class="btn-action edit-btn" title="Edit item">
-                                                    <i class="fas fa-edit"></i> <span class="action-text">Edit</span>
+                                                <a href="edit-item.php?id=<?= $item['id'] ?>" class="btn-action edit-btn" aria-label="Edit <?= h($item['title']) ?>">
+                                                    <i class="fas fa-edit" aria-hidden="true"></i> <span class="action-text">Edit</span>
                                                 </a>
                                             <?php endif; ?>
                                         </td>
@@ -263,7 +269,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     </div>
                 <?php else: ?>
                     <div class="empty-state">
-                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <div class="empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></div>
                         <h3>No items reported yet</h3>
                         <p>When you find and report lost items, they'll appear here.</p>
                         <a href="turn-in-item.php" class="btn btn-primary">Report Your First Item</a>
@@ -271,11 +277,60 @@ $pending_claims = array_filter($my_claims, function($claim) {
                 <?php endif; ?>
             </div>
 
-            <!-- Claims Received Section -->
             <div class="dashboard-card claims-card full-width">
                 <div class="card-header">
                     <h2>
-                        <span class="card-icon"><i class="fas fa-file-signature"></i></span>
+                        <span class="card-icon" aria-hidden="true"><i class="fas fa-hand-holding"></i></span>
+                        My Claim Requests
+                        <span class="item-count">(<?= $total_requests ?>)</span>
+                    </h2>
+                </div>
+                
+                <?php if (count($my_requests) > 0): ?>
+                    <div class="claims-grid">
+                        <?php foreach ($my_requests as $request): ?>
+                            <div class="claim-card">
+                                <div class="claim-header">
+                                    <h3><?= h($request['item_title']) ?></h3>
+                                    <span class="status-badge status-<?= h($request['status']) ?>">
+                                        <?= ucfirst(h($request['status'])) ?>
+                                    </span>
+                                </div>
+                                
+                                <div class="claim-details">
+                                    <div class="claim-date">
+                                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: #64748b;" aria-hidden="true"></i>
+                                        <strong>Submitted:</strong> <?= date('M d, Y', strtotime($request['created_at'])) ?>
+                                    </div>
+                                    
+                                    <?php if (!empty($request['proof_description'])): ?>
+                                        <div class="claim-proof">
+                                            <strong><i class="fas fa-file-alt" style="margin-right: 4px;" aria-hidden="true"></i> My Proof:</strong>
+                                            <p><?= h(substr($request['proof_description'], 0, 150)) ?>...</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="claim-footer">
+                                    <a href="view-item.php?id=<?= $request['item_id'] ?>" class="btn btn-secondary btn-small" aria-label="View details for <?= h($request['item_title']) ?>">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> View Item
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-state compact">
+                        <i class="fas fa-search" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;" aria-hidden="true"></i>
+                        <p>You haven't submitted any claim requests yet.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="dashboard-card claims-card full-width">
+                <div class="card-header">
+                    <h2>
+                        <span class="card-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
                         Claims on My Turned In Items
                         <span class="item-count">(<?= $total_claims ?>)</span>
                     </h2>
@@ -294,25 +349,25 @@ $pending_claims = array_filter($my_claims, function($claim) {
                                 
                                 <div class="claim-details">
                                     <div class="claimant-info">
-                                        <i class="fas fa-user" style="margin-right: 6px; color: #64748b;"></i>
+                                        <i class="fas fa-user" style="margin-right: 6px; color: #64748b;" aria-hidden="true"></i>
                                         <strong>Claimant:</strong> <?= h($claim['claimer_name'] ?? 'Anonymous') ?>
                                     </div>
                                     <div class="claim-date">
-                                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: #64748b;"></i>
+                                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: #64748b;" aria-hidden="true"></i>
                                         <strong>Date:</strong> <?= date('M d, Y', strtotime($claim['created_at'])) ?>
                                     </div>
                                     
                                     <?php if (!empty($claim['proof_description'])): ?>
                                         <div class="claim-proof">
-                                            <strong><i class="fas fa-file-alt" style="margin-right: 4px;"></i> Proof provided:</strong>
+                                            <strong><i class="fas fa-file-alt" style="margin-right: 4px;" aria-hidden="true"></i> Proof provided:</strong>
                                             <p><?= h(substr($claim['proof_description'], 0, 150)) ?>...</p>
                                         </div>
                                     <?php endif; ?>
                                 </div>
                                 
                                 <div class="claim-footer">
-                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small">
-                                        <i class="fas fa-eye"></i> View Item
+                                    <a href="view-item.php?id=<?= $claim['item_id'] ?>" class="btn btn-secondary btn-small" aria-label="View item <?= h($claim['item_title']) ?>">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> View Item
                                     </a>
                                 </div>
                             </div>
@@ -320,7 +375,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
                     </div>
                 <?php else: ?>
                     <div class="empty-state compact">
-                        <i class="fas fa-inbox" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                        <i class="fas fa-inbox" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 10px;" aria-hidden="true"></i>
                         <p>No claims received yet.</p>
                     </div>
                 <?php endif; ?>
@@ -747,7 +802,7 @@ $pending_claims = array_filter($my_claims, function($claim) {
     box-shadow: 0 0 0 3px rgba(155,44,44,0.1);
 }
 
-/* Status Badges - keeping your colors */
+/* Status Badges */
 .status-badge {
     display: inline-block;
     padding: 6px 14px;
@@ -932,94 +987,194 @@ $pending_claims = array_filter($my_claims, function($claim) {
 }
 
 /* Responsive */
+/* Tablet */
 @media (max-width: 1024px) {
+
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
     }
-}
 
-@media (max-width: 768px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
-    
+
     .profile-card,
     .activity-card,
     .full-width {
         grid-column: 1;
     }
-    
-    .stats-row {
-        grid-template-columns: 1fr;
+
+}
+
+
+/* Mobile */
+@media (max-width: 768px) {
+
+    .dashboard-page {
+        padding: 24px 0 40px;
     }
-    
+
     .welcome-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 16px;
     }
-    
-    .claims-grid {
-        grid-template-columns: 1fr;
+
+    .welcome-text h1 {
+        font-size: 1.6rem;
     }
-    
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats stack nicely */
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .stat-card {
+        padding: 18px;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.6rem;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+    }
+
+    /* Dashboard cards spacing */
+    .dashboard-card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s;
+    min-width: 0; /* ADD THIS: Prevents the grid item from breaking mobile width */
+}
+
+    /* Profile section */
     .profile-header {
         flex-direction: column;
         text-align: center;
+        gap: 12px;
     }
-    
+
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 1.5rem;
+    }
+
+    .profile-title h2 {
+        font-size: 1.3rem;
+    }
+
+    .profile-details {
+        padding: 18px;
+    }
+
     .detail-item {
         flex-direction: column;
+        align-items: flex-start;
         gap: 4px;
+        padding: 12px 0;
     }
-    
+
     .detail-label {
         width: 100%;
+        font-size: 0.9rem;
     }
+
+    .detail-value {
+        font-size: 0.95rem;
+    }
+
+    /* Activity items */
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+
+    /* Claims grid */
+    .claims-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .claim-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .claim-footer {
+        justify-content: flex-start;
+    }
+
 }
 
+
+/* Small phones */
 @media (max-width: 480px) {
-    .dashboard-card {
-        padding: 20px;
+
+    .stats-row {
+        grid-template-columns: 1fr;
     }
-    
+
     .stat-card {
-        flex-direction: column;
-        text-align: center;
+        flex-direction: row;
+        text-align: left;
     }
-    
+
+    .dashboard-card {
+        padding: 18px;
+    }
+
+    .items-table th,
     .items-table td {
-        padding: 12px;
+        padding: 10px;
+        font-size: 0.85rem;
     }
-    
+
     .actions-cell {
         flex-direction: column;
+        gap: 6px;
     }
-    
+
     .btn-action {
         width: 100%;
         justify-content: center;
     }
-}
 
-/* Loading State */
-.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-/* Focus Visible for Accessibility */
-*:focus-visible {
-    outline: 3px solid #9B2C2C;
-    outline-offset: 2px;
-}
-
-/* Print Styles */
-@media print {
-    .btn,
-    .btn-logout,
-    .filter-select {
-        display: none !important;
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
+
+    .filter-select {
+        width: 100%;
+    }
+
 }
 </style>
 

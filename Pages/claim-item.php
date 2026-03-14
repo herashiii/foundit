@@ -157,10 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$errorMsg) {
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<main class="page-container">
-    <!-- Secondary Navigation -->
+<main class="page-container" role="main">
     <div class="container">
-        <nav class="breadcrumb" aria-label="Secondary Navigation">
+        <nav class="breadcrumb" aria-label="Breadcrumb Navigation">
             <a href="index.php">Home</a>
             <span class="sep" aria-hidden="true">/</span>
             <a href="find-my-item.php">Find My Item</a>
@@ -173,7 +172,6 @@ include __DIR__ . '/../includes/header.php';
         </nav>
     </div>
 
-    <!-- Main Content -->
     <section class="container form-section">
         <div class="form-wrapper">
             
@@ -183,7 +181,7 @@ include __DIR__ . '/../includes/header.php';
             </header>
 
             <?php if ($errorMsg): ?>
-                <div class="alert alert-error" role="alert">
+                <div class="alert alert-error" role="alert" aria-live="assertive">
                     <span class="icon" aria-hidden="true">
                         <i class="fas fa-exclamation-triangle"></i>
                     </span>
@@ -198,7 +196,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
                 
             <?php elseif ($successMsg): ?>
-                <div class="alert alert-success" role="status">
+                <div class="alert alert-success" role="status" aria-live="polite">
                     <span class="icon" aria-hidden="true">
                         <i class="fas fa-check-circle"></i>
                     </span>
@@ -208,7 +206,6 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
                 
-                <!-- Next steps guidance -->
                 <div class="item-context-card" style="margin-top: 24px; background: var(--neut-gray-1);">
                     <div class="context-details" style="width: 100%;">
                         <span class="context-category">What happens next?</span>
@@ -227,7 +224,6 @@ include __DIR__ . '/../includes/header.php';
                 
             <?php else: ?>
 
-                <!-- User Info Summary (HCI: Show user they're logged in) -->
                 <div class="item-context-card" style="margin-bottom: 20px; background: var(--neut-gray-1);">
                     <div class="context-details" style="width: 100%;">
                         <span class="context-category">Claiming as</span>
@@ -243,11 +239,10 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Context Card -->
                 <div class="item-context-card">
                     <img src="<?= h($itemPhoto) ?>" 
-                         alt="Image of <?= h($item['title']) ?>" 
-                         title="Item being claimed: <?= h($item['title']) ?>" 
+                         alt="" 
+                         aria-hidden="true"
                          class="context-img"
                          onerror="this.src='<?= placeholderDataUri($item['title']) ?>'">
                     <div class="context-details">
@@ -260,7 +255,6 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Instructional Feedback - HCI Friendly -->
                 <div class="alert alert-info" role="note">
                     <span class="icon" aria-hidden="true">
                         <i class="fas fa-info-circle"></i>
@@ -276,7 +270,6 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Claim Form -->
                 <form method="POST" action="claim-item.php?id=<?= $itemId ?>" id="claimForm">
                     <div class="form-group">
                         <label for="proof_description">
@@ -292,7 +285,8 @@ include __DIR__ . '/../includes/header.php';
                             aria-describedby="proof-hint"
                             minlength="20"
                         ><?= h($_POST['proof_description'] ?? '') ?></textarea>
-                        <div id="proof-hint" class="field-hint" style="font-size: 0.85rem; color: var(--split-char-2); margin-top: 4px;">
+                        
+                        <div id="proof-hint" class="field-hint" style="font-size: 0.85rem; color: var(--split-char-2); margin-top: 4px;" aria-live="polite" aria-atomic="true">
                             Minimum 20 characters. Be as specific as possible.
                         </div>
                     </div>

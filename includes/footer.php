@@ -1,16 +1,14 @@
-<!-- Footer V3 (Aligned with 14-Page Requirements) -->
- <?php
+<?php
 // If current page is inside /Login/, prefix links to go to /Pages/
 $currentFolder = basename(dirname($_SERVER['SCRIPT_NAME']));
 $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
 ?>
-    <footer>
+    <footer role="contentinfo">
         <div class="container">
             <div class="footer-grid">
-                <!-- Brand Col -->
                 <div>
                     <div class="logo">
-                        <img src="../favicon.png" alt="" class="logo-img">
+                        <img src="../favicon.png" alt="" class="logo-img" aria-hidden="true">
                         <div>Found<span>iT</span></div>
                     </div>
                     <p style="font-size: 0.95rem; line-height: 1.6; color: #A0AEC0;">
@@ -18,7 +16,6 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                     </p>
                 </div>
 
-                <!-- Core Links Col -->
                 <div>
                     <h3 class="footer-title">Platform</h3>
                     <ul class="footer-links">
@@ -38,7 +35,6 @@ $pagePrefix = ($currentFolder === 'Login') ? '../Pages/' : '';
                         </ul>
                 </div>
 
-                <!-- Info Col -->
                 <div>
                     <h3 class="footer-title">Information</h3>
                     <ul class="footer-links">
